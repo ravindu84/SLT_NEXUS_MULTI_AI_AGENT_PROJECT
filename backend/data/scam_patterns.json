@@ -1,0 +1,73 @@
+{
+  "scam_patterns": [
+    {
+      "id": "fake_prize",
+      "type": "Prize Scam",
+      "patterns": ["You won", "Congratulations", "Lucky winner", "Claim your prize", "Rs. 500,000", "Rs. 1,000,000"],
+      "indicators": ["Unknown number", "Asks for bank details", "Urgency to claim", "Suspicious links"],
+      "severity": "high",
+      "example": "Congratulations! You won Rs.500,000 from SLT Mobitel! Click here to claim: bit.ly/xyz",
+      "explanation": "SLT never sends prize notifications via SMS with links. All official promotions are announced on slt.lk"
+    },
+    {
+      "id": "phishing_link",
+      "type": "Phishing Link",
+      "patterns": ["Click here", "bit.ly", "tinyurl", "Verify your account", "Update your details", "Your account will be suspended"],
+      "indicators": ["Shortened URLs", "Non-SLT domains", "Asks for login credentials", "Threatens account suspension"],
+      "severity": "high",
+      "example": "SLT Alert: Your account will be suspended. Update details now: bit.ly/slt-update",
+      "explanation": "SLT will never ask you to click shortened links. Official SLT links always use slt.lk or myslt.slt.lk domains"
+    },
+    {
+      "id": "fake_bill",
+      "type": "Fake Bill Payment",
+      "patterns": ["Bill overdue", "Pay immediately", "Account disconnection", "Transfer to", "Bank account"],
+      "indicators": ["Asks to transfer money to personal account", "Non-official payment methods", "Extreme urgency"],
+      "severity": "high",
+      "example": "Your SLT bill is overdue. To avoid disconnection, transfer Rs.5000 to account 00123456 immediately",
+      "explanation": "SLT only accepts payments through official channels: myslt.slt.lk, SLT offices, banks, or authorized agents"
+    },
+    {
+      "id": "fake_job",
+      "type": "Job Scam",
+      "patterns": ["Work from home", "Earn Rs", "Part time job", "SLT hiring", "WhatsApp for details"],
+      "indicators": ["Non-official recruitment", "Asks for registration fee", "Too good to be true salary"],
+      "severity": "medium",
+      "example": "SLT Mobitel is hiring! Work from home, earn Rs.50,000/month. WhatsApp 07XXXXXXXX for details",
+      "explanation": "SLT recruitment is only through careers.slt.lk. They never recruit via SMS or WhatsApp"
+    },
+    {
+      "id": "sim_upgrade",
+      "type": "SIM Upgrade Scam",
+      "patterns": ["SIM upgrade", "Free SIM", "4G upgrade", "Share OTP", "Verification code"],
+      "indicators": ["Asks for OTP", "Caller pretends to be SLT staff", "Requests personal information"],
+      "severity": "critical",
+      "example": "We are upgrading your SIM to 5G for free. Please share the OTP you received to complete upgrade",
+      "explanation": "NEVER share OTP with anyone. SLT staff will never ask for your OTP. SIM upgrades require visiting an SLT office with NIC"
+    },
+    {
+      "id": "data_offer",
+      "type": "Fake Data Offer",
+      "patterns": ["Free data", "50GB free", "Unlimited data", "Special offer", "Reply YES"],
+      "indicators": ["Unknown sender", "Too good to be true", "Asks to reply or call"],
+      "severity": "medium",
+      "example": "SLT Special: Get 50GB FREE data! Reply YES to activate. Limited time offer!",
+      "explanation": "Official SLT promotions come from recognized short codes. Check myslt.slt.lk for genuine offers"
+    }
+  ],
+  "safe_slt_contacts": {
+    "official_numbers": ["1212", "0112 021212"],
+    "official_websites": ["slt.lk", "myslt.slt.lk", "careers.slt.lk"],
+    "official_apps": ["MySLT App (Play Store/App Store)"],
+    "social_media": ["facebook.com/saborntlt", "twitter.com/ABORNSLT"]
+  },
+  "scam_check_rules": [
+    "Check if sender is from known SLT short codes",
+    "Look for shortened URLs (bit.ly, tinyurl, etc.)",
+    "Check for urgency language (immediately, now, last chance)",
+    "Look for requests for personal info (NIC, bank, OTP)",
+    "Verify offers on official SLT website",
+    "Check for grammar and spelling errors",
+    "Be suspicious of too-good-to-be-true offers"
+  ]
+}

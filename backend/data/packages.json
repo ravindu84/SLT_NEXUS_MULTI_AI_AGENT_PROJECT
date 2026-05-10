@@ -1,0 +1,79 @@
+{
+  "packages": [
+    {
+      "id": "fiber_basic_10",
+      "name": "SLT Fibre Basic 10 Mbps",
+      "type": "fiber",
+      "speed_mbps": 10,
+      "data_limit_gb": 100,
+      "price_lkr": 1490,
+      "best_for": ["single_user", "light_browsing", "social_media", "budget_conscious"],
+      "features": ["10 Mbps speed", "SD streaming", "Basic browsing", "Email"]
+    },
+    {
+      "id": "fiber_speed_30",
+      "name": "SLT Fibre Speed 30 Mbps",
+      "type": "fiber",
+      "speed_mbps": 30,
+      "data_limit_gb": 150,
+      "price_lkr": 1990,
+      "best_for": ["small_family", "work_from_home", "hd_streaming", "online_learning"],
+      "features": ["30 Mbps speed", "HD streaming", "Video calls", "WFH ready"]
+    },
+    {
+      "id": "fiber_speed_50",
+      "name": "SLT Fibre Speed 50 Mbps",
+      "type": "fiber",
+      "speed_mbps": 50,
+      "data_limit_gb": 200,
+      "price_lkr": 2490,
+      "best_for": ["medium_family", "moderate_gaming", "streaming", "multiple_devices"],
+      "features": ["50 Mbps speed", "Full HD streaming", "Online gaming", "Multiple devices"]
+    },
+    {
+      "id": "fiber_speed_100",
+      "name": "SLT Fibre Speed 100 Mbps",
+      "type": "fiber",
+      "speed_mbps": 100,
+      "data_limit_gb": 350,
+      "price_lkr": 3490,
+      "best_for": ["large_family", "heavy_gaming", "4k_streaming", "content_creators"],
+      "features": ["100 Mbps speed", "4K streaming", "Competitive gaming", "Smart home"]
+    },
+    {
+      "id": "fiber_ultra_200",
+      "name": "SLT Fibre Ultra 200 Mbps",
+      "type": "fiber",
+      "speed_mbps": 200,
+      "data_limit_gb": 500,
+      "price_lkr": 4990,
+      "best_for": ["tech_enthusiasts", "professional_gamers", "content_creators", "large_household"],
+      "features": ["200 Mbps speed", "Multiple 4K streams", "Pro gaming", "Home server"]
+    },
+    {
+      "id": "4g_postpaid_basic",
+      "name": "SLT 4G LTE Postpaid Basic",
+      "type": "4g_lte",
+      "speed_mbps": 25,
+      "data_limit_gb": 30,
+      "price_lkr": 990,
+      "best_for": ["mobile_workers", "students", "backup_connection"],
+      "features": ["4G LTE speed", "Portable", "Router included"]
+    },
+    {
+      "id": "enterprise_fiber_500",
+      "name": "SLT Enterprise Fiber 500 Mbps",
+      "type": "enterprise",
+      "speed_mbps": 500,
+      "data_limit_gb": 2000,
+      "price_lkr": 24990,
+      "best_for": ["small_business", "office", "hosting"],
+      "features": ["500 Mbps symmetric", "SLA guaranteed", "24/7 support", "Static IP"]
+    }
+  ],
+  "add_ons": [
+    {"id": "extra_10gb", "name": "Extra 10GB", "price_lkr": 350},
+    {"id": "extra_25gb", "name": "Extra 25GB", "price_lkr": 750},
+    {"id": "youtube_unlimited", "name": "YouTube Unlimited", "price_lkr": 499}
+  ]
+}

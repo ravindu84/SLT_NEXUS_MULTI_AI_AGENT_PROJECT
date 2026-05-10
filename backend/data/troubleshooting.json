@@ -1,0 +1,77 @@
+{
+  "issues": [
+    {
+      "id": "no_internet_fiber",
+      "title": "No Internet Connection - Fiber",
+      "symptoms": ["No internet", "Connected but no internet", "WiFi connected no internet"],
+      "router_models": ["ZTE F670L", "Huawei HG8145V5", "Nokia G-240W-F"],
+      "steps": [
+        {"step": 1, "action": "Check if router is powered on and all lights are normal", "detail": "Power light should be solid green"},
+        {"step": 2, "action": "Check the fiber cable connection at the back of router", "detail": "Ensure the green fiber cable is firmly plugged in"},
+        {"step": 3, "action": "Restart your router - unplug power, wait 30 seconds, plug back in", "detail": "Wait 2-3 minutes for full reboot"},
+        {"step": 4, "action": "Check LOS light on router", "detail": "If LOS is RED or blinking, there is a fiber line issue - call 1212"},
+        {"step": 5, "action": "Try connecting via ethernet cable directly", "detail": "If ethernet works but WiFi doesn't, it's a WiFi issue"},
+        {"step": 6, "action": "Reset router to factory settings using pin hole button", "detail": "Hold reset button for 10 seconds. Warning: this resets WiFi password"}
+      ],
+      "escalation": "If issue persists after all steps, call SLT support at 1212 or visit nearest SLT office"
+    },
+    {
+      "id": "slow_internet",
+      "title": "Slow Internet Speed",
+      "symptoms": ["Internet slow", "Buffering", "Speed less than expected", "Lag"],
+      "steps": [
+        {"step": 1, "action": "Run a speed test at speedtest.net", "detail": "Compare result with your package speed"},
+        {"step": 2, "action": "Check how many devices are connected to WiFi", "detail": "Too many devices sharing bandwidth causes slowness"},
+        {"step": 3, "action": "Check if any device is downloading large files", "detail": "One device can use all bandwidth"},
+        {"step": 4, "action": "Move closer to the router", "detail": "WiFi signal weakens with distance and walls"},
+        {"step": 5, "action": "Change WiFi channel in router settings", "detail": "Go to 192.168.1.1 > WiFi settings > Change channel"},
+        {"step": 6, "action": "Check if your data limit is exceeded", "detail": "Speed is throttled after data limit. Check at myslt.slt.lk"}
+      ],
+      "escalation": "If speed is consistently below 50% of package speed, report to 1212"
+    },
+    {
+      "id": "los_red_light",
+      "title": "Router LOS Light Red",
+      "symptoms": ["LOS red", "LOS blinking red", "Red light on router"],
+      "steps": [
+        {"step": 1, "action": "Check fiber cable for damage", "detail": "Look for bends, cuts, or crushed sections in the green cable"},
+        {"step": 2, "action": "Check fiber wall socket", "detail": "Ensure cable is firmly connected to wall point"},
+        {"step": 3, "action": "Restart router", "detail": "Sometimes a restart clears temporary LOS errors"},
+        {"step": 4, "action": "Check if there's construction near your home", "detail": "Fiber cables can be damaged during construction"}
+      ],
+      "escalation": "LOS red usually means fiber line damage. Call 1212 immediately for technician visit"
+    },
+    {
+      "id": "wifi_not_showing",
+      "title": "WiFi Network Not Visible",
+      "symptoms": ["WiFi not showing", "Can't find WiFi", "WiFi disappeared"],
+      "steps": [
+        {"step": 1, "action": "Check if WiFi light is on the router", "detail": "If WiFi light is off, WiFi may be disabled"},
+        {"step": 2, "action": "Press WPS/WiFi button on router", "detail": "Some routers have a physical WiFi on/off button"},
+        {"step": 3, "action": "Restart router", "detail": "Unplug, wait 30 seconds, plug back in"},
+        {"step": 4, "action": "Check if WiFi is enabled in router settings", "detail": "Go to 192.168.1.1 > WiFi > Enable"},
+        {"step": 5, "action": "Check if your device WiFi is turned on", "detail": "Toggle airplane mode off, WiFi on"}
+      ],
+      "escalation": "If WiFi still not visible after all steps, router may need replacement. Call 1212"
+    },
+    {
+      "id": "forgot_wifi_password",
+      "title": "Forgot WiFi Password",
+      "symptoms": ["Forgot password", "WiFi password", "Can't connect WiFi"],
+      "steps": [
+        {"step": 1, "action": "Check the sticker on bottom/back of router", "detail": "Default WiFi password is usually printed there"},
+        {"step": 2, "action": "Connect via ethernet cable and go to 192.168.1.1", "detail": "Login: admin, Password: admin (or on sticker)"},
+        {"step": 3, "action": "Navigate to WiFi settings", "detail": "Look for Wireless > Security > Password field"},
+        {"step": 4, "action": "Change password and save", "detail": "Use a strong password with letters, numbers, symbols"}
+      ],
+      "escalation": "If you can't access router settings, factory reset using pin hole button"
+    }
+  ],
+  "router_led_guide": {
+    "power": {"green_solid": "Normal", "off": "No power - check power cable"},
+    "los": {"off": "Normal - fiber connected", "red_solid": "Fiber disconnected", "red_blinking": "Fiber signal weak"},
+    "pon": {"green_solid": "Registered with network", "green_blinking": "Trying to register", "off": "Not registered"},
+    "lan": {"green_solid": "Device connected via ethernet", "green_blinking": "Data transfer active", "off": "No ethernet device"},
+    "wifi": {"green_solid": "WiFi enabled", "green_blinking": "WiFi data transfer", "off": "WiFi disabled"}
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "faqs": [
+    {
+      "id": "faq_1",
+      "question": "How do I check my data balance?",
+      "answer": "You can check your data balance through: 1) MySLT App - download from Play Store or App Store, 2) MySLT website at myslt.slt.lk, 3) Call 1212 and follow voice prompts, 4) Dial *123# from your SLT number.",
+      "category": "account"
+    },
+    {
+      "id": "faq_2",
+      "question": "How do I pay my SLT bill?",
+      "answer": "You can pay your SLT bill through: 1) MySLT App, 2) myslt.slt.lk online portal, 3) Any SLT Teleshop, 4) Bank payment (all major banks), 5) Dialog/Mobitel eZ Cash, 6) Authorized payment centers. You need your telephone number to make the payment.",
+      "category": "billing"
+    },
+    {
+      "id": "faq_3",
+      "question": "How do I upgrade my internet package?",
+      "answer": "To upgrade your package: 1) Visit myslt.slt.lk and login, 2) Go to 'Change Package' section, 3) Select your desired package, 4) Confirm upgrade. You can also visit any SLT Teleshop or call 1212. Note: Upgrades take effect from your next billing cycle.",
+      "category": "packages"
+    },
+    {
+      "id": "faq_4",
+      "question": "What is peak and off-peak time?",
+      "answer": "Peak hours are 8:00 AM to 12:00 AM (midnight). Off-peak hours are 12:00 AM to 8:00 AM. During off-peak hours, you use your off-peak data allocation which doesn't affect your peak data. Schedule large downloads during off-peak hours to save data.",
+      "category": "packages"
+    },
+    {
+      "id": "faq_5",
+      "question": "How do I get a new fiber connection?",
+      "answer": "To get a new SLT fiber connection: 1) Check availability at slt.lk/fiber or call 1212, 2) Visit nearest SLT Teleshop with NIC, 3) Select your preferred package, 4) Pay registration fee, 5) SLT will schedule installation within 7-14 days. Free installation is included with most packages.",
+      "category": "new_connection"
+    },
+    {
+      "id": "faq_6",
+      "question": "My internet speed is slow, what should I do?",
+      "answer": "For slow internet: 1) Run speed test at speedtest.net, 2) Restart your router, 3) Check connected device count, 4) Check if data limit exceeded at myslt.slt.lk, 5) Move closer to router, 6) If speed is below 50% of package speed, report to 1212.",
+      "category": "troubleshooting"
+    },
+    {
+      "id": "faq_7",
+      "question": "How do I change my WiFi password?",
+      "answer": "To change WiFi password: 1) Connect to router via WiFi or ethernet, 2) Open browser, go to 192.168.1.1, 3) Login (default: admin/admin), 4) Navigate to WiFi/Wireless settings, 5) Find Security/Password field, 6) Enter new password, 7) Click Save/Apply. Your devices will disconnect and need the new password.",
+      "category": "troubleshooting"
+    },
+    {
+      "id": "faq_8",
+      "question": "What apps use the most data?",
+      "answer": "Data usage by popular apps (approximate per hour): YouTube HD: 3GB/hr, YouTube SD: 0.7GB/hr, Netflix HD: 3GB/hr, TikTok: 0.8GB/hr, Zoom video call: 1.5GB/hr, Facebook browsing: 0.15GB/hr, WhatsApp calls: 0.03GB/hr, Online gaming: 0.08GB/hr. Tip: Lower YouTube quality to 480p to save 75% data.",
+      "category": "usage"
+    },
+    {
+      "id": "faq_9",
+      "question": "How do I contact SLT support?",
+      "answer": "Contact SLT support through: 1) Call 1212 (24/7), 2) Visit slt.lk live chat, 3) Email customercare@slt.com.lk, 4) Visit nearest SLT Teleshop, 5) Facebook: SLT Mobitel official page, 6) MySLT App support section.",
+      "category": "support"
+    },
+    {
+      "id": "faq_10",
+      "question": "What is SLT PeoTV?",
+      "answer": "SLT PeoTV is SLT's IPTV service providing 100+ TV channels and on-demand content through your fiber connection. Packages start from Rs.300/month. You need an SLT fiber connection and PeoTV set-top box. Features include recording, pause live TV, and video on demand.",
+      "category": "services"
+    }
+  ]
+}

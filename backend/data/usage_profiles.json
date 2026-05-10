@@ -1,0 +1,44 @@
+{
+  "usage_profiles": [
+    {
+      "profile": "heavy_youtube",
+      "label": "YouTube Enthusiast",
+      "breakdown": {"YouTube": 60, "Social Media": 15, "Web Browsing": 10, "WhatsApp": 5, "Other": 10},
+      "monthly_data_gb": 80,
+      "recommendation": "Consider YouTube Unlimited add-on (Rs.499/month) to save data. Lower quality to 720p to reduce usage by 50%.",
+      "tips": ["Set YouTube default quality to 720p", "Download videos on WiFi for offline viewing", "Use YouTube Premium for background play"]
+    },
+    {
+      "profile": "gamer",
+      "label": "Online Gamer",
+      "breakdown": {"Gaming": 40, "YouTube": 25, "Discord": 15, "Downloads": 15, "Other": 5},
+      "monthly_data_gb": 120,
+      "recommendation": "Need minimum 50 Mbps package. Gaming itself uses less data but game downloads are huge. Schedule updates during off-peak.",
+      "tips": ["Schedule game updates for off-peak hours (12AM-8AM)", "Use wired ethernet for gaming - lower ping", "Close background apps while gaming"]
+    },
+    {
+      "profile": "work_from_home",
+      "label": "Work From Home Professional",
+      "breakdown": {"Video Calls": 35, "Cloud/Email": 25, "Web Browsing": 20, "Streaming": 15, "Other": 5},
+      "monthly_data_gb": 60,
+      "recommendation": "30-50 Mbps package is ideal. Prioritize stable connection. Consider wired connection for important meetings.",
+      "tips": ["Use ethernet cable for video calls", "Close unnecessary tabs during meetings", "Set Zoom to 720p instead of 1080p"]
+    },
+    {
+      "profile": "social_media",
+      "label": "Social Media User",
+      "breakdown": {"TikTok": 35, "Instagram": 25, "Facebook": 20, "WhatsApp": 10, "Other": 10},
+      "monthly_data_gb": 45,
+      "recommendation": "Basic 10-30 Mbps package is sufficient. TikTok and Instagram use significant data due to video content.",
+      "tips": ["Enable data saver mode in TikTok and Instagram", "Download content on WiFi", "Disable auto-play videos on Facebook"]
+    },
+    {
+      "profile": "family",
+      "label": "Family Household",
+      "breakdown": {"YouTube": 30, "Social Media": 20, "Online Learning": 20, "Gaming": 15, "Other": 15},
+      "monthly_data_gb": 150,
+      "recommendation": "100 Mbps package recommended for 4+ family members. Multiple simultaneous users need higher bandwidth.",
+      "tips": ["Set up QoS on router to prioritize important activities", "Create separate WiFi bands (2.4GHz and 5GHz)", "Monitor connected devices regularly"]
+    }
+  ]
+}

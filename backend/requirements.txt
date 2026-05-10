@@ -1,0 +1,16 @@
+fastapi
+uvicorn
+python-dotenv
+httpx
+pydantic
+langchain
+langchain-openai
+langchain-community
+langgraph
+langchain-core
+langchain-anthropic
+openai
+google-generativeai
+tiktoken
+python-multipart
+langchain-google-genai
