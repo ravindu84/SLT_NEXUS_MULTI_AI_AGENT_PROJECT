@@ -16,7 +16,7 @@ At the core of the SLT NEXUS ecosystem sits **LIYA**, the Master Orchestrator po
 
 ## The Multi-Agent Swarm (8 Specialized Agents)
 
-### Group 1: Customer Agents (B2C - Outward Facing)
+### Group 1: Customer Customer Agents (B2C - Outward Facing)
 1. **Spark (Sales):** Handles new package inquiries and customer onboarding.
 2. **Pulse (Tech/NOC):** Troubleshoots internet issues and checks fiber faults.
 3. **Insight (Data):** Processes data queries and package comparisons.
@@ -33,6 +33,39 @@ At the core of the SLT NEXUS ecosystem sits **LIYA**, the Master Orchestrator po
 * **Backend (Zone B):** Hosted on **AWS Cloud Infrastructure** (EC2 / Lambda). Powered by Python for heavy LangChain/LangGraph orchestration.
 * **MCP (Model Context Protocol) Integrations:** The AI Agents strictly use MCP to securely connect, authenticate, and fetch real-time data from internal systems (Mock iMaster NCE, Clarity/WFM DB, and Billing Systems) without exposing core credentials.
 * **Database, Auth & Vector Storage:** **Supabase** is used for secure New User Registration (Auth) and acts as the primary Vector DB to store embedded data chunks for the RAG pipeline.
+
+## Getting Started (Local Setup)
+
+To clone and run the SLT NEXUS ecosystem locally on your machine, follow these steps. *(Note: Open separate terminal windows for the frontend, backend, and mobile setups).*
+
+### 1. Clone the Repository
+```bash
+git clone [https://github.com/ravindu84/SLT_NEXUS_MULTI_AI_AGENT_PROJECT.git](https://github.com/ravindu84/SLT_NEXUS_MULTI_AI_AGENT_PROJECT.git)
+cd SLT_NEXUS_MULTI_AI_AGENT_PROJECT
+```
+
+### 2. Frontend Setup (Web Dashboard & 3D Avatar)
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+### 3. Backend Setup (Python RAG & LangGraph Agents)
+```bash
+cd ../backend
+python -m venv venv
+venv\Scripts\activate
+pip install -r requirements.txt
+python main.py
+```
+
+### 4. Mobile App Setup (React Native)
+```bash
+cd ../mobile
+npm install
+npx expo start
+```
 
 ## Team
 Conceptualized and developed by **NEXGEN Creators** for the ultimate AI transformation at SLT.
