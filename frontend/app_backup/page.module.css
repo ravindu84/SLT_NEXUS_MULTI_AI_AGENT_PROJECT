@@ -1,0 +1,612 @@
+/* ============================================
+   LIYA Multi-Agent AI Avatar System
+   Page Styles — Split Layout (Avatar + Chat)
+   ============================================ */
+
+/* --- App Layout --- */
+.app {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* =============================================
+   LEFT: 3D Avatar Section
+   ============================================= */
+.avatarSection {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: radial-gradient(
+    ellipse at 50% 40%,
+    rgba(0, 82, 204, 0.12) 0%,
+    rgba(10, 14, 26, 1) 70%
+  );
+}
+
+/* Grid overlay effect */
+.gridOverlay {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(38, 132, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(38, 132, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 3D Canvas container */
+.avatarCanvas {
+  width: 100%;
+  height: 60%;
+  position: relative;
+  z-index: 1;
+}
+
+/* Loading state */
+.avatarLoading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 16px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
+
+.loadingOrb {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  animation: pulse-orb 2s ease-in-out infinite;
+  box-shadow: 0 0 40px rgba(0, 82, 204, 0.4);
+}
+
+@keyframes pulse-orb {
+  0%, 100% {
+    transform: scale(0.9);
+    box-shadow: 0 0 30px rgba(0, 82, 204, 0.3);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 0 60px rgba(0, 82, 204, 0.6);
+  }
+}
+
+/* Avatar Name */
+.avatarName {
+  position: absolute;
+  top: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 2;
+}
+
+.liyaTitle {
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: 12px;
+  color: var(--text-primary);
+  text-shadow: 0 0 40px rgba(38, 132, 255, 0.3);
+  line-height: 1;
+}
+
+.liyaAccent {
+  background: var(--gradient-glow);
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.liyaSubtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+/* Avatar Status */
+.avatarStatus {
+  position: absolute;
+  bottom: 140px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.statusIndicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  border-radius: var(--radius-full);
+  font-size: 13px;
+  font-weight: 600;
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.statusIdle {
+  background: rgba(100, 116, 139, 0.1);
+  color: var(--text-secondary);
+}
+
+.statusSpeaking {
+  background: rgba(0, 82, 204, 0.15);
+  color: var(--slt-blue-light);
+  border-color: rgba(38, 132, 255, 0.3);
+  box-shadow: 0 0 20px rgba(38, 132, 255, 0.2);
+}
+
+.statusListening {
+  background: rgba(0, 200, 83, 0.15);
+  color: var(--slt-green);
+  border-color: rgba(0, 200, 83, 0.3);
+  box-shadow: 0 0 20px rgba(0, 200, 83, 0.2);
+}
+
+.statusThinking {
+  background: rgba(255, 171, 0, 0.15);
+  color: var(--warning);
+  border-color: rgba(255, 171, 0, 0.3);
+  animation: pulse-think 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-think {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.statusDotLarge {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Voice Button */
+.voiceBtn {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  background: rgba(26, 31, 53, 0.8);
+  backdrop-filter: blur(12px);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 2;
+}
+
+.voiceBtn:hover {
+  border-color: var(--slt-green);
+  color: var(--slt-green);
+  box-shadow: 0 0 30px rgba(0, 200, 83, 0.3);
+  transform: translateX(-50%) scale(1.05);
+}
+
+.voiceBtnActive {
+  border-color: var(--slt-green);
+  background: rgba(0, 200, 83, 0.15);
+  color: var(--slt-green);
+  animation: pulse-listen 1.5s ease-in-out infinite;
+  box-shadow: 0 0 30px rgba(0, 200, 83, 0.4);
+}
+
+@keyframes pulse-listen {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(0, 200, 83, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(0, 200, 83, 0.6);
+  }
+}
+
+.voiceBtn:disabled {
+  cursor: default;
+}
+
+/* Agent chips */
+.agentChips {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 2;
+}
+
+.agentChip {
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(26, 31, 53, 0.6);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--chip-color, var(--border-color));
+  color: var(--chip-color, var(--text-muted));
+  opacity: 0.7;
+  transition: all 0.3s ease;
+}
+
+.agentChip:hover {
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+/* =============================================
+   RIGHT: Chat Panel
+   ============================================= */
+.chatPanel {
+  width: 420px;
+  min-width: 380px;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  border-left: 1px solid var(--border-color);
+  z-index: 5;
+}
+
+/* Chat Header */
+.chatHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-color);
+  background: rgba(17, 24, 39, 0.9);
+  backdrop-filter: blur(16px);
+}
+
+.chatHeaderLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  background: var(--success);
+  border-radius: 50%;
+  animation: pulse-glow 2s ease-in-out infinite;
+  box-shadow: 0 0 8px var(--success);
+}
+
+.chatTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.chatHeaderActions {
+  display: flex;
+  gap: 4px;
+}
+
+.iconBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.iconBtn:hover {
+  background: var(--bg-card);
+  border-color: var(--border-active);
+}
+
+/* Chat Messages */
+.chatMessages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scroll-behavior: smooth;
+}
+
+/* Empty state */
+.chatEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 20px;
+}
+
+.chatEmptyTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+}
+
+.chatEmptySubtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  max-width: 280px;
+  line-height: 1.6;
+  margin-bottom: 24px;
+}
+
+/* Quick prompts */
+.quickPrompts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.quickPrompt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-family: "Inter", sans-serif;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.quickPrompt:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+  border-color: var(--slt-blue);
+  transform: translateX(4px);
+}
+
+/* Chat Messages */
+.chatMsg {
+  display: flex;
+  flex-direction: column;
+  animation: fadeInUp 0.3s ease;
+  max-width: 95%;
+}
+
+.chatMsgUser {
+  align-self: flex-end;
+}
+
+.chatMsgAssistant {
+  align-self: flex-start;
+}
+
+.chatMsgContent {
+  padding: 12px 16px;
+  border-radius: var(--radius-lg);
+  font-size: 13px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.chatMsgUser .chatMsgContent {
+  background: var(--gradient-primary);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+
+.chatMsgAssistant .chatMsgContent {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-bottom-left-radius: 4px;
+  color: var(--text-primary);
+}
+
+.chatMsgError .chatMsgContent {
+  border-color: var(--danger);
+  background: rgba(255, 61, 87, 0.08);
+}
+
+/* Agent badge */
+.agentBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  width: fit-content;
+}
+
+.chatMsgTime {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 4px;
+  opacity: 0.7;
+}
+
+.chatMsgUser .chatMsgTime {
+  text-align: right;
+}
+
+/* Typing Indicator */
+.typingIndicator {
+  display: flex;
+  gap: 6px;
+  padding: 12px 16px;
+}
+
+.typingDot {
+  width: 8px;
+  height: 8px;
+  background: var(--slt-blue-light);
+  border-radius: 50%;
+  animation: typing-dot 1.4s ease-in-out infinite;
+}
+
+.typingDot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typingDot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+/* Chat Input */
+.chatInputArea {
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--border-color);
+  background: rgba(17, 24, 39, 0.9);
+  backdrop-filter: blur(16px);
+}
+
+.chatInputContainer {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 6px 6px 6px 14px;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.chatInputContainer:focus-within {
+  border-color: var(--slt-blue);
+  box-shadow: 0 0 0 3px rgba(0, 82, 204, 0.15);
+}
+
+.chatInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-family: "Inter", sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: none;
+  max-height: 100px;
+  padding: 6px 0;
+}
+
+.chatInput::placeholder {
+  color: var(--text-muted);
+}
+
+.chatSendBtn {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border-radius: var(--radius-md);
+  background: var(--gradient-primary);
+  border: none;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.25s ease;
+  box-shadow: var(--shadow-glow);
+}
+
+.chatSendBtn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 0 25px rgba(0, 82, 204, 0.5);
+}
+
+.chatSendBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.sendSpinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =============================================
+   Responsive
+   ============================================= */
+@media (max-width: 900px) {
+  .app {
+    flex-direction: column;
+  }
+
+  .avatarSection {
+    height: 40vh;
+    min-height: 300px;
+  }
+
+  .chatPanel {
+    width: 100%;
+    min-width: unset;
+    max-width: unset;
+    flex: 1;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+  }
+
+  .liyaTitle {
+    font-size: 32px;
+    letter-spacing: 8px;
+  }
+
+  .agentChips {
+    display: none;
+  }
+
+  .voiceBtn {
+    bottom: 16px;
+    width: 48px;
+    height: 48px;
+  }
+
+  .avatarStatus {
+    bottom: 74px;
+  }
+}

@@ -1,0 +1,381 @@
+/* ============================================
+   LIYA Multi-Agent AI Avatar System
+   Page Styles — Unified Layout (Avatar + VR + Chat)
+   ============================================ */
+
+/* --- App Layout --- */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+/* --- Navbar --- */
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 32px;
+  background: rgba(10, 14, 26, 0.7);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-color);
+  z-index: 100;
+}
+
+.navLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logoBox {
+  width: 40px;
+  height: 40px;
+  background: var(--gradient-primary);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-glow);
+}
+
+.logoIcon {
+  color: white;
+}
+
+.logoText {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.5px;
+  font-style: italic;
+  text-transform: uppercase;
+}
+
+.navCenter {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.viewSwitcher {
+  display: flex;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px;
+  border-radius: 99px;
+  border: 1px solid var(--border-color);
+}
+
+.viewBtn {
+  padding: 8px 24px;
+  border-radius: 99px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.viewBtnActive {
+  background: var(--slt-blue);
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 82, 204, 0.4);
+}
+
+.navRight {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.langSelector {
+  display: flex;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+}
+
+.langBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.langBtnActive {
+  color: var(--slt-blue-light);
+}
+
+.themeBtn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.themeBtn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
+
+/* --- Main Content Area --- */
+.mainContent {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  position: relative;
+}
+
+/* =============================================
+   LEFT: View Section (Avatar or VR)
+   ============================================= */
+.avatarSection, .vrSection {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.avatarSection {
+  background: #0a0e1a;
+}
+
+.vrSection {
+  background: #0a0e1a;
+}
+
+/* 3D Canvas container */
+.avatarCanvas {
+  width: 100%;
+  height: 70%;
+  position: relative;
+  z-index: 1;
+}
+
+/* Avatar Name */
+.avatarName {
+  position: absolute;
+  top: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 2;
+}
+
+.liyaTitle {
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: 12px;
+  color: var(--text-primary);
+  text-shadow: 0 0 40px rgba(38, 132, 255, 0.3);
+  line-height: 1;
+}
+
+.liyaAccent {
+  background: var(--gradient-glow);
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.liyaSubtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-top: 8px;
+  font-weight: 500;
+}
+
+/* Avatar Status */
+.avatarStatus {
+  position: absolute;
+  bottom: 160px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+}
+
+.statusIndicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 20px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 600;
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+.statusIdle { background: rgba(100, 116, 139, 0.1); color: var(--text-secondary); }
+.statusSpeaking { background: rgba(0, 82, 204, 0.15); color: var(--slt-blue-light); border-color: rgba(38, 132, 255, 0.3); }
+.statusListening { background: rgba(0, 200, 83, 0.15); color: var(--slt-green); border-color: rgba(0, 200, 83, 0.3); }
+.statusThinking { background: rgba(255, 171, 0, 0.15); color: var(--warning); border-color: rgba(255, 171, 0, 0.3); animation: pulse-think 1.5s ease-in-out infinite; }
+
+@keyframes pulse-think { 0%, 100% { opacity: 1; } 50% { opacity: 0.6; } }
+
+.statusDotLarge {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 10px currentColor;
+}
+
+/* Voice Button */
+.voiceBtn {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  background: rgba(26, 31, 53, 0.8);
+  backdrop-filter: blur(12px);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  z-index: 2;
+}
+
+.voiceBtnActive {
+  border-color: var(--slt-green);
+  background: rgba(0, 200, 83, 0.15);
+  color: var(--slt-green);
+  box-shadow: 0 0 40px rgba(0, 200, 83, 0.4);
+}
+
+/* Agent chips */
+.agentChips {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 2;
+}
+
+.agentChip {
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  background: rgba(26, 31, 53, 0.6);
+  border: 1px solid var(--chip-color, var(--border-color));
+  color: var(--chip-color, var(--text-muted));
+  opacity: 0.7;
+}
+
+/* =============================================
+   RIGHT: Chat Panel Wrapper
+   ============================================= */
+.chatWrapper {
+  width: 420px;
+  border-left: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+}
+
+.chatClosed {
+  width: 0;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(100%);
+}
+
+.chatOpen {
+  width: 420px;
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Floating button for mobile/collapsed */
+.floatingChatBtn {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--gradient-primary);
+  color: white;
+  border: none;
+  display: none; /* Desktop hidden by default */
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 32px rgba(0, 82, 204, 0.4);
+  cursor: pointer;
+  z-index: 1000;
+}
+
+/* =============================================
+   Responsive
+   ============================================= */
+@media (max-width: 1100px) {
+  .chatOpen {
+    width: 350px;
+  }
+}
+
+@media (max-width: 900px) {
+  .navbar {
+    padding: 12px 16px;
+  }
+  
+  .navCenter {
+    display: none; /* Hide switcher in center, move to side or menu */
+  }
+
+  .mainContent {
+    flex-direction: column;
+  }
+
+  .avatarSection, .vrSection {
+    height: 50vh;
+  }
+
+  .chatWrapper {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    z-index: 500;
+  }
+
+  .floatingChatBtn {
+    display: flex;
+  }
+}
