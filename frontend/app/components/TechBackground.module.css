@@ -9,11 +9,7 @@
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  background: radial-gradient(
-    ellipse at 50% 40%,
-    rgba(0, 82, 204, 0.10) 0%,
-    rgba(10, 14, 26, 1) 70%
-  );
+  background: transparent;
 }
 
 /* --- Particle Canvas --- */
