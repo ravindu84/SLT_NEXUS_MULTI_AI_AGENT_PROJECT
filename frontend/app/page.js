@@ -208,10 +208,11 @@ export default function Home() {
       {/* Premium Header */}
       <nav className={styles.navbar}>
         <div className={styles.navLeft}>
-          <div className={styles.logoBox}>
-            <Zap className={styles.logoIcon} size={18} />
-          </div>
-          <span className={styles.logoText}>SLT NEXUS</span>
+          <img 
+            src="/assets/logo.png" 
+            alt="SLT NEXUS" 
+            className={styles.mainLogo}
+          />
         </div>
 
         <div className={styles.navCenter}>
@@ -249,6 +250,18 @@ export default function Home() {
               exit={{ opacity: 0, scale: 1.05 }}
               className={styles.avatarSection}
             >
+              {/* 3D Avatar Canvas - MOVED TO TOP LEVEL OF SECTION */}
+              <div className={styles.avatarCanvas}>
+                {hasMounted && (
+                  <AvatarScene
+                    isSpeaking={isSpeaking}
+                    isListening={isListening}
+                    isThinking={isThinking}
+                    audioLevel={audioLevel}
+                  />
+                )}
+              </div>
+
               {/* Background Video */}
               <video 
                 autoPlay 
@@ -275,17 +288,6 @@ export default function Home() {
                 <p className={styles.liyaSubtitle}>Multi-Agent AI Avatar • SLT-MOBITEL</p>
               </div>
 
-              {/* 3D Avatar */}
-              <div className={styles.avatarCanvas}>
-                {hasMounted && (
-                  <AvatarScene
-                    isSpeaking={isSpeaking}
-                    isListening={isListening}
-                    isThinking={isThinking}
-                    audioLevel={audioLevel}
-                  />
-                )}
-              </div>
 
               {/* Status indicator */}
               <div className={styles.avatarStatus}>
@@ -394,6 +396,22 @@ export default function Home() {
                       <ChevronUp size={16} />
                     </button>
                   )}
+
+                  <button 
+                    className={styles.testSpeakBtn}
+                    style={{ marginTop: 0, padding: "8px 12px", borderRadius: "8px", fontSize: "12px", zIndex: 10 }}
+                    onClick={() => {
+                      setIsSpeaking(true);
+                      // Use browser's built-in TTS for a quick offline test
+                      const utterance = new SpeechSynthesisUtterance("Hello there! I am Liya, your AI assistant. I am now testing my new mouth animations created in Blender.");
+                      utterance.lang = "en-US";
+                      utterance.onend = () => setIsSpeaking(false);
+                      window.speechSynthesis.speak(utterance);
+                    }}
+                    title="Test Lip Sync (Offline)"
+                  >
+                    Test Lips
+                  </button>
                 </div>
               </div>
             </motion.div>

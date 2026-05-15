@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "SLT NEXUS",
+    "slug": "slt-nexus-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "package": "com.slt.nexus.mobile"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "07f7c84e-2fc9-4921-afb0-a133567c4414"
+      }
+    }
+  }
+}

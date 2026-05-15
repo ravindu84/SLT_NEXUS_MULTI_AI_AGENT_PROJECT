@@ -19,7 +19,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 28px;
+  padding: 8px 28px;
   background: rgba(10, 14, 26, 0.85);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
@@ -33,31 +33,17 @@
   gap: 10px;
 }
 
-.logoBox {
-  width: 36px;
-  height: 36px;
-  background: var(--gradient-primary);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 16px rgba(0, 82, 204, 0.35);
+.mainLogo {
+  height: 42px;
+  width: auto;
+  object-fit: contain;
+  cursor: pointer;
+  filter: drop-shadow(0 0 10px rgba(38, 132, 255, 0.2));
+  transition: transform 0.3s ease;
 }
 
-.logoIcon {
-  color: white;
-}
-
-.logoText {
-  font-size: 18px;
-  font-weight: 900;
-  letter-spacing: -0.5px;
-  font-style: italic;
-  text-transform: uppercase;
-  background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.mainLogo:hover {
+  transform: scale(1.02);
 }
 
 .navCenter {
@@ -196,10 +182,15 @@
 
 /* 3D Canvas container */
 .avatarCanvas {
-  width: 100%;
-  height: 75%;
-  position: relative;
-  z-index: 3;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 5 !important; /* Behind UI text but above video */
+  /* NO flexbox here so it doesn't get pushed around */
 }
 
 /* Avatar Name */
@@ -209,7 +200,7 @@
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
-  z-index: 2;
+  z-index: 10;
 }
 
 .liyaTitle {
@@ -607,4 +598,42 @@
     font-size: 9px;
     padding: 3px 8px;
   }
+}
+
+/* Test Speak Button */
+.testSpeakBtn {
+  margin-top: 1rem;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 25px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  position: relative;
+  z-index: 1000; /* Ensure it's above the canvas */
+  pointer-events: auto; /* Force pointer events */
+}
+
+.testSpeakBtn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(38, 132, 255, 0.3);
+  border-color: rgba(38, 132, 255, 0.5);
+}
+
+.testSpeakBtn:active {
+  transform: translateY(0);
+}
+
+.testIcon {
+  color: #ffab00;
+  filter: drop-shadow(0 0 5px rgba(255, 171, 0, 0.5));
 }

@@ -1,0 +1,10 @@
+node_modules
+.expo
+.next
+.git
+venv
+my_env
+backend
+frontend
+mobile/node_modules
+frontend/node_modules
