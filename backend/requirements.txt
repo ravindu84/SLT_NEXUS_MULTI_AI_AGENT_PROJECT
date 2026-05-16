@@ -14,3 +14,5 @@ google-generativeai
 tiktoken
 python-multipart
 langchain-google-genai
+gTTS
+google-cloud-texttospeech

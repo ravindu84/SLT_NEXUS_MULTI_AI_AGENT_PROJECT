@@ -45,6 +45,7 @@ export default function Home() {
 
   const messagesEndRef = useRef(null);
   const audioRef = useRef(null);
+  const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
   const animFrameRef = useRef(null);
 
@@ -67,34 +68,53 @@ export default function Home() {
         const response = await fetch(`${API_URL}/tts`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: text.slice(0, 500) }),
+          body: JSON.stringify({ 
+            text: text.slice(0, 500),
+            lang: language 
+          }),
         });
         if (!response.ok) return;
         const audioBlob = await response.blob();
         const audioUrl = URL.createObjectURL(audioBlob);
         if (audioRef.current) audioRef.current.pause();
+        if (audioRef.current) audioRef.current.pause();
         const audio = new Audio(audioUrl);
         audioRef.current = audio;
-        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Reuse AudioContext if it exists
+        if (!audioContextRef.current) {
+          audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        const audioContext = audioContextRef.current;
+        
+        // We need to create a new source every time because a MediaElementSource
+        // can only be connected to one AudioContext once.
         const source = audioContext.createMediaElementSource(audio);
         const analyser = audioContext.createAnalyser();
         analyser.fftSize = 256;
         source.connect(analyser);
         analyser.connect(audioContext.destination);
         analyserRef.current = analyser;
+        
         const dataArray = new Uint8Array(analyser.frequencyBinCount);
         const updateLevel = () => {
           analyser.getByteFrequencyData(dataArray);
           const avg = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
-          handleAudioLevelChange(avg / 255);
+          // Even higher sensitivity
+          handleAudioLevelChange((avg / 255) * 8);
           animFrameRef.current = requestAnimationFrame(updateLevel);
         };
-        audio.onplay = () => { handleSpeakingChange(true); updateLevel(); };
+        audio.onplay = () => { 
+          if (audioContext.state === 'suspended') {
+            audioContext.resume();
+          }
+          handleSpeakingChange(true); 
+          updateLevel(); 
+        };
         audio.onended = () => {
           handleSpeakingChange(false);
           handleAudioLevelChange(0);
           cancelAnimationFrame(animFrameRef.current);
-          audioContext.close();
           URL.revokeObjectURL(audioUrl);
         };
         audio.onerror = () => { handleSpeakingChange(false); handleAudioLevelChange(0); };
@@ -104,7 +124,7 @@ export default function Home() {
         handleSpeakingChange(false);
       }
     },
-    [isMuted, handleSpeakingChange, handleAudioLevelChange]
+    [isMuted, handleSpeakingChange, handleAudioLevelChange, language]
   );
 
   // Send message
@@ -233,6 +253,17 @@ export default function Home() {
         </div>
 
         <div className={styles.navRight}>
+          <div className={styles.langSwitcher}>
+            {['en', 'si', 'ta'].map((ln) => (
+              <button
+                key={ln}
+                onClick={() => setLanguage(ln)}
+                className={`${styles.langBtn} ${language === ln ? styles.langBtnActive : ""}`}
+              >
+                {ln === 'en' ? 'EN' : ln === 'si' ? 'සිං' : 'த'}
+              </button>
+            ))}
+          </div>
           <div className={styles.navBadge}>
             <span className={styles.liveDot}></span>
             <span>AI Powered</span>
@@ -241,192 +272,187 @@ export default function Home() {
       </nav>
 
       <div className={styles.mainContent}>
-        <AnimatePresence mode="wait">
-          {view === "avatar" ? (
+        {/* Avatar Section - Always Mounted for stability */}
+        <div 
+          className={styles.avatarSection}
+          style={{ 
+            opacity: view === "avatar" ? 1 : 0,
+            pointerEvents: view === "avatar" ? "auto" : "none",
+            position: "absolute",
+            width: "100%",
+            height: "100%",
+            transition: "opacity 0.5s ease-in-out",
+            zIndex: view === "avatar" ? 2 : 1
+          }}
+        >
+          {/* 3D Avatar Canvas */}
+          <div className={styles.avatarCanvas}>
+            {hasMounted && (
+              <AvatarScene
+                isSpeaking={isSpeaking}
+                isListening={isListening}
+                isThinking={isThinking}
+                audioLevel={audioLevel}
+              />
+            )}
+          </div>
+
+          {/* Background Video */}
+          <video 
+            autoPlay 
+            muted 
+            loop 
+            playsInline 
+            className={styles.bgVideo}
+          >
+            <source src="/assets/office-bg-video.mp4" type="video/mp4" />
+          </video>
+
+          {/* Digital Nexus Overlay */}
+          {hasMounted && (
+            <div className={styles.techOverlay}>
+              <TechBackground />
+            </div>
+          )}
+
+          {/* Avatar Name */}
+          <div className={styles.avatarName}>
+            <h1 className={styles.liyaTitle}>
+              L<span className={styles.liyaAccent}>I</span>YA
+            </h1>
+            <p className={styles.liyaSubtitle}>Multi-Agent AI Avatar • SLT-MOBITEL</p>
+          </div>
+
+          {/* Status indicator */}
+          <div className={styles.avatarStatus}>
+            <div className={`${styles.statusIndicator} ${
+              isSpeaking ? styles.statusSpeaking : 
+              isListening ? styles.statusListening : 
+              isThinking ? styles.statusThinking : styles.statusIdle
+            }`}>
+              <span className={styles.statusDotLarge}></span>
+              <span>
+                {isSpeaking ? "Speaking..." : isListening ? "Listening..." : isThinking ? "Thinking..." : "Ready"}
+              </span>
+            </div>
+          </div>
+
+          {/* Floating transcript panel */}
+          {showTranscript && messages.length > 0 && (
             <motion.div 
-              key="avatar"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.05 }}
-              className={styles.avatarSection}
+              className={styles.transcriptPanel}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
             >
-              {/* 3D Avatar Canvas - MOVED TO TOP LEVEL OF SECTION */}
-              <div className={styles.avatarCanvas}>
-                {hasMounted && (
-                  <AvatarScene
-                    isSpeaking={isSpeaking}
-                    isListening={isListening}
-                    isThinking={isThinking}
-                    audioLevel={audioLevel}
-                  />
-                )}
+              <div className={styles.transcriptHeader}>
+                <span className={styles.transcriptTitle}>
+                  {lastAssistantMsg?.agent_emoji} {lastAssistantMsg?.agent_label || "LIYA"}
+                </span>
+                <button className={styles.transcriptToggle} onClick={() => setShowTranscript(false)}>
+                  <ChevronDown size={14} />
+                </button>
               </div>
-
-              {/* Background Video */}
-              <video 
-                autoPlay 
-                muted 
-                loop 
-                playsInline 
-                className={styles.bgVideo}
-              >
-                <source src="/assets/office-bg-video.mp4" type="video/mp4" />
-              </video>
-
-              {/* Digital Nexus Overlay */}
-              {hasMounted && (
-                <div className={styles.techOverlay}>
-                  <TechBackground />
-                </div>
-              )}
-
-              {/* Avatar Name */}
-              <div className={styles.avatarName}>
-                <h1 className={styles.liyaTitle}>
-                  L<span className={styles.liyaAccent}>I</span>YA
-                </h1>
-                <p className={styles.liyaSubtitle}>Multi-Agent AI Avatar • SLT-MOBITEL</p>
-              </div>
-
-
-              {/* Status indicator */}
-              <div className={styles.avatarStatus}>
-                <div className={`${styles.statusIndicator} ${
-                  isSpeaking ? styles.statusSpeaking : 
-                  isListening ? styles.statusListening : 
-                  isThinking ? styles.statusThinking : styles.statusIdle
-                }`}>
-                  <span className={styles.statusDotLarge}></span>
-                  <span>
-                    {isSpeaking ? "Speaking..." : isListening ? "Listening..." : isThinking ? "Thinking..." : "Ready"}
-                  </span>
-                </div>
-              </div>
-
-              {/* Floating transcript panel */}
-              {showTranscript && messages.length > 0 && (
-                <motion.div 
-                  className={styles.transcriptPanel}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <div className={styles.transcriptHeader}>
-                    <span className={styles.transcriptTitle}>
-                      {lastAssistantMsg?.agent_emoji} {lastAssistantMsg?.agent_label || "LIYA"}
-                    </span>
-                    <button className={styles.transcriptToggle} onClick={() => setShowTranscript(false)}>
-                      <ChevronDown size={14} />
-                    </button>
-                  </div>
-                  <div className={styles.transcriptMessages}>
-                    {messages.slice(-4).map((msg) => (
-                      <div key={msg.id} className={`${styles.transcriptMsg} ${msg.role === 'user' ? styles.transcriptMsgUser : styles.transcriptMsgBot}`}>
-                        {msg.role === 'assistant' && msg.agent_emoji && (
-                          <span className={styles.transcriptAgent}>{msg.agent_emoji}</span>
-                        )}
-                        <p>{msg.content.length > 200 ? msg.content.slice(0, 200) + '...' : msg.content}</p>
-                      </div>
-                    ))}
-                    {isLoading && (
-                      <div className={`${styles.transcriptMsg} ${styles.transcriptMsgBot}`}>
-                        <div className={styles.typingIndicator}>
-                          <div className={styles.typingDot}></div>
-                          <div className={styles.typingDot}></div>
-                          <div className={styles.typingDot}></div>
-                        </div>
-                      </div>
+              <div className={styles.transcriptMessages}>
+                {messages.slice(-4).map((msg) => (
+                  <div key={msg.id} className={`${styles.transcriptMsg} ${msg.role === 'user' ? styles.transcriptMsgUser : styles.transcriptMsgBot}`}>
+                    {msg.role === 'assistant' && msg.agent_emoji && (
+                      <span className={styles.transcriptAgent}>{msg.agent_emoji}</span>
                     )}
-                    <div ref={messagesEndRef} />
+                    <p>{msg.content.length > 200 ? msg.content.slice(0, 200) + '...' : msg.content}</p>
                   </div>
-                </motion.div>
-              )}
-
-              {/* Bottom control bar */}
-              <div className={styles.bottomBar}>
-                {/* Agent chips row */}
-                <div className={styles.agentChips}>
-                  <span className={`${styles.agentChip} ${styles.agentChipMain}`} style={{ "--chip-color": "#2684ff" }}>🧠 LIYA</span>
-                  <span className={styles.agentChip} style={{ "--chip-color": "#ffab00" }}>⚡ Spark</span>
-                  <span className={styles.agentChip} style={{ "--chip-color": "#00c853" }}>💓 Pulse</span>
-                  <span className={styles.agentChip} style={{ "--chip-color": "#00bcd4" }}>👁️ Insight</span>
-                  <span className={styles.agentChip} style={{ "--chip-color": "#ff3d57" }}>🛡️ Guardian</span>
-                  <span className={styles.agentChip} style={{ "--chip-color": "#9c27b0" }}>🔗 Vault</span>
-                  <span className={styles.agentChip} style={{ "--chip-color": "#ff6d00" }}>📍 Dispatcher</span>
-                  <span className={styles.agentChip} style={{ "--chip-color": "#4caf50" }}>🔍 Analyzer</span>
-                  <span className={styles.agentChip} style={{ "--chip-color": "#03a9f4" }}>🔌 Provisioner</span>
-                </div>
-
-                {/* Input bar */}
-                <div className={styles.inputBar}>
-                  <button 
-                    className={`${styles.voiceBtn} ${isListening ? styles.voiceBtnActive : ""}`}
-                    onClick={startListening}
-                    disabled={isListening}
-                  >
-                    {isListening ? <MicOff size={20} /> : <Mic size={20} />}
-                  </button>
-
-                  <div className={styles.inputWrapper}>
-                    <input
-                      type="text"
-                      className={styles.textInput}
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyDown={handleKeyPress}
-                      placeholder="Type or speak to LIYA..."
-                      disabled={isLoading}
-                    />
-                    <button
-                      className={styles.sendBtn}
-                      onClick={() => sendMessage()}
-                      disabled={!input.trim() || isLoading}
-                    >
-                      <Send size={16} />
-                    </button>
+                ))}
+                {isLoading && (
+                  <div className={`${styles.transcriptMsg} ${styles.transcriptMsgBot}`}>
+                    <div className={styles.typingIndicator}>
+                      <div className={styles.typingDot}></div>
+                      <div className={styles.typingDot}></div>
+                      <div className={styles.typingDot}></div>
+                    </div>
                   </div>
-
-                  {messages.length > 0 && (
-                    <button className={styles.resetBtn} onClick={newChat} title="New Chat">
-                      <RotateCcw size={16} />
-                    </button>
-                  )}
-
-                  {messages.length > 0 && !showTranscript && (
-                    <button className={styles.transcriptOpenBtn} onClick={() => setShowTranscript(true)} title="Show transcript">
-                      <ChevronUp size={16} />
-                    </button>
-                  )}
-
-                  <button 
-                    className={styles.testSpeakBtn}
-                    style={{ marginTop: 0, padding: "8px 12px", borderRadius: "8px", fontSize: "12px", zIndex: 10 }}
-                    onClick={() => {
-                      setIsSpeaking(true);
-                      // Use browser's built-in TTS for a quick offline test
-                      const utterance = new SpeechSynthesisUtterance("Hello there! I am Liya, your AI assistant. I am now testing my new mouth animations created in Blender.");
-                      utterance.lang = "en-US";
-                      utterance.onend = () => setIsSpeaking(false);
-                      window.speechSynthesis.speak(utterance);
-                    }}
-                    title="Test Lip Sync (Offline)"
-                  >
-                    Test Lips
-                  </button>
-                </div>
+                )}
+                <div ref={messagesEndRef} />
               </div>
-            </motion.div>
-          ) : (
-            <motion.div 
-              key="vr"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className={styles.vrSection}
-            >
-              <VRTeleshop onProductSelect={(label) => console.log('Selected:', label)} />
             </motion.div>
           )}
-        </AnimatePresence>
+
+          {/* Bottom control bar */}
+          <div className={styles.bottomBar}>
+            {/* Agent chips row */}
+            <div className={styles.agentChips}>
+              <span className={`${styles.agentChip} ${styles.agentChipMain}`} style={{ "--chip-color": "#2684ff" }}>🧠 LIYA</span>
+              <span className={styles.agentChip} style={{ "--chip-color": "#ffab00" }}>⚡ Spark</span>
+              <span className={styles.agentChip} style={{ "--chip-color": "#00c853" }}>💓 Pulse</span>
+              <span className={styles.agentChip} style={{ "--chip-color": "#00bcd4" }}>👁️ Insight</span>
+              <span className={styles.agentChip} style={{ "--chip-color": "#ff3d57" }}>🛡️ Guardian</span>
+              <span className={styles.agentChip} style={{ "--chip-color": "#9c27b0" }}>🔗 Vault</span>
+              <span className={styles.agentChip} style={{ "--chip-color": "#ff6d00" }}>📍 Dispatcher</span>
+              <span className={styles.agentChip} style={{ "--chip-color": "#4caf50" }}>🔍 Analyzer</span>
+              <span className={styles.agentChip} style={{ "--chip-color": "#03a9f4" }}>🔌 Provisioner</span>
+            </div>
+
+            {/* Input bar */}
+            <div className={styles.inputBar}>
+              <button 
+                className={`${styles.voiceBtn} ${isListening ? styles.voiceBtnActive : ""}`}
+                onClick={startListening}
+                disabled={isListening}
+              >
+                {isListening ? <MicOff size={20} /> : <Mic size={20} />}
+              </button>
+
+              <div className={styles.inputWrapper}>
+                <input
+                  type="text"
+                  className={styles.textInput}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  placeholder="Type or speak to LIYA..."
+                  disabled={isLoading}
+                />
+                <button
+                  className={styles.sendBtn}
+                  onClick={() => sendMessage()}
+                  disabled={!input.trim() || isLoading}
+                >
+                  <Send size={16} />
+                </button>
+              </div>
+
+              {messages.length > 0 && (
+                <button className={styles.resetBtn} onClick={newChat} title="New Chat">
+                  <RotateCcw size={16} />
+                </button>
+              )}
+
+              {messages.length > 0 && !showTranscript && (
+                <button className={styles.transcriptOpenBtn} onClick={() => setShowTranscript(true)} title="Show transcript">
+                  <ChevronUp size={16} />
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* VR Section - Always Mounted for stability */}
+        <div 
+          className={styles.vrSection}
+          style={{ 
+            opacity: view === "vr" ? 1 : 0,
+            pointerEvents: view === "vr" ? "auto" : "none",
+            position: "absolute",
+            width: "100%",
+            height: "100%",
+            transition: "opacity 0.5s ease-in-out",
+            zIndex: view === "vr" ? 2 : 1,
+            backgroundColor: "#0a0e1a"
+          }}
+        >
+          <VRTeleshop 
+            onProductSelect={(label) => console.log('Selected:', label)} 
+            onBack={() => setView('avatar')}
+          />
+        </div>
       </div>
     </div>
   );

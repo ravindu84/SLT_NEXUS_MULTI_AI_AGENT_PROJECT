@@ -1,0 +1,31 @@
+# Sensitive files
+.env
+*.json
+!package.json
+!composer.json
+!tsconfig.json
+backend/google-credentials.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+ENV/
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.next/
+out/
+build/
+
+# IDEs
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db

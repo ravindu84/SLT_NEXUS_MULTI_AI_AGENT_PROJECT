@@ -125,7 +125,7 @@ const ProductRack = ({ position, label, color, type, onSelect }) => {
 
 // --- Main VR Shop Component ---
 
-const VRTeleshop = ({ onProductSelect, isKiosk = false }) => {
+const VRTeleshop = ({ onProductSelect, onBack, isKiosk = false }) => {
   const [cameraPos, setCameraPos] = useState([0, 2, 8]);
   const [targetPos, setTargetPos] = useState([0, 0, 0]);
   const bgTexture = useLoader(THREE.TextureLoader, '/assets/vr-bg.png');
@@ -248,7 +248,7 @@ const VRTeleshop = ({ onProductSelect, isKiosk = false }) => {
 
       {/* Back Button */}
       <button 
-        onClick={() => window.location.reload()} // Simple way to go back for now
+        onClick={() => onBack ? onBack() : window.location.reload()} 
         className="absolute bottom-10 left-10 z-20 px-6 py-2 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 rounded-full text-white text-xs font-bold tracking-widest uppercase transition-all"
       >
         ← Return to AI Avatar

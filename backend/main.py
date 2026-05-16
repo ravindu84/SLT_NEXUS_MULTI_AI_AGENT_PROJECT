@@ -1,10 +1,24 @@
 import os
 import uuid
 from typing import List, Optional
-from fastapi import FastAPI, HTTPException
+import io
+from fastapi import FastAPI, HTTPException, Response
+from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
+from gtts import gTTS
+try:
+    from google.cloud import texttospeech
+    HAS_GOOGLE_CLOUD_TTS = True
+    # Set credentials path
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(os.path.dirname(__file__), "google-credentials.json")
+    client = texttospeech.TextToSpeechClient()
+except ImportError:
+    HAS_GOOGLE_CLOUD_TTS = False
+except Exception as e:
+    print(f"Google Cloud TTS Init Error: {e}")
+    HAS_GOOGLE_CLOUD_TTS = False
 
 # Import our LangGraph brain
 from backend.graph import liya_app
@@ -35,6 +49,10 @@ class ChatRequest(BaseModel):
     message: str
     session_id: Optional[str] = None
 
+class TTSRequest(BaseModel):
+    text: str
+    lang: Optional[str] = "si"
+
 class ChatResponse(BaseModel):
     response: str
     session_id: str
@@ -49,36 +67,23 @@ async def health_check():
 
 @app.post("/api/chat", response_model=ChatResponse)
 async def chat_endpoint(request: ChatRequest):
-    """
-    Primary chat endpoint for the frontend.
-    Processes user messages through LIYA's LangGraph brain.
-    """
     if not request.message:
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
-    # Handle session management
     session_id = request.session_id or str(uuid.uuid4())
     if session_id not in sessions:
         sessions[session_id] = []
 
-    # Get history and add new message
     history = sessions[session_id]
     history.append(HumanMessage(content=request.message))
 
     try:
-        # Run the LangGraph agent
         result = liya_app.invoke({"messages": history})
-        
-        # Get the latest AI response
         ai_message = result["messages"][-1]
         ai_response = ai_message.content
-        
-        # Metadata for frontend UI
         agent_used = "general_agent"
         agent_emoji = "👋"
         agent_label = "LIYA"
-        
-        # Update session history
         sessions[session_id] = result["messages"]
 
         return ChatResponse(
@@ -94,6 +99,61 @@ async def chat_endpoint(request: ChatRequest):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/tts")
+async def text_to_speech(request: TTSRequest):
+    if not request.text:
+        raise HTTPException(status_code=400, detail="Text cannot be empty")
+    
+    target_lang = request.lang if request.lang in ['en', 'si', 'ta'] else 'si'
+    print(f"TTS Request - Lang: {target_lang}, Text: {request.text[:50]}...")
+
+    try:
+        if HAS_GOOGLE_CLOUD_TTS:
+            print(f"Using Premium Google Cloud TTS for {target_lang}")
+            voice_map = {
+                "si": ("si-LK", "si-LK-Standard-A"),
+                "ta": ("ta-IN", "ta-IN-Standard-A"),
+                "en": ("en-US", "en-US-Neural2-F")
+            }
+            lang_code, voice_name = voice_map.get(target_lang, ("si-LK", "si-LK-Standard-A"))
+            
+            synthesis_input = texttospeech.SynthesisInput(text=request.text)
+            voice = texttospeech.VoiceSelectionParams(
+                language_code=lang_code,
+                name=voice_name
+            )
+            audio_config = texttospeech.AudioConfig(
+                audio_encoding=texttospeech.AudioEncoding.MP3,
+                pitch=0.0,
+                speaking_rate=1.0
+            )
+            
+            response = client.synthesize_speech(
+                input=synthesis_input, voice=voice, audio_config=audio_config
+            )
+            
+            return StreamingResponse(
+                io.BytesIO(response.audio_content),
+                media_type="audio/mpeg"
+            )
+        else:
+            tts = gTTS(text=request.text, lang=target_lang)
+            mp3_fp = io.BytesIO()
+            tts.write_to_fp(mp3_fp)
+            mp3_fp.seek(0)
+            return StreamingResponse(mp3_fp, media_type="audio/mpeg")
+            
+    except Exception as e:
+        print(f"TTS Generation Error: {e}")
+        try:
+            tts = gTTS(text=request.text, lang=target_lang)
+            mp3_fp = io.BytesIO()
+            tts.write_to_fp(mp3_fp)
+            mp3_fp.seek(0)
+            return StreamingResponse(mp3_fp, media_type="audio/mpeg")
+        except Exception as inner_e:
+            raise HTTPException(status_code=500, detail=str(inner_e))
 
 if __name__ == "__main__":
     import uvicorn
