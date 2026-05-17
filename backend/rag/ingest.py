@@ -6,10 +6,13 @@ Loads all JSON datasets, chunks them, creates embeddings, and stores in ChromaDB
 import json
 import os
 from pathlib import Path
+from dotenv import load_dotenv
+
+load_dotenv()
 
 import chromadb
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_openai import OpenAIEmbeddings
 
 
 DATA_DIR = Path(__file__).parent.parent / "data"
@@ -213,13 +216,13 @@ def chunk_documents(documents: list[dict], chunk_size: int = 500, chunk_overlap:
 
 def ingest_to_chromadb(texts: list, metadatas: list, ids: list):
     """Store embedded documents in ChromaDB."""
-    print(f"📦 Initializing ChromaDB at: {CHROMA_DB_PATH}")
+    print(f"INFO: Initializing ChromaDB at: {CHROMA_DB_PATH}")
     client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
 
     # Delete existing collection if exists
     try:
         client.delete_collection("slt_knowledge")
-        print("🗑️  Deleted existing collection")
+        print("INFO: Deleted existing collection")
     except Exception:
         pass
 
@@ -228,10 +231,10 @@ def ingest_to_chromadb(texts: list, metadatas: list, ids: list):
         metadata={"hnsw:space": "cosine"}
     )
 
-    print(f"🧠 Loading embedding model...")
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    print(f"INFO: Loading embedding model...")
+    embeddings = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
 
-    print(f"📊 Generating embeddings for {len(texts)} chunks...")
+    print(f"INFO: Generating embeddings for {len(texts)} chunks...")
     embedded_texts = embeddings.embed_documents(texts)
 
     # Add in batches
@@ -244,51 +247,51 @@ def ingest_to_chromadb(texts: list, metadatas: list, ids: list):
             metadatas=metadatas[i:end],
             ids=ids[i:end],
         )
-        print(f"  ✅ Added batch {i//batch_size + 1}/{(len(texts)-1)//batch_size + 1}")
+        print(f"  SUCCESS: Added batch {i//batch_size + 1}/{(len(texts)-1)//batch_size + 1}")
 
-    print(f"\n🎉 Successfully ingested {collection.count()} documents into ChromaDB!")
+    print(f"\nSUCCESS: Successfully ingested {collection.count()} documents into ChromaDB!")
     return collection
 
 
 def run_ingestion():
     """Main ingestion pipeline."""
     print("=" * 60)
-    print("🚀 SLT Smart Assistant - Data Ingestion Pipeline")
+    print("START: SLT Smart Assistant - Data Ingestion Pipeline")
     print("=" * 60)
 
     # Prepare all documents
-    print("\n📁 Loading datasets...")
+    print("\nINFO: Loading datasets...")
     all_documents = []
 
-    print("  📦 Loading packages...")
+    print("  INFO: Loading packages...")
     all_documents.extend(prepare_package_documents())
 
-    print("  🔧 Loading troubleshooting guides...")
+    print("  INFO: Loading troubleshooting guides...")
     all_documents.extend(prepare_troubleshooting_documents())
 
-    print("  🛡️  Loading scam patterns...")
+    print("  INFO: Loading scam patterns...")
     all_documents.extend(prepare_scam_documents())
 
-    print("  ❓ Loading FAQs...")
+    print("  INFO: Loading FAQs...")
     all_documents.extend(prepare_faq_documents())
 
-    print("  📊 Loading usage profiles...")
+    print("  INFO: Loading usage profiles...")
     all_documents.extend(prepare_usage_documents())
 
-    print(f"\n📄 Total documents: {len(all_documents)}")
+    print(f"\nINFO: Total documents: {len(all_documents)}")
 
     # Chunk documents
-    print("\n✂️  Chunking documents...")
+    print("\nINFO: Chunking documents...")
     texts, metadatas, ids = chunk_documents(all_documents)
-    print(f"📊 Total chunks: {len(texts)}")
+    print(f"INFO: Total chunks: {len(texts)}")
 
     # Ingest into ChromaDB
-    print("\n💾 Ingesting into ChromaDB...")
+    print("\nINFO: Ingesting into ChromaDB...")
     collection = ingest_to_chromadb(texts, metadatas, ids)
 
     # Test query
-    print("\n🔍 Testing retrieval...")
-    embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+    print("\nINFO: Testing retrieval...")
+    embeddings = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
     test_query = "best package for gaming"
     query_embedding = embeddings.embed_query(test_query)
     results = collection.query(
@@ -299,7 +302,7 @@ def run_ingestion():
     for i, doc in enumerate(results["documents"][0]):
         print(f"  Result {i+1}: {doc[:100]}...")
 
-    print("\n✅ Ingestion complete! Ready for AI Agent.")
+    print("\nSUCCESS: Ingestion complete! Ready for AI Agent.")
 
 
 if __name__ == "__main__":

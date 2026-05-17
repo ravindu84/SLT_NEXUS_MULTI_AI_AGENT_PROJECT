@@ -21,7 +21,7 @@ const TechBackground = dynamic(() => import("./components/TechBackground"), {
   ssr: false,
 });
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
 export default function Home() {
   const [view, setView] = useState("avatar");
@@ -69,7 +69,9 @@ export default function Home() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ 
-            text: text.slice(0, 500),
+            text: text.length > 500 
+              ? text.slice(0, text.lastIndexOf(' ', 500) || 500) 
+              : text,
             lang: language 
           }),
         });
@@ -128,55 +130,70 @@ export default function Home() {
   );
 
   // Send message
-  const sendMessage = async (text) => {
-    const messageText = text || input.trim();
-    if (!messageText || isLoading) return;
-    setInput("");
-    const userMsg = { id: Date.now(), role: "user", content: messageText, timestamp: new Date() };
-    setMessages((prev) => [...prev, userMsg]);
-    setIsLoading(true);
-    setIsThinking(true);
-    setShowTranscript(true);
-    setTimeout(scrollToBottom, 50);
-
-    try {
-      const response = await fetch(`${API_URL}/api/chat`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: messageText, session_id: sessionId }),
-      });
-      if (!response.ok) throw new Error("API request failed");
-      const data = await response.json();
-      setSessionId(data.session_id);
-      const aiMsg = {
-        id: Date.now() + 1,
-        role: "assistant",
-        content: data.response,
-        agent_used: data.agent_used,
-        agent_emoji: data.agent_emoji,
-        agent_label: data.agent_label,
-        intent: data.intent,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiMsg]);
-      speak(data.response);
-    } catch (error) {
-      const errorMsg = {
-        id: Date.now() + 1,
-        role: "assistant",
-        content: "⚠️ Could not connect to the server. Make sure the backend is running.",
-        agent_emoji: "⚠️",
-        agent_label: "System",
-        timestamp: new Date(),
-        isError: true,
-      };
-      setMessages((prev) => [...prev, errorMsg]);
-    } finally {
-      setIsLoading(false);
-      setIsThinking(false);
-      setTimeout(scrollToBottom, 100);
-    }
-  };
+    const sendMessage = async (text, retryCount = 0) => {
+      const messageText = text || input.trim();
+      if (!messageText || isLoading) return;
+      
+      if (retryCount === 0) {
+        setInput("");
+        const userMsg = { id: Date.now(), role: "user", content: messageText, timestamp: new Date() };
+        setMessages((prev) => [...prev, userMsg]);
+        setIsLoading(true);
+        setIsThinking(true);
+        setShowTranscript(true);
+        setTimeout(scrollToBottom, 50);
+      }
+  
+      try {
+        const response = await fetch(`${API_URL}/api/chat`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message: messageText, session_id: sessionId, lang: language }),
+        });
+        
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
+        
+        const data = await response.json();
+        setSessionId(data.session_id);
+        const aiMsg = {
+          id: Date.now() + 1,
+          role: "assistant",
+          content: data.response,
+          agent_used: data.agent_used,
+          agent_emoji: data.agent_emoji,
+          agent_label: data.agent_label,
+          intent: data.intent,
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, aiMsg]);
+        speak(data.response);
+      } catch (error) {
+        console.error(`Attempt ${retryCount + 1} failed:`, error);
+        
+        if (retryCount < 2) {
+          console.log("Retrying...");
+          setTimeout(() => sendMessage(messageText, retryCount + 1), 1000);
+          return;
+        }
+  
+        const errorMsg = {
+          id: Date.now() + 1,
+          role: "assistant",
+          content: `⚠️ Connection Error: ${error.message}. I tried 3 times but couldn't reach the server. Please check your internet or restart the backend.`,
+          agent_emoji: "⚠️",
+          agent_label: "System",
+          timestamp: new Date(),
+          isError: true,
+        };
+        setMessages((prev) => [...prev, errorMsg]);
+      } finally {
+        if (retryCount === 0 || retryCount >= 2) {
+          setIsLoading(false);
+          setIsThinking(false);
+          setTimeout(scrollToBottom, 100);
+        }
+      }
+    };
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -379,15 +396,18 @@ export default function Home() {
           <div className={styles.bottomBar}>
             {/* Agent chips row */}
             <div className={styles.agentChips}>
-              <span className={`${styles.agentChip} ${styles.agentChipMain}`} style={{ "--chip-color": "#2684ff" }}>🧠 LIYA</span>
-              <span className={styles.agentChip} style={{ "--chip-color": "#ffab00" }}>⚡ Spark</span>
-              <span className={styles.agentChip} style={{ "--chip-color": "#00c853" }}>💓 Pulse</span>
-              <span className={styles.agentChip} style={{ "--chip-color": "#00bcd4" }}>👁️ Insight</span>
-              <span className={styles.agentChip} style={{ "--chip-color": "#ff3d57" }}>🛡️ Guardian</span>
-              <span className={styles.agentChip} style={{ "--chip-color": "#9c27b0" }}>🔗 Vault</span>
-              <span className={styles.agentChip} style={{ "--chip-color": "#ff6d00" }}>📍 Dispatcher</span>
-              <span className={styles.agentChip} style={{ "--chip-color": "#4caf50" }}>🔍 Analyzer</span>
-              <span className={styles.agentChip} style={{ "--chip-color": "#03a9f4" }}>🔌 Provisioner</span>
+              <span className={`${styles.agentChip} ${(!lastAssistantMsg || lastAssistantMsg.agent_used === 'liya_agent') ? styles.agentChipActive : ''}`} style={{ "--chip-color": "#2684ff" }}>🧠 LIYA</span>
+              <span className={`${styles.agentChip} ${(lastAssistantMsg?.agent_used === 'signa_agent') ? styles.agentChipActive : ''}`} style={{ "--chip-color": "#e91e63" }}>🤟 Signa</span>
+              <span className={`${styles.agentChip} ${(lastAssistantMsg?.agent_used === 'oracle_agent') ? styles.agentChipActive : ''}`} style={{ "--chip-color": "#9c27b0" }}>🔮 Oracle</span>
+              <span className={`${styles.agentChip} ${(lastAssistantMsg?.agent_used === 'pathfinder_agent') ? styles.agentChipActive : ''}`} style={{ "--chip-color": "#ff6d00" }}>📍 Pathfinder</span>
+              <span className={`${styles.agentChip} ${(lastAssistantMsg?.agent_used === 'pulse_agent') ? styles.agentChipActive : ''}`} style={{ "--chip-color": "#00c853" }}>💓 Pulse</span>
+              <span className={`${styles.agentChip} ${(lastAssistantMsg?.agent_used === 'insight_agent') ? styles.agentChipActive : ''}`} style={{ "--chip-color": "#00bcd4" }}>👁️ Insight</span>
+              <span className={`${styles.agentChip} ${(lastAssistantMsg?.agent_used === 'spark_agent') ? styles.agentChipActive : ''}`} style={{ "--chip-color": "#ffab00" }}>⚡ Spark</span>
+              <span className={`${styles.agentChip} ${(lastAssistantMsg?.agent_used === 'guardian_agent') ? styles.agentChipActive : ''}`} style={{ "--chip-color": "#ff3d57" }}>🛡️ Guardian</span>
+              <span className={`${styles.agentChip} ${(lastAssistantMsg?.agent_used === 'vault_agent') ? styles.agentChipActive : ''}`} style={{ "--chip-color": "#607d8b" }}>🔗 Vault</span>
+              <span className={`${styles.agentChip} ${(lastAssistantMsg?.agent_used === 'provisioner_agent') ? styles.agentChipActive : ''}`} style={{ "--chip-color": "#03a9f4" }}>🔌 Provisioner</span>
+              <span className={`${styles.agentChip} ${(lastAssistantMsg?.agent_used === 'analyzer_agent') ? styles.agentChipActive : ''}`} style={{ "--chip-color": "#4caf50" }}>🔍 Analyzer</span>
+              <span className={`${styles.agentChip} ${(lastAssistantMsg?.agent_used === 'messenger_agent') ? styles.agentChipActive : ''}`} style={{ "--chip-color": "#ff5722" }}>✉️ Messenger</span>
             </div>
 
             {/* Input bar */}

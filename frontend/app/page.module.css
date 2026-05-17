@@ -679,3 +679,14 @@
   border-color: rgba(255, 255, 255, 0.3);
   color: white;
 }
+
+/* Dynamic Active Agent Chip Glow */
+.agentChipActive {
+  opacity: 1 !important;
+  background: color-mix(in srgb, var(--chip-color) 20%, rgba(10, 14, 26, 0.8)) !important;
+  box-shadow: 0 0 16px color-mix(in srgb, var(--chip-color) 40%, transparent) !important;
+  border-color: var(--chip-color) !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  transform: translateY(-2px) scale(1.05) !important;
+}

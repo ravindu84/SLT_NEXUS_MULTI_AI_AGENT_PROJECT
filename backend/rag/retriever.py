@@ -7,11 +7,10 @@ import os
 from pathlib import Path
 
 import chromadb
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_openai import OpenAIEmbeddings
 
 
 CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", str(Path(__file__).parent.parent / "chroma_db"))
-EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
 
 
 class SLTRetriever:
@@ -19,8 +18,8 @@ class SLTRetriever:
 
     def __init__(self):
         self.client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
-        self.collection = self.client.get_collection("slt_knowledge")
-        self.embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
+        self.collection = self.client.get_or_create_collection("slt_knowledge")
+        self.embeddings = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
 
     def query(self, query_text: str, n_results: int = 5, source_filter: str = None) -> list[dict]:
         """

@@ -177,10 +177,19 @@ export default function ChatPanel({
   };
 
   const AGENTS = {
-    sales_agent: { color: "#2684ff", bg: "rgba(38,132,255,0.12)" },
-    tech_support_agent: { color: "#00c853", bg: "rgba(0,200,83,0.12)" },
-    scam_detector_agent: { color: "#ff3d57", bg: "rgba(255,61,87,0.12)" },
-    general_agent: { color: "#ffab00", bg: "rgba(255,171,0,0.12)" },
+    liya_agent: { color: "#2684ff", bg: "rgba(38,132,255,0.12)" },
+    signa_agent: { color: "#e91e63", bg: "rgba(233,30,99,0.12)" },
+    oracle_agent: { color: "#9c27b0", bg: "rgba(156,39,176,0.12)" },
+    pathfinder_agent: { color: "#ff6d00", bg: "rgba(255,109,0,0.12)" },
+    pulse_agent: { color: "#00c853", bg: "rgba(0,200,83,0.12)" },
+    insight_agent: { color: "#00bcd4", bg: "rgba(0,188,212,0.12)" },
+    spark_agent: { color: "#ffab00", bg: "rgba(255,171,0,0.12)" },
+    guardian_agent: { color: "#ff3d57", bg: "rgba(255,61,87,0.12)" },
+    vault_agent: { color: "#607d8b", bg: "rgba(96,125,139,0.12)" },
+    provisioner_agent: { color: "#03a9f4", bg: "rgba(3,169,244,0.12)" },
+    analyzer_agent: { color: "#4caf50", bg: "rgba(76,175,80,0.12)" },
+    messenger_agent: { color: "#ff5722", bg: "rgba(255,87,34,0.12)" },
+    general_agent: { color: "#2684ff", bg: "rgba(38,132,255,0.12)" },
   };
 
   const QUICK_PROMPTS = [
