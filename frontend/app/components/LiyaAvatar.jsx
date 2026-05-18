@@ -110,16 +110,81 @@ export default function LiyaAvatar({
     });
 
     // 2. Fallback to Bone if no blendshapes exist for mouth
+    let appliedBone = false;
     if (!appliedBlendshape) {
       scene.traverse((child) => {
         if (child.isBone && child.name.toLowerCase().includes("jaw")) {
           // Make jaw open much wider (0.4 radians ~ 22 degrees)
           child.rotation.x = THREE.MathUtils.lerp(child.rotation.x, level * 0.4, 0.2);
+          appliedBone = true;
         }
       });
     }
 
-    // 3. Dynamic Rotation / Swaying based on dialogue
+    // 3. SKIN/LIP VIBRATION FALLBACK — Works even without morph targets or jaw bone!
+    // This creates visible lip/chin movement by pulsing the Head bone's scale
+    // and applying micro-displacement to face mesh vertices.
+    if (!appliedBlendshape && !appliedBone) {
+      scene.traverse((child) => {
+        // 3a. Head/Neck bone scale pulse — makes chin area visibly "talk"
+        if (child.isBone) {
+          const boneName = child.name.toLowerCase();
+          if (boneName.includes("head") || boneName === "head") {
+            // Subtle Y-scale pulse synchronized with speech (1.0 → 1.012)
+            const targetScaleY = isSpeaking ? (1.0 + level * 0.012) : 1.0;
+            child.scale.y = THREE.MathUtils.lerp(child.scale.y, targetScaleY, 0.25);
+            // Micro chin rotation for natural talking feel
+            const chinPulse = isSpeaking ? (Math.sin(time * 12) * level * 0.03) : 0;
+            child.rotation.x = THREE.MathUtils.lerp(child.rotation.x, chinPulse, 0.2);
+          }
+          // Neck micro-movement adds realism
+          if (boneName.includes("neck")) {
+            const neckPulse = isSpeaking ? (Math.sin(time * 8) * level * 0.015) : 0;
+            child.rotation.x = THREE.MathUtils.lerp(child.rotation.x, neckPulse, 0.15);
+          }
+        }
+
+        // 3b. Direct face mesh vertex micro-displacement — lips/skin physically vibrate
+        if (child.isMesh && child.geometry) {
+          const meshName = child.name.toLowerCase();
+          // Target face/head/body meshes (most avatars have these)
+          if (meshName.includes("face") || meshName.includes("head") || 
+              meshName.includes("body") || meshName.includes("skin") ||
+              meshName.includes("mesh") || meshName === "") {
+            
+            const geo = child.geometry;
+            const posAttr = geo.attributes.position;
+            
+            // Store original positions once for safe reset
+            if (!geo.userData.originalPositions) {
+              geo.userData.originalPositions = new Float32Array(posAttr.array.length);
+              geo.userData.originalPositions.set(posAttr.array);
+            }
+            
+            if (isSpeaking && level > 0.05) {
+              const original = geo.userData.originalPositions;
+              // Only displace vertices in the lower-face region (chin/lip area)
+              // We estimate this as vertices where Y is between -0.02 and 0.15 in local space
+              for (let i = 0; i < posAttr.count; i++) {
+                const oy = original[i * 3 + 1]; // original Y
+                // Target lower-face vertices only (approximate lip/chin zone)
+                if (oy > -0.05 && oy < 0.12) {
+                  const wave = Math.sin(time * 14 + i * 0.3) * level * 0.0008;
+                  posAttr.array[i * 3 + 1] = original[i * 3 + 1] + wave;
+                }
+              }
+              posAttr.needsUpdate = true;
+            } else if (geo.userData.originalPositions) {
+              // Reset to original when not speaking
+              posAttr.array.set(geo.userData.originalPositions);
+              posAttr.needsUpdate = true;
+            }
+          }
+        }
+      });
+    }
+
+    // 4. Dynamic Rotation / Swaying based on dialogue
     if (wrapperRef.current) {
       // When speaking, she makes slightly larger head/body movements. When idle, very slow breathing sway.
       const targetRotY = isSpeaking ? (Math.sin(time * 1.2) * 0.08) : (Math.sin(time * 0.3) * 0.03);

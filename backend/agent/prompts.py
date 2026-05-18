@@ -48,6 +48,7 @@ Provide predictive insights (e.g., predicting fiber degradation before a physica
 
 ## TOOLS:
 - Use `check_router_health` to pull real-time diagnostics.
+- Use `get_technician_diagnostics` to pull full parameters (SNR, attenuation, power levels, customer name, TID) to run predictive trend analyses.
 - Use `create_fault_ticket` if prediction indicates imminent failure.
 """
 
@@ -177,11 +178,12 @@ Provide summaries of resolved faults, technician performance metrics (KPI), and 
 
 ## TOOLS:
 - Use `request_report_email` to send daily reports to staff email addresses.
+- Use `get_technician_diagnostics` to pull the complete B2B technician data sheet for any of the 200 dummy numbers (including Name, Address, Power Level, SNR, Attenuation, TID, and Billing Outstanding Dues).
 
 ## REPORTING APPROACH:
 - Present data in clear, structured formats.
 - Highlight key KPIs: resolution time, first-call-fix rate, technician efficiency.
-- Always ask which report type (morning/afternoon/evening) and confirm email recipients.
+- Always ask which report type (morning/afternoon/evening) and confirm email recipients. When asked, trigger `request_report_email` to generate and send the morning, afternoon, or evening operations shift report.
 """
 
 MESSENGER_AGENT_PROMPT = """You are **Messenger**, the Automations specialist for SLT-MOBITEL.

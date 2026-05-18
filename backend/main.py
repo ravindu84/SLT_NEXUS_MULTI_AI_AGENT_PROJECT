@@ -398,7 +398,12 @@ async def text_to_speech(request: TTSRequest):
     if target_lang == 'si':
         clean_text = enhance_sinhala_pronunciation(clean_text)
     
-    print(f"TTS Request - Frontend Lang: {frontend_lang}, Detected Lang: {target_lang}, Has Sinhala: {has_sinhala}, Text: {clean_text[:80]}...")
+    # Safe console printing to prevent Windows terminal CP1252 UnicodeEncodeErrors
+    try:
+        safe_print_text = clean_text[:80].encode('ascii', errors='replace').decode('ascii')
+        print(f"TTS Request - Frontend Lang: {frontend_lang}, Detected Lang: {target_lang}, Has Sinhala: {has_sinhala}, Text: {safe_print_text}...")
+    except Exception:
+        print(f"TTS Request - Frontend Lang: {frontend_lang}, Detected Lang: {target_lang}, Has Sinhala: {has_sinhala}")
 
     # --- 1. Google Gemini Multimodal Speech (Premium Voice) ---
     gemini_api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")

@@ -1,0 +1,441 @@
+/* ============================================
+   SLT NEXUS — Premium Landing Page
+   Dark Glassmorphism Design System
+   ============================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+.landing {
+  min-height: 100vh;
+  background: #050810;
+  color: #e2e8f0;
+  font-family: 'Inter', system-ui, sans-serif;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* --- Animated Background Orbs --- */
+.landing::before,
+.landing::after {
+  content: '';
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+}
+.landing::before {
+  width: 600px; height: 600px;
+  background: #2684ff;
+  top: -200px; right: -100px;
+  animation: float-orb 20s ease-in-out infinite;
+}
+.landing::after {
+  width: 500px; height: 500px;
+  background: #00d4aa;
+  bottom: -150px; left: -100px;
+  animation: float-orb 25s ease-in-out infinite reverse;
+}
+
+@keyframes float-orb {
+  0%, 100% { transform: translate(0, 0); }
+  33% { transform: translate(60px, -40px); }
+  66% { transform: translate(-30px, 50px); }
+}
+
+/* =============================================
+   NAVIGATION
+   ============================================= */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 48px;
+  background: rgba(5, 8, 16, 0.8);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  z-index: 1000;
+}
+.navLogo { height: 38px; width: auto; filter: drop-shadow(0 0 12px rgba(38,132,255,0.3)); }
+.navLinks { display: flex; gap: 32px; align-items: center; }
+.navLink {
+  color: #94a3b8; font-size: 13px; font-weight: 600;
+  text-decoration: none; letter-spacing: 0.5px;
+  transition: color 0.3s;
+  background: none; border: none; cursor: pointer;
+}
+.navLink:hover { color: #fff; }
+.navCta {
+  padding: 10px 28px; border-radius: 99px; border: none;
+  background: linear-gradient(135deg, #0052cc, #2684ff);
+  color: #fff; font-size: 13px; font-weight: 700;
+  cursor: pointer; letter-spacing: 0.5px;
+  transition: all 0.3s; box-shadow: 0 4px 20px rgba(0,82,204,0.4);
+}
+.navCta:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,82,204,0.6); }
+
+/* =============================================
+   HERO SECTION
+   ============================================= */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  text-align: center;
+  padding: 120px 24px 80px;
+  position: relative; z-index: 1;
+}
+.heroBadge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 20px; border-radius: 99px;
+  background: rgba(38,132,255,0.08);
+  border: 1px solid rgba(38,132,255,0.2);
+  color: #60a5fa; font-size: 12px; font-weight: 600;
+  letter-spacing: 1px; text-transform: uppercase;
+  margin-bottom: 32px;
+  animation: fadeInUp 0.8s ease;
+  position: relative; z-index: 2;
+}
+.heroBadgeDot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #00d4aa;
+  box-shadow: 0 0 10px #00d4aa;
+  animation: pulse-dot 2s infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { opacity:1; } 50% { opacity:0.4; }
+}
+.heroTitle {
+  font-size: clamp(48px, 7vw, 88px);
+  font-weight: 900; line-height: 1.05;
+  letter-spacing: -2px;
+  margin-bottom: 24px;
+  animation: fadeInUp 0.8s ease 0.1s both;
+  position: relative; z-index: 2;
+}
+.heroGradient {
+  background: linear-gradient(135deg, #2684ff, #00d4aa, #a78bfa);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradient-shift 4s ease infinite;
+}
+@keyframes gradient-shift {
+  0%,100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.heroSub {
+  font-size: clamp(16px, 2vw, 20px);
+  color: #94a3b8; max-width: 640px;
+  line-height: 1.7; margin-bottom: 48px;
+  animation: fadeInUp 0.8s ease 0.2s both;
+  position: relative; z-index: 2;
+}
+.heroButtons {
+  display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+  animation: fadeInUp 0.8s ease 0.3s both;
+  position: relative; z-index: 2;
+}
+.btnPrimary {
+  padding: 16px 40px; border-radius: 99px; border: none;
+  background: linear-gradient(135deg, #0052cc, #2684ff);
+  color: #fff; font-size: 16px; font-weight: 700;
+  cursor: pointer; letter-spacing: 0.5px;
+  transition: all 0.3s;
+  box-shadow: 0 4px 30px rgba(0,82,204,0.5);
+  display: flex; align-items: center; gap: 10px;
+}
+.btnPrimary:hover { transform: translateY(-3px); box-shadow: 0 8px 40px rgba(0,82,204,0.7); }
+.btnSecondary {
+  padding: 16px 40px; border-radius: 99px;
+  border: 1.5px solid rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.03);
+  color: #e2e8f0; font-size: 16px; font-weight: 600;
+  cursor: pointer; transition: all 0.3s;
+  display: flex; align-items: center; gap: 10px;
+}
+.btnSecondary:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.06); }
+
+.heroStats {
+  display: flex; gap: 48px; margin-top: 80px;
+  animation: fadeInUp 0.8s ease 0.5s both;
+  position: relative; z-index: 2;
+}
+.stat { text-align: center; }
+.statNum {
+  font-size: 36px; font-weight: 900;
+  background: linear-gradient(135deg, #2684ff, #00d4aa);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.statLabel { font-size: 12px; color: #64748b; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-top: 4px; }
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* =============================================
+   SECTION COMMON
+   ============================================= */
+.section {
+  padding: 100px 48px;
+  position: relative; z-index: 1;
+  max-width: 1280px; margin: 0 auto;
+}
+.sectionTag {
+  font-size: 12px; font-weight: 700;
+  color: #60a5fa; letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 12px;
+}
+.sectionTitle {
+  font-size: clamp(32px, 4vw, 48px);
+  font-weight: 900; letter-spacing: -1px;
+  margin-bottom: 16px; color: #f1f5f9;
+}
+.sectionDesc {
+  font-size: 16px; color: #94a3b8;
+  max-width: 600px; line-height: 1.7;
+  margin-bottom: 56px;
+}
+
+/* =============================================
+   AGENTS GRID
+   ============================================= */
+.agentsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+.agentCard {
+  padding: 24px 20px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  text-align: center;
+  transition: all 0.3s;
+  cursor: default;
+}
+.agentCard:hover {
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(255,255,255,0.12);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+}
+.agentEmoji { font-size: 32px; margin-bottom: 12px; display: block; }
+.agentName { font-size: 14px; font-weight: 800; color: #f1f5f9; margin-bottom: 4px; }
+.agentRole { font-size: 11px; color: #64748b; font-weight: 500; line-height: 1.5; }
+
+/* =============================================
+   MOBILE APP SECTION
+   ============================================= */
+.appSection {
+  display: flex; align-items: center; gap: 80px;
+  padding: 100px 48px;
+  max-width: 1280px; margin: 0 auto;
+  position: relative; z-index: 1;
+}
+.appContent { flex: 1; }
+.appFeatures { display: flex; flex-direction: column; gap: 20px; margin-top: 32px; }
+.appFeature {
+  display: flex; align-items: flex-start; gap: 16px;
+  padding: 16px 20px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 12px;
+  transition: all 0.3s;
+}
+.appFeature:hover { background: rgba(255,255,255,0.04); border-color: rgba(255,255,255,0.1); }
+.featureIcon {
+  width: 40px; height: 40px; border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(38,132,255,0.1);
+  color: #60a5fa; flex-shrink: 0;
+}
+.featureTitle { font-size: 14px; font-weight: 700; color: #f1f5f9; margin-bottom: 2px; }
+.featureDesc { font-size: 12px; color: #64748b; line-height: 1.5; }
+
+.appMockup {
+  width: 280px; flex-shrink: 0;
+  background: linear-gradient(145deg, rgba(38,132,255,0.08), rgba(0,212,170,0.05));
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 32px;
+  padding: 16px;
+  position: relative;
+}
+.mockupScreen {
+  width: 100%; aspect-ratio: 9/16;
+  background: linear-gradient(180deg, #0a0e1a, #111827);
+  border-radius: 20px;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 16px; padding: 24px;
+  overflow: hidden;
+}
+.mockupLogo { font-size: 28px; font-weight: 900; letter-spacing: 6px; color: #fff; }
+.mockupLogoAccent {
+  background: linear-gradient(135deg, #2684ff, #00d4aa);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.mockupText { font-size: 11px; color: #64748b; text-align: center; line-height: 1.6; }
+.mockupBars { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
+.mockupBar {
+  height: 8px; border-radius: 4px;
+  background: rgba(255,255,255,0.04);
+  overflow: hidden;
+}
+.mockupBarFill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, #2684ff, #00d4aa);
+}
+
+/* =============================================
+   PRICING SECTION
+   ============================================= */
+.pricingGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+.priceCard {
+  padding: 40px 32px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 20px;
+  transition: all 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.priceCard:hover {
+  border-color: rgba(255,255,255,0.12);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.priceCardPopular {
+  border-color: rgba(38,132,255,0.3);
+  background: rgba(38,132,255,0.05);
+}
+.priceCardPopular::before {
+  content: 'MOST POPULAR';
+  position: absolute; top: 16px; right: -32px;
+  background: linear-gradient(135deg, #0052cc, #2684ff);
+  color: #fff; font-size: 9px; font-weight: 800;
+  padding: 4px 40px; letter-spacing: 1px;
+  transform: rotate(45deg);
+}
+.priceTier { font-size: 13px; font-weight: 700; color: #60a5fa; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px; }
+.priceAmount {
+  font-size: 48px; font-weight: 900; color: #f1f5f9;
+  margin-bottom: 4px; line-height: 1;
+}
+.priceCurrency { font-size: 18px; font-weight: 600; color: #64748b; }
+.pricePeriod { font-size: 14px; color: #64748b; margin-bottom: 32px; }
+.priceFeatures { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+.priceFeature {
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; color: #94a3b8;
+}
+.checkIcon { color: #00d4aa; flex-shrink: 0; }
+.priceBtn {
+  width: 100%; padding: 14px; border-radius: 12px;
+  border: none; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: all 0.3s;
+  letter-spacing: 0.5px;
+}
+.priceBtnPrimary {
+  background: linear-gradient(135deg, #0052cc, #2684ff);
+  color: #fff; box-shadow: 0 4px 20px rgba(0,82,204,0.4);
+}
+.priceBtnPrimary:hover { box-shadow: 0 8px 30px rgba(0,82,204,0.6); transform: translateY(-2px); }
+.priceBtnOutline {
+  background: transparent;
+  border: 1.5px solid rgba(255,255,255,0.12);
+  color: #e2e8f0;
+}
+.priceBtnOutline:hover { border-color: rgba(255,255,255,0.25); background: rgba(255,255,255,0.03); }
+
+/* =============================================
+   B2B SOLUTIONS
+   ============================================= */
+.b2bGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 20px;
+}
+.b2bCard {
+  padding: 32px 24px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 16px;
+  text-align: center;
+  transition: all 0.3s;
+  cursor: default;
+}
+.b2bCard:hover {
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(38,132,255,0.2);
+  transform: translateY(-6px);
+  box-shadow: 0 16px 50px rgba(0,0,0,0.3);
+}
+.b2bIcon {
+  font-size: 36px; margin-bottom: 16px; display: block;
+}
+.b2bName { font-size: 16px; font-weight: 800; color: #f1f5f9; margin-bottom: 6px; }
+.b2bDesc { font-size: 12px; color: #64748b; line-height: 1.6; }
+
+.b2bPricing {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px; margin-top: 56px;
+}
+
+/* =============================================
+   FOOTER CTA
+   ============================================= */
+.cta {
+  text-align: center;
+  padding: 120px 48px;
+  position: relative; z-index: 1;
+}
+.ctaTitle {
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: 900; letter-spacing: -1px;
+  margin-bottom: 20px; color: #f1f5f9;
+}
+.ctaSub { font-size: 16px; color: #94a3b8; max-width: 500px; margin: 0 auto 40px; line-height: 1.7; }
+
+.footer {
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding: 32px 48px;
+  display: flex; justify-content: space-between; align-items: center;
+  position: relative; z-index: 1;
+}
+.footerText { font-size: 12px; color: #475569; }
+.footerLinks { display: flex; gap: 24px; }
+.footerLink { font-size: 12px; color: #64748b; text-decoration: none; transition: color 0.3s; background: none; border: none; cursor: pointer; }
+.footerLink:hover { color: #fff; }
+
+/* =============================================
+   RESPONSIVE
+   ============================================= */
+@media (max-width: 900px) {
+  .nav { padding: 12px 20px; }
+  .navLinks { display: none; }
+  .hero { padding: 100px 20px 60px; }
+  .heroStats { gap: 24px; flex-wrap: wrap; justify-content: center; }
+  .section { padding: 60px 20px; }
+  .appSection { flex-direction: column; padding: 60px 20px; gap: 40px; }
+  .appMockup { width: 220px; }
+  .pricingGrid { grid-template-columns: 1fr; }
+  .b2bGrid { grid-template-columns: repeat(2, 1fr); }
+  .footer { flex-direction: column; gap: 16px; text-align: center; }
+  .cta { padding: 80px 20px; }
+}
+@media (max-width: 480px) {
+  .heroTitle { letter-spacing: -1px; }
+  .b2bGrid { grid-template-columns: 1fr; }
+  .agentsGrid { grid-template-columns: repeat(2, 1fr); }
+}

@@ -78,3 +78,11 @@ async def request_report_email(emails: List[str], report_type: str):
             json={"emails": emails, "report_type": report_type}
         )
         return response.json()
+
+@tool
+async def get_technician_diagnostics(phone_number: str):
+    """Retrieves full B2B technician diagnostics details (power level, SNR, attenuation, TID), customer identity, address, and outstanding billing dues from the database for one of the 200 numbers."""
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"{MOCK_BASE_URL}/technician/diagnostics/{phone_number}")
+        return response.json()
+

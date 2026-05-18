@@ -89,6 +89,48 @@ async def router_diagnostics(device_id: str):
         firmware_version="V5.R19.C10.S120"
     )
 
+@router.get("/technician/diagnostics/{phone_number}")
+async def get_tech_diagnostics(phone_number: str):
+    """Simulates B2B full technician diagnostics sheet for one of the 200 numbers."""
+    import sqlite3
+    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        query = """
+            SELECT c.registered_name, c.address, c.telephone_type,
+                   n.status, n.line_state, n.power_level, n.snr, n.attenuation, n.ont_type, n.tid, n.clarity_path,
+                   b.monthly_rental, b.total_due, b.payment_status
+            FROM customers c
+            LEFT JOIN network_status n ON c.phone_number = n.phone_number
+            LEFT JOIN billing b ON c.phone_number = b.phone_number
+            WHERE c.phone_number = ?
+        """
+        cursor.execute(query, (phone_number,))
+        row = cursor.fetchone()
+        conn.close()
+        if row:
+            return {
+                "phone_number": phone_number,
+                "customer_name": row[0],
+                "address": row[1],
+                "line_type": row[2],
+                "status": row[3],
+                "line_state": row[4],
+                "power_level": row[5] if row[5] is not None else "N/A",
+                "snr": row[6] if row[6] is not None else "N/A",
+                "attenuation": row[7] if row[7] is not None else "N/A",
+                "ont_type": row[8] if row[8] is not None else "N/A",
+                "tid": row[9] if row[9] is not None else "N/A",
+                "clarity_path": row[10] if row[10] is not None else "N/A",
+                "monthly_rental": row[11],
+                "total_due": f"LKR {row[12]:.2f}",
+                "payment_status": row[13]
+            }
+    except Exception as e:
+        print(f"Tech diagnostics DB error: {e}")
+    return {"error": "Device not found in database"}
+
 @router.post("/wfm/ticket", response_model=TicketResponse)
 async def create_fault_ticket(request: TicketRequest):
     """Simulates WFM/Clarity fault ticketing."""

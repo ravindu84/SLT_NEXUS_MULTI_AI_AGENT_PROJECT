@@ -40,6 +40,7 @@ from backend.agent.tools.mcp_tools import (
     process_package_payment,
     record_new_connection,
     request_report_email,
+    get_technician_diagnostics,
 )
 
 # --- RAG-Powered Tools (Vector Store) ---
@@ -96,6 +97,7 @@ tools = [
     process_package_payment,
     record_new_connection,
     request_report_email,
+    get_technician_diagnostics,
     # RAG-Powered Tools (Vector Store search)
     package_advisor,
     self_fix_internet,
@@ -125,8 +127,6 @@ def extract_phone_number(text: str) -> Optional[str]:
         # Normalize: remove spaces and dashes
         return match.group().replace(" ", "").replace("-", "")
     return None
-
-
 
 # --- RAG Context Retrieval ---
 
@@ -286,8 +286,6 @@ async def agent_node(state: AgentState):
     if phone_number:
         base_prompt += f"\n\n## PHONE NUMBER (ALREADY PROVIDED - DO NOT ASK AGAIN!):\nThe customer's SLT phone number is: **{phone_number}**. Use this directly for any lookups. DO NOT ask the customer for their phone number again."
     
-
-
     # --- Inject RAG Context into prompt ---
     rag_context = state.get("rag_context", "")
     if rag_context:

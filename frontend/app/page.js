@@ -21,10 +21,15 @@ const TechBackground = dynamic(() => import("./components/TechBackground"), {
   ssr: false,
 });
 
+const LandingPage = dynamic(() => import("./components/LandingPage"), {
+  ssr: false,
+});
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
 export default function Home() {
   const [view, setView] = useState("avatar");
+  const [showApp, setShowApp] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [isListening, setIsListening] = useState(false);
@@ -239,6 +244,11 @@ export default function Home() {
   }, []);
 
   const lastAssistantMsg = [...messages].reverse().find(m => m.role === "assistant");
+
+  // Show Landing Page by default, switch to LIYA app when user clicks "Try LIYA"
+  if (!showApp) {
+    return <LandingPage onTryLiya={() => setShowApp(true)} />;
+  }
 
   return (
     <div className={`${styles.app} ${theme === 'dark' ? styles.dark : styles.light}`}>
