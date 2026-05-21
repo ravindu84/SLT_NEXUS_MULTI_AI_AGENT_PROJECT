@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import { LanguageProvider } from "./context/LanguageContext";
 import { ThemeProvider } from "./context/ThemeContext";
 
+import { AudioProvider } from "./context/AudioContext";
+
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
@@ -23,12 +25,18 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#3b82f6" />
+      </head>
       <body className={inter.className}>
-        <LanguageProvider>
-          <ThemeProvider>
-            {children}
-          </ThemeProvider>
-        </LanguageProvider>
+        <AudioProvider>
+          <LanguageProvider>
+            <ThemeProvider>
+              {children}
+            </ThemeProvider>
+          </LanguageProvider>
+        </AudioProvider>
       </body>
     </html>
   );

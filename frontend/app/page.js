@@ -7,6 +7,7 @@ import styles from "./page.module.css";
 import { useLanguage } from "./context/LanguageContext";
 import { useTheme } from "./context/ThemeContext";
 import { Zap, Mic, MicOff, Send, RotateCcw, ChevronUp, ChevronDown } from "lucide-react";
+import AuthPage from "./auth/page"; // Import the AuthPage for inline rendering
 
 // Dynamically load 3D components with SSR disabled
 const AvatarScene = dynamic(() => import("./components/AvatarScene"), {
@@ -37,15 +38,21 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
 export default function Home() {
   const [view, setView] = useState("avatar");
+  const [showAuth, setShowAuth] = useState(false);
   const [showApp, setShowApp] = useState(false);
   const [hasMounted, setHasMounted] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState(null);
   const [isListening, setIsListening] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
 
   useEffect(() => {
     setHasMounted(true);
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    });
   }, []);
 
   // Chat state (inline)
@@ -75,6 +82,15 @@ export default function Home() {
   const stopBgMusic = () => {
     if (bgMusicRef.current) {
       bgMusicRef.current.pause();
+    }
+  };
+
+  const handleInstallClick = async () => {
+    if (!installPrompt) return;
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setInstallPrompt(null);
     }
   };
 
@@ -271,13 +287,30 @@ export default function Home() {
 
   const lastAssistantMsg = [...messages].reverse().find(m => m.role === "assistant");
 
-  // Show Landing Page by default, switch to LIYA app when user clicks "Try LIYA"
-  if (!showApp) {
-    return <LandingPage onTryLiya={() => { setShowApp(true); playBgMusic(); }} />;
+  if (!hasMounted) {
+    return <div style={{ height: "100vh", background: "#000" }}></div>;
+  }
+
+  if (!showAuth && !showApp) {
+    return <LandingPage onTryLiya={() => { setShowAuth(true); playBgMusic(); }} />;
+  }
+
+  if (showAuth && !showApp) {
+    return <AuthPage onAuthSuccess={() => { setShowAuth(false); setShowApp(true); }} />;
   }
 
   return (
     <div className={`${styles.app} ${theme === 'dark' ? styles.dark : styles.light}`}>
+      {/* PWA Install Button when logged in */}
+      {showApp && installPrompt && (
+        <button 
+          onClick={handleInstallClick}
+          style={{ position: 'fixed', top: '20px', left: '50%', transform: 'translateX(-50%)', zIndex: 9999, background: 'linear-gradient(45deg, #3b82f6, #8b5cf6)', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '30px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', gap: '8px' }}
+        >
+          📲 Download SLT App
+        </button>
+      )}
+
       {/* Premium Header */}
       <nav className={styles.navbar}>
         <div className={styles.navLeft}>
