@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../../utils/supabase";
 import { useAudio } from "../context/AudioContext";
-import { Phone, Lock, Hash, ArrowRight } from "lucide-react";
+import { Phone, Lock, Hash, ArrowRight, Zap } from "lucide-react";
 import styles from "../page.module.css";
 
 export default function AuthPage({ onAuthSuccess }) {

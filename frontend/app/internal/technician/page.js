@@ -40,7 +40,7 @@ export default function TechnicianPortal() {
     try {
       const res = await fetch(`http://localhost:8000/wfm/active-faults`);
       const data = await res.json();
-      const myTickets = data.faults.filter(t => t.assigned_technician === techName);
+      const myTickets = data.fault_tickets.filter(t => t.technician === techName);
       setTickets(myTickets);
     } catch (err) {
       console.error(err);
@@ -67,9 +67,8 @@ export default function TechnicianPortal() {
                     {ticket.status}
                   </span>
                 </div>
-                <p><strong>Customer:</strong> {ticket.phone_number}</p>
-                <p><strong>Issue:</strong> {ticket.issue_type}</p>
-                <p><strong>Description:</strong> {ticket.description}</p>
+                <p><strong>Customer Phone:</strong> {ticket.phone_number}</p>
+                <p><strong>Created At:</strong> {ticket.created_at}</p>
               </div>
             ))
           )}

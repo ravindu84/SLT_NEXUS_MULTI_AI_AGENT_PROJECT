@@ -2,7 +2,7 @@
 
 import { Wrench, Shield, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import styles from "../../page.module.css";
+import styles from "../page.module.css";
 
 export default function InternalPortal() {
   return (
