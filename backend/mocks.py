@@ -194,7 +194,7 @@ async def get_daily_usage(phone_number: str):
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute(
-            "SELECT log_date, facebook_gb, google_gb, youtube_gb, yahoo_gb, aws_gb, total_gb "
+            "SELECT log_date, facebook_gb, google_gb, youtube_gb, amazon_gb, tiktok_gb, total_gb "
             "FROM daily_usage_logs WHERE phone_number = ? ORDER BY log_date DESC LIMIT 30", 
             (phone_number,)
         )
@@ -209,8 +209,8 @@ async def get_daily_usage(phone_number: str):
                     "facebook_gb": r[1],
                     "google_gb": r[2],
                     "youtube_gb": r[3],
-                    "yahoo_gb": r[4],
-                    "aws_gb": r[5],
+                    "amazon_gb": r[4],
+                    "tiktok_gb": r[5],
                     "total_gb": r[6]
                 })
             return {"phone_number": phone_number, "daily_logs": logs}
