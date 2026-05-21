@@ -1,0 +1,122 @@
+/* ============================================
+   SLT NEXUS — Legal / Content Pages
+   Dark Glassmorphism Design System
+   ============================================ */
+
+.pageContainer {
+  min-height: 100vh;
+  background: #050810;
+  color: #e2e8f0;
+  font-family: 'Inter', system-ui, sans-serif;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* Background Orbs */
+.pageContainer::before,
+.pageContainer::after {
+  content: '';
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.1;
+  pointer-events: none;
+  z-index: 0;
+}
+.pageContainer::before {
+  width: 500px; height: 500px;
+  background: #2684ff;
+  top: -100px; left: -100px;
+}
+.pageContainer::after {
+  width: 400px; height: 400px;
+  background: #00d4aa;
+  bottom: 10%; right: -50px;
+}
+
+.nav {
+  position: fixed; top: 0; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 48px;
+  background: rgba(5, 8, 16, 0.8);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  z-index: 1000;
+}
+.navLogo { height: 38px; width: auto; filter: drop-shadow(0 0 12px rgba(38,132,255,0.3)); }
+
+.backBtn {
+  display: flex; align-items: center; gap: 8px;
+  color: #94a3b8; font-size: 14px; font-weight: 600;
+  text-decoration: none; transition: color 0.3s;
+}
+.backBtn:hover { color: #fff; }
+
+.contentWrapper {
+  max-width: 900px;
+  margin: 120px auto 80px;
+  padding: 40px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+  backdrop-filter: blur(20px);
+  position: relative;
+  z-index: 1;
+}
+
+.title {
+  font-size: 40px;
+  font-weight: 900;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, #2684ff, #00d4aa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
+}
+
+.subtitle {
+  text-align: center;
+  color: #64748b;
+  margin-bottom: 48px;
+  font-size: 16px;
+}
+
+.langSection {
+  margin-bottom: 48px;
+  padding-bottom: 48px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.langSection:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.langTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.langBadge {
+  background: rgba(38, 132, 255, 0.1);
+  color: #60a5fa;
+  padding: 4px 12px;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.textBody {
+  font-size: 15px;
+  line-height: 1.8;
+  color: #cbd5e1;
+}

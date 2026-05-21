@@ -25,6 +25,14 @@ const LandingPage = dynamic(() => import("./components/LandingPage"), {
   ssr: false,
 });
 
+const LiyaProDashboard = dynamic(() => import("./components/LiyaProDashboard"), {
+  ssr: false,
+});
+
+const NeoDashboard = dynamic(() => import("./components/NeoDashboard"), {
+  ssr: false,
+});
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
 
 export default function Home() {
@@ -50,9 +58,25 @@ export default function Home() {
 
   const messagesEndRef = useRef(null);
   const audioRef = useRef(null);
+  const bgMusicRef = useRef(null);
   const audioContextRef = useRef(null);
   const analyserRef = useRef(null);
   const animFrameRef = useRef(null);
+
+  const playBgMusic = () => {
+    if (!bgMusicRef.current) {
+      bgMusicRef.current = new Audio('/assets/startup-theme.mp3');
+      bgMusicRef.current.loop = true;
+      bgMusicRef.current.volume = 0.25;
+    }
+    bgMusicRef.current.play().catch(e => console.warn('Autoplay blocked:', e));
+  };
+
+  const stopBgMusic = () => {
+    if (bgMusicRef.current) {
+      bgMusicRef.current.pause();
+    }
+  };
 
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
@@ -136,6 +160,7 @@ export default function Home() {
 
   // Send message
     const sendMessage = async (text, retryCount = 0) => {
+      stopBgMusic();
       const messageText = text || input.trim();
       if (!messageText || isLoading) return;
       
@@ -218,6 +243,7 @@ export default function Home() {
 
   // Voice input
   const startListening = () => {
+    stopBgMusic();
     if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
       alert("Speech recognition not supported in this browser.");
       return;
@@ -247,7 +273,7 @@ export default function Home() {
 
   // Show Landing Page by default, switch to LIYA app when user clicks "Try LIYA"
   if (!showApp) {
-    return <LandingPage onTryLiya={() => setShowApp(true)} />;
+    return <LandingPage onTryLiya={() => { setShowApp(true); playBgMusic(); }} />;
   }
 
   return (
@@ -271,6 +297,18 @@ export default function Home() {
               LIYA AI
             </button>
             <button 
+              onClick={() => setView('avatar_pro')}
+              className={`${styles.viewBtn} ${view === 'avatar_pro' ? styles.viewBtnActive : ""}`}
+            >
+              MAYA
+            </button>
+            <button 
+              onClick={() => setView('neo')}
+              className={`${styles.viewBtn} ${view === 'neo' ? styles.viewBtnActive : ""}`}
+            >
+              NEO
+            </button>
+            <button 
               onClick={() => setView('vr')}
               className={`${styles.viewBtn} ${view === 'vr' ? styles.viewBtnActive : ""}`}
             >
@@ -284,7 +322,7 @@ export default function Home() {
             {['en', 'si', 'ta'].map((ln) => (
               <button
                 key={ln}
-                onClick={() => setLanguage(ln)}
+                onClick={() => { setLanguage(ln); stopBgMusic(); }}
                 className={`${styles.langBtn} ${language === ln ? styles.langBtnActive : ""}`}
               >
                 {ln === 'en' ? 'EN' : ln === 'si' ? 'සිං' : 'த'}
@@ -482,6 +520,54 @@ export default function Home() {
             onProductSelect={(label) => console.log('Selected:', label)} 
             onBack={() => setView('avatar')}
           />
+        </div>
+
+        {/* LIYA 2.0 (Pro Lab) Section - Always Mounted for stability */}
+        <div 
+          className={styles.vrSection}
+          style={{ 
+            opacity: view === "avatar_pro" ? 1 : 0,
+            pointerEvents: view === "avatar_pro" ? "auto" : "none",
+            position: "absolute",
+            width: "100%",
+            height: "100%",
+            transition: "opacity 0.5s ease-in-out",
+            zIndex: view === "avatar_pro" ? 2 : 1,
+            backgroundColor: "#060913"
+          }}
+        >
+          {hasMounted && (
+            <LiyaProDashboard
+              language={language}
+              isMuted={isMuted}
+              API_URL={API_URL}
+              onInteraction={stopBgMusic}
+            />
+          )}
+        </div>
+
+        {/* NEO Assistant Section - Always Mounted for stability */}
+        <div 
+          className={styles.vrSection}
+          style={{ 
+            opacity: view === "neo" ? 1 : 0,
+            pointerEvents: view === "neo" ? "auto" : "none",
+            position: "absolute",
+            width: "100%",
+            height: "100%",
+            transition: "opacity 0.5s ease-in-out",
+            zIndex: view === "neo" ? 2 : 1,
+            backgroundColor: "#060913"
+          }}
+        >
+          {hasMounted && (
+            <NeoDashboard
+              language={language}
+              isMuted={isMuted}
+              API_URL={API_URL}
+              onInteraction={stopBgMusic}
+            />
+          )}
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import styles from "./LandingPage.module.css";
+import Link from "next/link";
 import { Check, ArrowRight, Smartphone, Globe, Bot, Sparkles, Shield, BarChart3, Zap } from "lucide-react";
 import InteractiveTechVisual from "./InteractiveTechVisual";
 
@@ -135,7 +136,13 @@ export default function LandingPage({ onTryLiya }) {
     <div className={styles.landing}>
       {/* --- Navigation --- */}
       <nav className={styles.nav}>
-        <img src="/assets/logo.png" alt="SLT NEXUS" className={styles.navLogo} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <img src="/assets/logo.png" alt="SLT NEXUS" className={styles.navLogo} />
+          <div className={styles.heroBadge} style={{ margin: 0, color: '#ffffff', background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.2)' }}>
+            <span className={styles.heroBadgeDot}></span>
+            Sri Lanka&apos;s First Multi-Agent AI Platform
+          </div>
+        </div>
         <div className={styles.navLinks}>
           <button className={styles.navLink} onClick={() => scrollTo("features")}>Features</button>
           <button className={styles.navLink} onClick={() => scrollTo("pricing")}>Pricing</button>
@@ -144,14 +151,30 @@ export default function LandingPage({ onTryLiya }) {
         </div>
       </nav>
 
-      {/* --- Hero Section --- */}
-      <section className={styles.hero}>
-        <InteractiveTechVisual />
-        <div className={styles.heroBadge}>
-          <span className={styles.heroBadgeDot}></span>
-          Sri Lanka&apos;s First Multi-Agent AI Platform
-        </div>
+      {/* --- Hero Section (Video Only) --- */}
+      <section className={styles.hero} style={{ justifyContent: 'space-between', paddingTop: '140px', paddingBottom: '20px' }}>
+        <video autoPlay loop muted playsInline className={styles.heroVideo}>
+          <source src="/assets/landing-bg.mp4" type="video/mp4" />
+        </video>
 
+        <div style={{ flex: 1 }}></div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 2, marginBottom: '10px' }}>
+          <div className={styles.heroButtons}>
+            <button className={styles.btnPrimary} onClick={onTryLiya}>
+              <Sparkles size={18} /> Experience LIYA AI
+            </button>
+            <button className={styles.btnSecondary} onClick={() => scrollTo("intro")}>
+              View Plans <ArrowRight size={16} />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* --- Intro Section (Text & Old Animation) --- */}
+      <section className={styles.hero} id="intro">
+        <InteractiveTechVisual />
+        
         <h1 className={styles.heroTitle}>
           The Future of
           <br />
@@ -164,31 +187,22 @@ export default function LandingPage({ onTryLiya }) {
           for SLT-MOBITEL.
         </p>
 
-        <div className={styles.heroButtons}>
-          <button className={styles.btnPrimary} onClick={onTryLiya}>
-            <Sparkles size={18} /> Experience LIYA AI
-          </button>
-          <button className={styles.btnSecondary} onClick={() => scrollTo("pricing")}>
-            View Plans <ArrowRight size={16} />
-          </button>
-        </div>
-
-        <div className={styles.heroStats}>
+        <div className={styles.heroStats} style={{ marginTop: '80px' }}>
           <div className={styles.stat}>
             <div className={styles.statNum}>12</div>
-            <div className={styles.statLabel}>AI Agents</div>
+            <div className={styles.statLabel} style={{ color: '#ffffff' }}>AI Agents</div>
           </div>
           <div className={styles.stat}>
             <div className={styles.statNum}>3</div>
-            <div className={styles.statLabel}>Languages</div>
+            <div className={styles.statLabel} style={{ color: '#ffffff' }}>Languages</div>
           </div>
           <div className={styles.stat}>
             <div className={styles.statNum}>200+</div>
-            <div className={styles.statLabel}>Accounts</div>
+            <div className={styles.statLabel} style={{ color: '#ffffff' }}>Accounts</div>
           </div>
           <div className={styles.stat}>
             <div className={styles.statNum}>24/7</div>
-            <div className={styles.statLabel}>Available</div>
+            <div className={styles.statLabel} style={{ color: '#ffffff' }}>Available</div>
           </div>
         </div>
       </section>
@@ -368,11 +382,11 @@ export default function LandingPage({ onTryLiya }) {
       </section>
 
       <footer className={styles.footer}>
-        <div className={styles.footerText}>© 2026 SLT-MOBITEL. SLT NEXUS — All rights reserved.</div>
+        <div className={styles.footerText}>© 2026 SLT-MOBITEL. SLT NEXUS — Powered by NexGen Creators. All rights reserved.</div>
         <div className={styles.footerLinks}>
-          <button className={styles.footerLink}>Privacy Policy</button>
-          <button className={styles.footerLink}>Terms of Service</button>
-          <button className={styles.footerLink}>Support</button>
+          <Link href="/privacy" className={styles.footerLink}>Privacy Policy</Link>
+          <Link href="/terms" className={styles.footerLink}>Terms of Service</Link>
+          <Link href="/support" className={styles.footerLink}>Support</Link>
         </div>
       </footer>
     </div>

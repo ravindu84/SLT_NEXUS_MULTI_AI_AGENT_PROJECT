@@ -121,11 +121,45 @@ PHONE_PATTERN = re.compile(
 )
 
 def extract_phone_number(text: str) -> Optional[str]:
-    """Extract SLT phone number from text using common Sri Lankan formats."""
+    """Extract SLT phone number from text using common Sri Lankan formats, including spoken Sinhala digits."""
+    if not text:
+        return None
+        
+    normalized = text.lower()
+    
+    # Map Sinhala digit words to digits
+    sinhala_digits = {
+        "බින්දුවයි": "0", "බින්දුව": "0",
+        "එකයි": "1", "එක": "1",
+        "දෙකයි": "2", "දෙක": "2",
+        "තුනයි": "3", "තුන": "3",
+        "හතරයි": "4", "හතර": "4",
+        "පහයි": "5", "පහක්": "5", "පහ": "5",
+        "හයයි": "6", "හය": "6",
+        "හතයි": "7", "හත": "7",
+        "අටයි": "8", "අට": "8",
+        "නමයයි": "9", "නමය": "9", "නවයයි": "9", "නවය": "9"
+    }
+    
+    # Replace Sinhala digit words with numbers
+    for word, digit in sinhala_digits.items():
+        normalized = normalized.replace(word, digit)
+        
+    # Remove all spaces and dashes in case of spaced digits
+    # (e.g. "0 1 1 2..." becomes "0112...")
+    no_spaces = re.sub(r'[\s-]', '', normalized)
+    
+    # Now check for standard 10-digit number anywhere in the string
+    # or Sri Lankan format with +94/94
+    match = re.search(r'(0\d{9})|(\+94\d{9})|(94\d{9})', no_spaces)
+    if match:
+        return match.group()
+        
+    # Fallback to standard pattern check on the original text
     match = PHONE_PATTERN.search(text)
     if match:
-        # Normalize: remove spaces and dashes
         return match.group().replace(" ", "").replace("-", "")
+        
     return None
 
 # --- RAG Context Retrieval ---
@@ -303,13 +337,20 @@ Naturally weave this information into your response — do not copy-paste it raw
     user_language = state.get("user_language", "si")
     lang_map = {"si": "Sinhala (සිංහල)", "ta": "Tamil (தமிழ்)", "en": "English"}
     lang_name = lang_map.get(user_language, "Sinhala (සිංහල)")
+    
+    # Strictly define how to respond based ONLY on the user_language variable.
+    if user_language == "en":
+        lang_instructions = "You MUST reply ONLY in English, regardless of the language the user typed in."
+    elif user_language == "ta":
+        lang_instructions = "You MUST reply ONLY in Tamil script (தமிழ்) with English technical terms naturally mixed in."
+    else:
+        lang_instructions = 'If the user types in Singlish (Sinhala written in English letters), fully understand it as Sinhala. However, you MUST write your response in the Sinhala script (සිංහල) with English technical terms naturally mixed in. Example: "ඔබේ internet connection එක check කරන්නම් 😊". DO NOT reply in Singlish, as the Voice Synthesizer cannot read Singlish properly.'
+
     base_prompt += f"""
 
 ## MANDATORY RESPONSE LANGUAGE:
-The customer's interface is set to **{lang_name}**. You MUST respond primarily in {lang_name}.
-- For Sinhala: Write in Sinhala script (සිංහල) with English technical terms naturally mixed in. Example: "ඔබේ internet connection එක check කරන්නම් 😊"
-- For Tamil: Write in Tamil script (தமிழ்) with English technical terms naturally mixed in.
-- For English: Write in English.
+The customer's interface is set to **{lang_name}**. 
+{lang_instructions}
 This is a STRICT requirement for the voice synthesis to work correctly.
 """
     

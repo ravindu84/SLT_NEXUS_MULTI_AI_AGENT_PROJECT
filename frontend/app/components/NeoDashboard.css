@@ -1,0 +1,557 @@
+/* =============================================
+   NEO ASSISTANT DASHBOARD STYLES
+   Standalone global CSS — Neo-themed accent colors
+   ============================================= */
+.neoDashboardContainer {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background: #060913;
+}
+
+.neoCanvasSection {
+  flex: 1;
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+}
+
+.neoFloatingBadge {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 16px;
+  background: rgba(10, 14, 26, 0.75);
+  border: 1px solid rgba(0, 230, 118, 0.2);
+  border-radius: 99px;
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+}
+
+.neoPulsingDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #00e676;
+  box-shadow: 0 0 8px #00e676;
+  animation: neo-pulse-dot 1.5s ease-in-out infinite;
+}
+
+@keyframes neo-pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.15); }
+}
+
+.neoControlSidebar {
+  width: 440px;
+  height: 100%;
+  background: rgba(10, 14, 26, 0.8);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border-left: 1px solid rgba(0, 230, 118, 0.1);
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  z-index: 10;
+  overflow-y: auto;
+  gap: 16px;
+  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+}
+
+.neoSidebarHeader {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid rgba(0, 230, 118, 0.12);
+  padding-bottom: 16px;
+}
+
+.neoGlowIcon {
+  filter: drop-shadow(0 0 8px #00e676);
+  color: #69f0ae !important;
+}
+
+.neoSidebarHeader h3 {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  color: white;
+}
+
+.neoSidebarHeader p {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* Neo-themed mode switcher */
+.neoModeSwitcher {
+  display: flex;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(0, 230, 118, 0.08);
+  border-radius: 12px;
+  padding: 4px;
+}
+
+.neoModeBtn {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text-muted);
+  transition: all 0.2s ease;
+}
+
+.neoModeBtn:hover {
+  color: white;
+}
+
+.neoModeActive {
+  background: rgba(0, 230, 118, 0.12);
+  border: 1px solid rgba(0, 230, 118, 0.25);
+  color: white !important;
+  text-shadow: 0 0 8px rgba(0, 230, 118, 0.3);
+}
+
+/* Neo-themed diagnostic card */
+.neoDiagnosticCard {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(0, 230, 118, 0.06);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.neoCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 230, 118, 0.08);
+}
+
+.neoCardHeaderTitleRow {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  align-items: center;
+}
+
+.neoCardHeaderIcon {
+  color: #69f0ae;
+  filter: drop-shadow(0 0 4px rgba(0, 230, 118, 0.5));
+}
+
+.neoCardHeader h4 {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #f1f5f9;
+}
+
+.neoResetBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 230, 118, 0.15);
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.neoResetBtn:hover {
+  background: rgba(0, 230, 118, 0.1);
+  border-color: rgba(0, 230, 118, 0.3);
+  color: white;
+}
+
+/* Neo neon bar colors */
+.neoNeonGreen { background: #00e676; box-shadow: 0 0 10px #00e676; }
+.neoNeonTeal { background: #1de9b6; box-shadow: 0 0 10px #1de9b6; }
+.neoNeonCyan { background: #00bcd4; box-shadow: 0 0 10px #00bcd4; }
+.neoNeonLime { background: #76ff03; box-shadow: 0 0 10px #76ff03; }
+.neoNeonAmber { background: #ffab00; box-shadow: 0 0 10px #ffab00; }
+.neoNeonBlue { background: #448aff; box-shadow: 0 0 10px #448aff; }
+
+/* Neo dashboard panel */
+.neoDashPanel {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(0, 230, 118, 0.06);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Neo preset buttons */
+.neoPresetBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(0, 230, 118, 0.08);
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.neoPresetBtn:hover:not(:disabled) {
+  background: rgba(0, 230, 118, 0.08);
+  border-color: rgba(0, 230, 118, 0.2);
+  color: white;
+}
+
+.neoPresetBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.neoPresetPlaying {
+  background: rgba(0, 230, 118, 0.12) !important;
+  border-color: rgba(0, 230, 118, 0.4) !important;
+  color: #69f0ae !important;
+}
+
+.neoPresetPlaying .neoPlayIcon {
+  color: #69f0ae !important;
+}
+
+.neoPlayIcon {
+  color: #69f0ae;
+  flex-shrink: 0;
+}
+
+/* Neo text area */
+.neoTextArea {
+  width: 100%;
+  background: rgba(10, 14, 26, 0.6);
+  border: 1.5px solid rgba(0, 230, 118, 0.1);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: white;
+  outline: none;
+  resize: none;
+  font-family: inherit;
+  transition: border-color 0.2s ease;
+}
+
+.neoTextArea:focus {
+  border-color: rgba(0, 230, 118, 0.4);
+}
+
+/* Neo synthesize button */
+.neoSynthBtn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px;
+  background: linear-gradient(135deg, #00c853 0%, #00e676 50%, #1de9b6 100%);
+  color: #0a0e1a;
+  border: none;
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.neoSynthBtn:hover:not(:disabled) {
+  transform: scale(1.01);
+  box-shadow: 0 0 16px rgba(0, 230, 118, 0.4);
+}
+
+.neoSynthBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Neo visualizer */
+.neoVisualizerBar {
+  flex: 1;
+  background: #00e676;
+  border-radius: 1.5px;
+  height: 10%;
+  transition: height 0.1s linear;
+}
+
+.neoFillGlow {
+  filter: drop-shadow(0 0 3px rgba(0, 230, 118, 0.8));
+}
+
+/* Neo range slider */
+.neoRangeSlider {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 99px;
+  outline: none;
+  cursor: pointer;
+}
+
+.neoRangeSlider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #69f0ae;
+  box-shadow: 0 0 8px #00e676;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.neoRangeSlider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+/* Neo slider value */
+.neoSliderValue {
+  color: #69f0ae;
+  font-weight: 700;
+}
+
+/* Neo info alert */
+.neoInfoAlert {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  background: rgba(0, 230, 118, 0.06);
+  border: 1px solid rgba(0, 230, 118, 0.15);
+  border-radius: 12px;
+  margin-top: auto;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.neoAlertIcon {
+  color: #69f0ae;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* Neo Chat — green themed */
+.neoChatHistory {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 230, 118, 0.08);
+  border-radius: 12px;
+  padding: 12px;
+  overflow-y: auto;
+  max-height: 240px;
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 230, 118, 0.15) transparent;
+}
+
+.neoChatMsg {
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 11px;
+  line-height: 1.4;
+  max-width: 90%;
+  animation: neo-chat-fade 0.25s ease-out forwards;
+}
+
+@keyframes neo-chat-fade {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.neoChatMsgUser {
+  background: rgba(0, 230, 118, 0.1);
+  border: 1px solid rgba(0, 230, 118, 0.2);
+  color: #f8fafc;
+  align-self: flex-end;
+}
+
+.neoChatMsgBot {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #e2e8f0;
+  align-self: flex-start;
+}
+
+.neoChatMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-weight: 700;
+  color: #69f0ae;
+}
+
+.neoChatEmoji {
+  font-size: 11px;
+}
+
+.neoChatLabel {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.neoChatContent {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.neoChatInputArea {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.neoChatInput {
+  flex: 1;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(0, 230, 118, 0.1);
+  border-radius: 8px;
+  padding: 8px 12px;
+  color: white;
+  font-size: 11px;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.neoChatInput:focus {
+  border-color: rgba(0, 230, 118, 0.4);
+  box-shadow: 0 0 8px rgba(0, 230, 118, 0.15);
+}
+
+.neoChatSendBtn {
+  background: #00c853;
+  color: #0a0e1a;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+
+.neoChatSendBtn:hover:not(:disabled) {
+  background: #00e676;
+  box-shadow: 0 0 12px rgba(0, 230, 118, 0.4);
+}
+
+.neoChatSendBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.neoChatMicBtn {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(0, 230, 118, 0.1);
+  border-radius: 8px;
+  color: var(--text-muted);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.neoChatMicBtn:hover:not(:disabled) {
+  color: white;
+  background: rgba(0, 230, 118, 0.08);
+  border-color: rgba(0, 230, 118, 0.2);
+}
+
+.neoChatMicBtnActive {
+  background: rgba(0, 230, 118, 0.15) !important;
+  border-color: rgba(0, 230, 118, 0.3) !important;
+  color: #69f0ae !important;
+  animation: neo-pulse-mic 1.5s ease-in-out infinite;
+}
+
+@keyframes neo-pulse-mic {
+  0%, 100% { box-shadow: 0 0 4px rgba(0, 230, 118, 0.2); }
+  50% { box-shadow: 0 0 14px rgba(0, 230, 118, 0.5); }
+}
+
+/* Neo typing indicator */
+.neoTypingIndicator {
+  display: flex;
+  gap: 4px;
+  padding: 4px 0;
+}
+
+.neoTypingDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #69f0ae;
+  animation: neo-typing-bounce 1.4s ease-in-out infinite;
+}
+
+.neoTypingDot:nth-child(2) { animation-delay: 0.2s; }
+.neoTypingDot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes neo-typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+  30% { transform: translateY(-6px); opacity: 1; }
+}
+
+/* Tablet & Mobile responsive for Neo Dashboard */
+@media (max-width: 900px) {
+  .neoDashboardContainer {
+    flex-direction: column;
+  }
+  
+  .neoCanvasSection {
+    height: 45%;
+    flex: none;
+  }
+
+  .neoControlSidebar {
+    width: 100%;
+    height: 55%;
+    border-left: none;
+    border-top: 1px solid rgba(0, 230, 118, 0.1);
+    box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+    padding: 16px;
+  }
+}
