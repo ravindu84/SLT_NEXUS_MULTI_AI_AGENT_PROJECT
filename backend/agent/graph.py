@@ -338,14 +338,20 @@ Naturally weave this information into your response — do not copy-paste it raw
     lang_map = {"si": "Sinhala (සිංහල)", "ta": "Tamil (தமிழ்)", "en": "English"}
     lang_name = lang_map.get(user_language, "Sinhala (සිංහල)")
     
-    system_prompt = f"""
-The customer's interface is set to {lang_name}. You MUST respond primarily in {lang_name}.
-- For Sinhala: Write in Sinhala script (සිංහල) with English technical terms naturally mixed in.
-- For Tamil: Write in Tamil script (தமிழ்) with English technical terms naturally mixed in.
-- For English: Write in English.
-"""
+    # Strictly define how to respond based ONLY on the user_language variable.
+    if user_language == "en":
+        lang_instructions = "You MUST reply ONLY in English, regardless of the language the user typed in."
+    elif user_language == "ta":
+        lang_instructions = "You MUST reply ONLY in Tamil script (தமிழ்) with English technical terms naturally mixed in."
+    else:
+        lang_instructions = 'If the user types in Singlish (Sinhala written in English letters), fully understand it as Sinhala. However, you MUST write your response in the Sinhala script (සිංහල) with English technical terms naturally mixed in. Example: "ඔබේ internet connection එක check කරන්නම් 😊". DO NOT reply in Singlish, as the Voice Synthesizer cannot read Singlish properly.'
 
-    base_prompt += f"\n\n## MANDATORY RESPONSE LANGUAGE:{system_prompt}\nThis is a STRICT requirement for the voice synthesis to work correctly.\n"
+    base_prompt += f"""
+## MANDATORY RESPONSE LANGUAGE:
+The customer's interface is set to **{lang_name}**.
+{lang_instructions}
+This is a STRICT requirement for the voice synthesis to work correctly.
+"""
     
     llm = get_llm().bind_tools(tools)
     
