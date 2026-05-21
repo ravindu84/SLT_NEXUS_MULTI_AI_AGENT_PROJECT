@@ -68,15 +68,22 @@ async def record_new_connection(customer_name: str, phone_number: str, address: 
 
 @tool
 async def request_report_email(emails: List[str], report_type: str):
-    """Sends the designated corporate report (morning, afternoon, or evening) to the specified list of 5 email addresses.
+    """Sends the designated corporate report to the specified list of email addresses.
     Use this when a staff member or officer asks to email, send, or dispatch a daily report.
-    report_type must be one of: 'morning', 'afternoon', 'evening'.
+    report_type must be one of: 'morning', 'afternoon', 'evening', 'day_start', 'full_details', 'day_end'.
     """
     async with httpx.AsyncClient() as client:
         response = await client.post(
             f"{MOCK_BASE_URL}/report/email",
             json={"emails": emails, "report_type": report_type}
         )
+        return response.json()
+
+@tool
+async def get_active_fault_tickets():
+    """Retrieves the list of all active fault tickets (including assigned technician and status) from the WFM/Clarity system."""
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"{MOCK_BASE_URL}/wfm/active-faults")
         return response.json()
 
 @tool

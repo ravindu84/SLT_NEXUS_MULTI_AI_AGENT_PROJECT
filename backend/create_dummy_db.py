@@ -12,6 +12,7 @@ def create_db():
     cursor.execute("DROP TABLE IF EXISTS billing")
     cursor.execute("DROP TABLE IF EXISTS data_usage")
     cursor.execute("DROP TABLE IF EXISTS daily_usage_logs")
+    cursor.execute("DROP TABLE IF EXISTS fault_tickets")
 
     # 1. CRM Table
     cursor.execute('''
@@ -89,6 +90,18 @@ def create_db():
         )
     ''')
 
+    # 6. Fault Tickets Table (WFM / Clarity)
+    cursor.execute('''
+        CREATE TABLE fault_tickets (
+            ticket_id TEXT PRIMARY KEY,
+            phone_number TEXT,
+            technician TEXT,
+            status TEXT,
+            created_at TEXT,
+            FOREIGN KEY(phone_number) REFERENCES customers(phone_number)
+        )
+    ''')
+
     # Data lists
     first_names = ["Kamal", "Nimal", "Sunil", "Kasun", "Dasun", "Nuwan", "Lahiru", "Tharindu", "Asanka", "Saman", 
                    "Ruwan", "Chathura", "Dinesh", "Mahesh", "Roshan", "Upul", "Anura", "Pradeep", "Janaka", "Supun"]
@@ -97,6 +110,8 @@ def create_db():
     
     ont_types = ["ZTE", "Huawei", "Tenda", "C-DATA", "NOKIYA"]
     packages = ["Unlimited Home", "Unlimited Home Plus", "Unlimited Twin", "Unlimited Pro", "Any Beat", "Any Flix", "Any Tide"]
+
+    technicians = ["KOSALA", "JANITH", "SANJEEWA", "NALAKA", "LAHIRU", "ASELA", "THARINDU", "PRASAD", "KAMAL", "SOMASIRI"]
 
     # Sinhala mapping
     block_names = {1: "එකේ", 2: "දෙකේ", 3: "තුනේ", 4: "හතරේ"}
@@ -107,6 +122,10 @@ def create_db():
         26: "විසිහය", 27: "විසිහත", 28: "විසිඅට", 29: "විසිනවය", 30: "තිහ", 31: "තිස්එක", 32: "තිස්දෙක"
     }
 
+    # Tracking generated numbers to randomly assign faults later
+    copper_numbers = []
+    fiber_numbers = []
+
     # Generate exact 200 customers
     for idx in range(200):
         if idx < 100:
@@ -115,6 +134,7 @@ def create_db():
             line_type = "Copper"
             addr = f"No {10 + idx}, Pitipana, Homagama"
             contact = f"07186838{idx:02d}"
+            copper_numbers.append(phone)
             
             # DP/LOOP: HO-ATR-A0300-A001-01
             dp_num = (idx // 10) + 1
@@ -149,6 +169,7 @@ def create_db():
             line_type = "Fiber"
             addr = f"No {110 + f_idx}, Pitipana, Homagama"
             contact = f"07186839{f_idx:02d}"
+            fiber_numbers.append(phone)
             
             # DP/LOOP: HO-MHM-0500-001-01 (8 loops per DP)
             dp_num = (f_idx // 8) + 1
@@ -208,7 +229,6 @@ def create_db():
             remaining = 0.0
             used = total_data
         else:
-            # 10% chance of being active but zero data
             if random.random() < 0.10:
                 usage_status = "Active"
                 remaining = 0.0
@@ -251,9 +271,27 @@ def create_db():
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
             ''', (phone, log_date, google, fb, yt, amzn, tk, tot))
 
+    # Generate 40 active fault tickets (20 copper, 20 fiber)
+    fault_copper = random.sample(copper_numbers, 20)
+    fault_fiber = random.sample(fiber_numbers, 20)
+    all_faults = fault_copper + fault_fiber
+
+    ticket_time = datetime.now()
+    for f_phone in all_faults:
+        t_id = f"SLT-FT-{random.randint(100000, 999999)}"
+        tech = random.choice(technicians)
+        status = random.choice(["Dispatched", "Pending", "In Progress"])
+        # Update line state in NMS to Fault
+        cursor.execute("UPDATE network_status SET status = 'DOWN', line_state = 'Fault' WHERE phone_number = ?", (f_phone,))
+        
+        cursor.execute('''
+            INSERT INTO fault_tickets (ticket_id, phone_number, technician, status, created_at)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (t_id, f_phone, tech, status, ticket_time.strftime("%Y-%m-%d %H:%M:%S")))
+
     conn.commit()
     conn.close()
-    print("SUCCESS: SLT NEXUS Database Rebuilt with Custom Parameters!")
+    print("SUCCESS: SLT NEXUS Database Rebuilt with Fault Tickets & Technicians!")
 
 if __name__ == "__main__":
     create_db()

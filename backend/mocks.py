@@ -135,7 +135,7 @@ async def get_tech_diagnostics(phone_number: str):
 async def create_fault_ticket(request: TicketRequest):
     """Simulates WFM/Clarity fault ticketing."""
     ticket_id = f"SLT-FT-{random.randint(100000, 999999)}"
-    technicians = ["Kusal Perera", "Angelo Mathews", "Wanindu Hasaranga", "Dimuth Karunaratne"]
+    technicians = ["KOSALA", "JANITH", "SANJEEWA", "NALAKA", "LAHIRU", "ASELA", "THARINDU", "PRASAD", "KAMAL", "SOMASIRI"]
     
     return TicketResponse(
         ticket_id=ticket_id,
@@ -143,6 +143,32 @@ async def create_fault_ticket(request: TicketRequest):
         assigned_technician=random.choice(technicians),
         estimated_resolution="4 Hours"
     )
+
+@router.get("/wfm/active-faults")
+async def get_active_faults():
+    """Returns all active fault tickets from the database."""
+    import sqlite3
+    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("SELECT ticket_id, phone_number, technician, status, created_at FROM fault_tickets")
+        rows = cursor.fetchall()
+        conn.close()
+        
+        faults = []
+        for r in rows:
+            faults.append({
+                "ticket_id": r[0],
+                "phone_number": r[1],
+                "technician": r[2],
+                "status": r[3],
+                "created_at": r[4]
+            })
+        return {"fault_tickets": faults}
+    except Exception as e:
+        print(f"Mock active faults DB error: {e}")
+        return {"error": "Could not fetch faults"}
 
 @router.get("/billing/usage/{phone_number}", response_model=UsageResponse)
 async def get_usage(phone_number: str):
@@ -245,26 +271,37 @@ async def email_report(request: ReportEmailRequest):
     """Simulates sending a WFM integrated report via email."""
     timestamp = datetime.now().isoformat()
     
+    report_mapping = {
+        "morning": "report_morning.png",
+        "afternoon": "report_afternoon.png",
+        "evening": "report_evening.png",
+        "day_start": "day_start.png",
+        "full_details": "full_details_report.png",
+        "day_end": "Day_End_Report.png"
+    }
+    
+    filename = report_mapping.get(request.report_type, f"report_{request.report_type}.png")
+    image_url = f"http://localhost:3000/assets/{filename}"
+    
     # Custom details for each report type based on WFM integration
-    if request.report_type == "morning":
-        subject = "SLT NEXUS - Daily Morning Fault & Attendance Report [08:00 AM]"
-        summary = "NMS diagnostics completed. 8 active alarms detected. Customer registration counter: 200 accounts active."
+    if request.report_type in ["morning", "day_start"]:
+        subject = f"SLT NEXUS - Morning / Day Start Report"
+        summary = "NMS diagnostics completed. Active alarms detected. WFM technicians dispatched."
     elif request.report_type == "afternoon":
-        subject = "SLT NEXUS - Afternoon NMS Signal & Attenuation Degradation Report [01:00 PM]"
-        summary = "Predictive maintenance flags: 3 Fiber lines show marginal power degradation (> -25.5 dBm). Tickets dispatched to technicians."
-    else: # evening
-        subject = "SLT NEXUS - WFM Closed Tickets & Evening Shifts Allocation Report [06:00 PM]"
-        summary = (
-            "WFM integration completed successfully. Evening shift rosters allocated. "
-            "Team allocations fetched from evening report assets. Closed 4 active line outages. "
-            "Outstanding payments updated in billing table."
-        )
+        subject = "SLT NEXUS - Afternoon NMS Signal Report [01:00 PM]"
+        summary = "Predictive maintenance flags and afternoon routing updated."
+    elif request.report_type == "full_details":
+        subject = "SLT NEXUS - Full Details Comprehensive Report"
+        summary = "Comprehensive breakdown of all system statistics, outages, and financial logs."
+    else: # evening, day_end
+        subject = "SLT NEXUS - WFM Closed Tickets & Evening Shifts Report"
+        summary = "WFM evening allocations completed. Outstanding payments updated in billing table."
 
     # Simulating email dispatch
     print(f"=== EMAIL DISPATCH SYSTEM ===")
     print(f"Subject: {subject}")
     print(f"To: {', '.join(request.emails)}")
-    print(f"Attachments: report_{request.report_type}.png (Integrated with WFM/Clarity MCP)")
+    print(f"Attachments: {filename} (Integrated with WFM/Clarity MCP)")
     print(f"Summary: {summary}")
     print(f"=============================")
 
@@ -275,7 +312,8 @@ async def email_report(request: ReportEmailRequest):
         "report_type": request.report_type,
         "emails_sent": request.emails,
         "summary": summary,
-        "attachment": f"report_{request.report_type}.png"
+        "attachment": filename,
+        "image_url": image_url
     }
 
 def uuid_gen():
