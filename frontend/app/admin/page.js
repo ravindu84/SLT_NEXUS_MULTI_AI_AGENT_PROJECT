@@ -66,7 +66,7 @@ export default function AdminDashboard() {
   const [customerData, setCustomerData] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
 
-  const API_URL = "";
+  const API_URL = "https://51.21.160.246.nip.io";
 
   const fetchData = async () => {
     try {
