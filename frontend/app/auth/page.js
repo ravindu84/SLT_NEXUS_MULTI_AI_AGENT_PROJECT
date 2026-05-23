@@ -10,6 +10,7 @@ export default function AuthPage({ onAuthSuccess }) {
   const { playMusic } = useAudio();
   const [tab, setTab] = useState("existing"); // "existing" or "new"
   const [step, setStep] = useState(1);
+  const [isDesktop, setIsDesktop] = useState(true);
   
   // Existing Customer State
   const [phone, setPhone] = useState("");
@@ -30,6 +31,10 @@ export default function AuthPage({ onAuthSuccess }) {
 
   useEffect(() => {
     playMusic();
+    setIsDesktop(window.innerWidth > 768);
+    const handleResize = () => setIsDesktop(window.innerWidth > 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
   }, [playMusic]);
 
   // --- EXISTING CUSTOMER FLOW ---
@@ -110,7 +115,7 @@ export default function AuthPage({ onAuthSuccess }) {
       <div style={{ display: "flex", gap: "20px", maxWidth: "800px", width: "100%" }}>
         
         {/* Left Sidebar - QR Codes (Modern App Download) */}
-        <div style={{ flex: "1", background: "rgba(255, 255, 255, 0.03)", padding: "30px", borderRadius: "16px", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.1)", display: "flex", flexDirection: "column", justifyContent: "center", alignItems: "center", color: "white", display: window.innerWidth > 768 ? 'flex' : 'none' }}>
+        <div style={{ flex: "1", background: "rgba(255, 255, 255, 0.03)", padding: "30px", borderRadius: "16px", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.1)", flexDirection: "column", justifyContent: "center", alignItems: "center", color: "white", display: isDesktop ? 'flex' : 'none' }}>
           <Zap size={40} color="#3b82f6" style={{ marginBottom: "20px" }} />
           <h2 style={{ fontSize: "20px", fontWeight: "700", marginBottom: "10px", textAlign: "center" }}>Get the NEXUS App</h2>
           <p style={{ color: "#a1a1aa", fontSize: "14px", textAlign: "center", marginBottom: "30px" }}>Scan to download on your device for the best experience.</p>
