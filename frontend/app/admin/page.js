@@ -66,7 +66,7 @@ export default function AdminDashboard() {
   const [customerData, setCustomerData] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+  const API_URL = "";
 
   const fetchData = async () => {
     try {
