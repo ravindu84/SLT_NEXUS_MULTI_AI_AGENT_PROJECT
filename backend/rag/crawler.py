@@ -18,7 +18,7 @@ load_dotenv()
 
 # Setup paths & configurations
 CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", "./chroma_db")
-MAX_PAGES_TO_CRAWL = 35  # Consolidate target to 35 high-value resource pages
+MAX_PAGES_TO_CRAWL = 100  # Extract comprehensive data from entire site
 
 # Pre-rendered seeds to ensure 100% extraction success
 SEEDS = [
@@ -31,7 +31,8 @@ SEEDS = [
 HIGH_VALUE_KEYWORDS = [
     "broadband", "fibre", "fiber", "peo-tv", "packages", "rates", 
     "charges", "telephone", "router", "product", "device", "e-teleshop", 
-    "new-connection", "sme", "faq"
+    "new-connection", "sme", "enterprise", "business", "mobile", "4g", "5g",
+    "promotions", "offers", "vas", "postpaid", "prepaid", "smart-home", "faq"
 ]
 
 # Initialize DB & Embeddings
@@ -62,7 +63,7 @@ def is_valid_slt_url(url: str) -> bool:
         
     # Allow roots and high-value keyword pages
     matches_keywords = any(kw in path for kw in HIGH_VALUE_KEYWORDS)
-    is_root_or_home = path in ["", "/", "/home", "/en/broadband", "/en/personal/telephone"]
+    is_root_or_home = path in ["", "/", "/home", "/en/broadband", "/en/personal", "/en/business"]
     
     return matches_keywords or is_root_or_home
 

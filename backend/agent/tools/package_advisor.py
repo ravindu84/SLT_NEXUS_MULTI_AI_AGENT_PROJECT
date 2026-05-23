@@ -27,7 +27,8 @@ def package_advisor(query: str) -> str:
         Relevant package information and recommendations from the SLT knowledge base
     """
     retriever = SLTRetriever()
-    context = retriever.get_context_string(query, n_results=5, source_filter="packages")
+    # Search the newly scraped website database
+    context = retriever.get_context_string(query, n_results=5, source_filter="slt_website")
     
     # Also get usage profile context if relevant
     usage_context = retriever.get_context_string(query, n_results=2, source_filter="usage_profiles")

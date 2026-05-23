@@ -12,7 +12,37 @@ def create_db():
     cursor.execute("DROP TABLE IF EXISTS billing")
     cursor.execute("DROP TABLE IF EXISTS data_usage")
     cursor.execute("DROP TABLE IF EXISTS daily_usage_logs")
+    cursor.execute("DROP TABLE IF EXISTS billing_history")
     cursor.execute("DROP TABLE IF EXISTS fault_tickets")
+    cursor.execute("DROP TABLE IF EXISTS prospects")
+    cursor.execute("DROP TABLE IF EXISTS new_connections")
+
+    # 0. Prospects Table (New App Users who haven't bought yet)
+    cursor.execute('''
+        CREATE TABLE prospects (
+            mobile_number TEXT PRIMARY KEY,
+            name TEXT,
+            nic TEXT,
+            email TEXT,
+            location_verified INTEGER,
+            human_verified INTEGER,
+            kyc_verified INTEGER,
+            created_at TEXT
+        )
+    ''')
+
+    # 0.5 New Connections Table (Waiting for Provisioner)
+    cursor.execute('''
+        CREATE TABLE new_connections (
+            connection_id TEXT PRIMARY KEY,
+            mobile_number TEXT,
+            slt_number TEXT,
+            package TEXT,
+            payment_status TEXT,
+            status TEXT,
+            created_at TEXT
+        )
+    ''')
 
     # 1. CRM Table
     cursor.execute('''
@@ -57,6 +87,21 @@ def create_db():
             unpaid_bills INTEGER,
             last_payment_date TEXT,
             payment_status TEXT,
+            nxc_balance INTEGER,
+            FOREIGN KEY(phone_number) REFERENCES customers(phone_number)
+        )
+    ''')
+
+    # 3.5 Billing History Table (Last 3 Months)
+    cursor.execute('''
+        CREATE TABLE billing_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            phone_number TEXT,
+            month TEXT,
+            year INTEGER,
+            amount_billed REAL,
+            amount_paid REAL,
+            arrears REAL,
             FOREIGN KEY(phone_number) REFERENCES customers(phone_number)
         )
     ''')
@@ -103,10 +148,12 @@ def create_db():
     ''')
 
     # Data lists
-    first_names = ["Kamal", "Nimal", "Sunil", "Kasun", "Dasun", "Nuwan", "Lahiru", "Tharindu", "Asanka", "Saman", 
-                   "Ruwan", "Chathura", "Dinesh", "Mahesh", "Roshan", "Upul", "Anura", "Pradeep", "Janaka", "Supun"]
-    last_names = ["Perera", "Fernando", "De Silva", "Silva", "Bandara", "Jayawardena", "Gunawardena", "Dissanayake", 
-                  "Ratnayake", "Rajapaksha", "Wijesinghe", "Senanayake", "Jayasinghe", "Karunaratne", "Samaranayake"]
+    names = ["Kasun Perera", "Nimal Fernando", "Saman Kumara", "Chaminda Silva", "Ruwan Rajapaksha", 
+             "Anura Dissanayake", "Namal Weerasinghe", "Janaka Bandara", "Nuwan Pradeep", "Roshan Ranawaka",
+             "Sunil Shantha", "Tharanga Rathnayake", "Dinesh Priyankara", "Lahiru Madushanka", "Asanka De Silva"]
+    
+    # 5 Specific Zones for the Logistics/Dispatch mapping
+    zones = ["Pitipana North", "Pitipana South", "Homagama Town", "Godagama", "Meegoda"]
     
     ont_types = ["ZTE", "Huawei", "Tenda", "C-DATA", "NOKIYA"]
     packages = ["Unlimited Home", "Unlimited Home Plus", "Unlimited Twin", "Unlimited Pro", "Any Beat", "Any Flix", "Any Tide"]
@@ -132,7 +179,8 @@ def create_db():
             # COPPER (100 numbers: 0112895800 - 0112895899)
             phone = f"01128958{idx:02d}"
             line_type = "Copper"
-            addr = f"No {10 + idx}, Pitipana, Homagama"
+            zone = zones[(idx // 20) % 5]
+            addr = f"No {10 + idx}, {zone}"
             contact = f"07186838{idx:02d}"
             copper_numbers.append(phone)
             
@@ -167,7 +215,8 @@ def create_db():
             f_idx = idx - 100
             phone = f"01128959{f_idx:02d}"
             line_type = "Fiber"
-            addr = f"No {110 + f_idx}, Pitipana, Homagama"
+            zone = zones[(f_idx // 20) % 5]
+            addr = f"No {110 + f_idx}, {zone}"
             contact = f"07186839{f_idx:02d}"
             fiber_numbers.append(phone)
             
@@ -190,7 +239,7 @@ def create_db():
             is_suspended = f_idx >= 75
 
         # CRM Details
-        name = f"{random.choice(first_names)} {random.choice(last_names)}"
+        name = random.choice(names)
         reg_date = "2023-05-10"
         has_v, has_i, has_ip = 1, 1, 1
         iptv_id = f"IPTV{phone}"
@@ -214,11 +263,43 @@ def create_db():
         # Billing details
         total_due = round(random.uniform(1500.0, 50000.0), 2)
         payment_status = "Suspended" if is_suspended else "Active"
+        
+        # Give some random NXC coins to active users (0 to 2000)
+        nxc_balance = 0 if is_suspended else random.randint(100, 2500)
+        
         cursor.execute('''
             INSERT INTO billing
-            (phone_number, monthly_rental, extra_gb_charges, total_due, unpaid_bills, last_payment_date, payment_status)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (phone, 2990.0, 0.0, total_due, 2 if is_suspended else 0, "2026-04-01", payment_status))
+            (phone_number, monthly_rental, extra_gb_charges, total_due, unpaid_bills, last_payment_date, payment_status, nxc_balance)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (phone, 2990.0, 0.0, total_due, 2 if is_suspended else 0, "2026-04-01", payment_status, nxc_balance))
+
+        # 3-Month Billing History
+        months = ["February", "March", "April"]
+        year = 2026
+        current_arrears = 0.0
+        
+        for idx_m, m in enumerate(months):
+            amt_billed = 2990.0 + round(random.uniform(0, 1000), 2) # Rental + some extra calls/data
+            
+            if is_suspended:
+                # If suspended, they haven't paid anything for the last 3 months
+                amt_paid = 0.0
+            else:
+                # Active users usually pay full, occasionally miss a bit
+                if random.random() < 0.9:
+                    amt_paid = amt_billed + current_arrears
+                else:
+                    amt_paid = amt_billed / 2 # Partial payment
+                    
+            # Calculate new arrears for this month
+            current_arrears = round(current_arrears + amt_billed - amt_paid, 2)
+            if current_arrears < 0: current_arrears = 0.0
+            
+            cursor.execute('''
+                INSERT INTO billing_history
+                (phone_number, month, year, amount_billed, amount_paid, arrears)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (phone, m, year, amt_billed, amt_paid, current_arrears))
 
         # Data Usage
         pkg = random.choice(packages)

@@ -6,8 +6,9 @@ import { AnimatePresence, motion } from "framer-motion";
 import styles from "./page.module.css";
 import { useLanguage } from "./context/LanguageContext";
 import { useTheme } from "./context/ThemeContext";
-import { Zap, Mic, MicOff, Send, RotateCcw, ChevronUp, ChevronDown } from "lucide-react";
+import { Zap, Mic, MicOff, Send, RotateCcw, ChevronUp, ChevronDown, Camera, Upload, X, Hand } from "lucide-react";
 import AuthPage from "./auth/page"; // Import the AuthPage for inline rendering
+import SignCamera from "./components/SignCamera"; // Import SignCamera
 
 // Dynamically load 3D components with SSR disabled
 const AvatarScene = dynamic(() => import("./components/AvatarScene"), {
@@ -62,6 +63,10 @@ export default function Home() {
   const [sessionId, setSessionId] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
+  const [attachedImage, setAttachedImage] = useState(null);
+  const [showCamera, setShowCamera] = useState(false);
+  const videoRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const messagesEndRef = useRef(null);
   const audioRef = useRef(null);
@@ -174,15 +179,19 @@ export default function Home() {
     [isMuted, handleSpeakingChange, handleAudioLevelChange, language]
   );
 
-  // Send message
     const sendMessage = async (text, retryCount = 0) => {
       stopBgMusic();
       const messageText = text || input.trim();
-      if (!messageText || isLoading) return;
+      if ((!messageText && !attachedImage) || isLoading) return;
       
       if (retryCount === 0) {
         setInput("");
-        const userMsg = { id: Date.now(), role: "user", content: messageText, timestamp: new Date() };
+        const userMsg = { 
+            id: Date.now(), 
+            role: "user", 
+            content: messageText + (attachedImage ? " [Image Attached]" : ""), 
+            timestamp: new Date() 
+        };
         setMessages((prev) => [...prev, userMsg]);
         setIsLoading(true);
         setIsThinking(true);
@@ -191,10 +200,20 @@ export default function Home() {
       }
   
       try {
+        const payload = { 
+            message: messageText || "Please check this image.", 
+            session_id: sessionId, 
+            lang: language 
+        };
+        if (attachedImage) {
+            // Remove the data:image/jpeg;base64, prefix for the API
+            payload.image_base64 = attachedImage.split(',')[1];
+        }
+
         const response = await fetch(`${API_URL}/api/chat`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ message: messageText, session_id: sessionId, lang: language }),
+          body: JSON.stringify(payload),
         });
         
         if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -236,10 +255,45 @@ export default function Home() {
         if (retryCount === 0 || retryCount >= 2) {
           setIsLoading(false);
           setIsThinking(false);
+          if (attachedImage && retryCount === 0) {
+             setAttachedImage(null); // Clear image after successful send
+          }
           setTimeout(scrollToBottom, 100);
         }
       }
     };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setAttachedImage(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const startCamera = async () => {
+    setShowCamera(true);
+  };
+
+  const capturePhoto = () => {
+    if (videoRef.current) {
+      const canvas = document.createElement("canvas");
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      setAttachedImage(canvas.toDataURL("image/jpeg"));
+      stopCamera();
+    }
+  };
+
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+    }
+    setShowCamera(false);
+  };
 
   const handleKeyPress = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -295,8 +349,16 @@ export default function Home() {
     return <LandingPage onTryLiya={() => { setShowAuth(true); playBgMusic(); }} />;
   }
 
-  if (showAuth && !showApp) {
-    return <AuthPage onAuthSuccess={() => { setShowAuth(false); setShowApp(true); }} />;
+  if (showAuth) {
+    return (
+      <AuthPage onAuthSuccess={(phoneNum) => {
+        setShowAuth(false);
+        setShowApp(true);
+        if (phoneNum) {
+          setSessionId(phoneNum); // Backend will use this as the user identifier!
+        }
+      }} />
+    );
   }
 
   return (
@@ -497,11 +559,44 @@ export default function Home() {
                 className={`${styles.voiceBtn} ${isListening ? styles.voiceBtnActive : ""}`}
                 onClick={startListening}
                 disabled={isListening}
+                title="Voice Input"
               >
                 {isListening ? <MicOff size={20} /> : <Mic size={20} />}
               </button>
+              
+              <button 
+                className={styles.voiceBtn}
+                onClick={startCamera}
+                title="Capture Photo"
+              >
+                <Camera size={20} />
+              </button>
+              
+              <button 
+                className={styles.voiceBtn}
+                onClick={() => fileInputRef.current?.click()}
+                title="Upload Image"
+              >
+                <Upload size={20} />
+              </button>
+              
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                style={{ display: "none" }} 
+                accept="image/*" 
+                onChange={handleFileUpload} 
+              />
 
               <div className={styles.inputWrapper}>
+                {attachedImage && (
+                  <div className={styles.imagePreviewWrapper}>
+                    <img src={attachedImage} alt="Attached" className={styles.imagePreview} />
+                    <button className={styles.removeImageBtn} onClick={() => setAttachedImage(null)}>
+                      <X size={12} />
+                    </button>
+                  </div>
+                )}
                 <input
                   type="text"
                   className={styles.textInput}
@@ -514,11 +609,23 @@ export default function Home() {
                 <button
                   className={styles.sendBtn}
                   onClick={() => sendMessage()}
-                  disabled={!input.trim() || isLoading}
+                  disabled={(!input.trim() && !attachedImage) || isLoading}
                 >
                   <Send size={16} />
                 </button>
               </div>
+
+              {/* Sign Language Camera Modal overlay */}
+              {showCamera && (
+                <SignCamera 
+                   API_URL={API_URL}
+                   onClose={() => setShowCamera(false)}
+                   onGestureDetected={(gesture) => {
+                       // Send the gesture immediately
+                       sendMessage(gesture, 0);
+                   }}
+                />
+              )}
 
               {messages.length > 0 && (
                 <button className={styles.resetBtn} onClick={newChat} title="New Chat">

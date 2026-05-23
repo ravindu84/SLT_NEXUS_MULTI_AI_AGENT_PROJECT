@@ -138,5 +138,40 @@ def query_knowledge_base(query: str) -> str:
             return f"Error querying internal knowledge base: {str(e)}. Fallback: Restart your fiber router and verify if the LOS LED is red."
     return "RAG Placeholder: SLT fiber troubleshooting suggests restarting the router and checking for the Red LOS light."
 
+@tool
+def send_sms_notification(phone_number: str, message: str) -> str:
+    """Send an SMS notification directly to a customer's phone number using Twilio."""
+    import requests
+    try:
+        response = requests.post(
+            "http://localhost:8000/api/admin/send-sms",
+            json={"to_number": phone_number, "message": message}
+        )
+        if response.status_code == 200 and response.json().get("status") == "success":
+            return f"SMS successfully sent to {phone_number}."
+        else:
+            return f"Failed to send SMS: {response.text}"
+    except Exception as e:
+        return f"Error sending SMS: {str(e)}"
+
+@tool
+def send_whatsapp_notification(phone_number: str, message: str, media_url: str = None) -> str:
+    """Send a WhatsApp message (with optional media URL like an image) to a customer's phone number using Twilio."""
+    import requests
+    try:
+        payload = {"to_number": phone_number, "message": message}
+        if media_url:
+            payload["media_url"] = media_url
+        response = requests.post(
+            "http://localhost:8000/api/admin/send-whatsapp",
+            json=payload
+        )
+        if response.status_code == 200 and response.json().get("status") == "success":
+            return f"WhatsApp message successfully sent to {phone_number}."
+        else:
+            return f"Failed to send WhatsApp: {response.text}"
+    except Exception as e:
+        return f"Error sending WhatsApp: {str(e)}"
+
 # List of tools to be used by the agent
-slt_tools = [check_nms_status, query_customer_profile, create_support_ticket, query_knowledge_base]
+slt_tools = [check_nms_status, query_customer_profile, create_support_ticket, query_knowledge_base, send_sms_notification, send_whatsapp_notification]

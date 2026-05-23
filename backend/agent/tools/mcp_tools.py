@@ -13,18 +13,22 @@ async def check_router_health(device_id: str):
         return response.json()
 
 @tool
-async def create_fault_ticket(phone_number: str, issue_type: str, description: str):
+async def create_fault_ticket(phone_number: str, issue_type: str, description: str, assigned_technician: str = None):
     """Creates a fault ticket in the WFM system and dispatches a technician."""
     async with httpx.AsyncClient() as client:
+        payload = {"phone_number": phone_number, "issue_type": issue_type, "description": description}
+        if assigned_technician:
+            payload["assigned_technician"] = assigned_technician
+            
         response = await client.post(
             f"{MOCK_BASE_URL}/wfm/ticket",
-            json={"phone_number": phone_number, "issue_type": issue_type, "description": description}
+            json=payload
         )
         return response.json()
 
 @tool
 async def get_data_usage(phone_number: str):
-    """Fetches real-time data usage and balance from the SLT Billing system."""
+    """Fetches real-time data usage, outstanding bill balance, NXC coin balance, and 3-month billing history (arrears)."""
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{MOCK_BASE_URL}/billing/usage/{phone_number}")
         return response.json()
@@ -47,6 +51,20 @@ async def process_package_payment(phone_number: str, package_name: str, amount: 
                 "package_name": package_name,
                 "amount": amount,
                 "currency": "LKR"
+            }
+        )
+        return response.json()
+
+@tool
+async def pay_slt_bill(phone_number: str, amount: float, use_nxc_coins: bool):
+    """Pays the outstanding SLT bill. Can optionally use the customer's NXC (NEXUS Coin) balance for a discount (1 NXC = 1 LKR)."""
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{MOCK_BASE_URL}/billing/pay",
+            json={
+                "phone_number": phone_number,
+                "amount": amount,
+                "use_nxc_coins": use_nxc_coins
             }
         )
         return response.json()
@@ -92,4 +110,73 @@ async def get_technician_diagnostics(phone_number: str):
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{MOCK_BASE_URL}/technician/diagnostics/{phone_number}")
         return response.json()
+
+@tool
+async def get_predictive_degradation_report():
+    """Scans the entire NMS database and returns a predictive report of all lines (Copper/Fiber) that have degrading signals but haven't completely failed yet. Includes DP Loop, Power Level, SNR, and Contact Info."""
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"{MOCK_BASE_URL}/wfm/predictive-degradation")
+        return response.json()
+
+@tool
+async def get_technician_status():
+    """Returns the fixed territory zones and active workloads for the 10 technicians. Use this to determine who is assigned to a specific region and who has the lowest ticket count."""
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"{MOCK_BASE_URL}/wfm/technician-status")
+        return response.json()
+
+@tool
+async def check_kyc_status(mobile_number: str):
+    """Checks if the user has uploaded their Selfie and NIC for KYC verification."""
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"{MOCK_BASE_URL}/auth/kyc-status/{mobile_number}")
+        return response.json()
+
+@tool
+async def finalize_new_connection(mobile_number: str, package_name: str):
+    """Finalizes the sale, automatically generates a new SLT number (e.g. 0112800100), and records the new connection for the Provisioner."""
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{MOCK_BASE_URL}/provisioning/finalize",
+            json={
+                "mobile_number": mobile_number,
+                "package_name": package_name
+            }
+        )
+        return response.json()
+
+@tool
+async def send_sms_notification(phone_number: str, message: str) -> str:
+    """Send an SMS notification directly to a customer's phone number using Twilio."""
+    import requests
+    try:
+        response = requests.post(
+            "http://localhost:8000/api/admin/send-sms",
+            json={"to_number": phone_number, "message": message}
+        )
+        if response.status_code == 200 and response.json().get("status") == "success":
+            return f"SMS successfully sent to {phone_number}."
+        else:
+            return f"Failed to send SMS: {response.text}"
+    except Exception as e:
+        return f"Error sending SMS: {str(e)}"
+
+@tool
+async def send_whatsapp_notification(phone_number: str, message: str, media_url: str = None) -> str:
+    """Send a WhatsApp message (with optional media URL like an image) to a customer's phone number using Twilio."""
+    import requests
+    try:
+        payload = {"to_number": phone_number, "message": message}
+        if media_url:
+            payload["media_url"] = media_url
+        response = requests.post(
+            "http://localhost:8000/api/admin/send-whatsapp",
+            json=payload
+        )
+        if response.status_code == 200 and response.json().get("status") == "success":
+            return f"WhatsApp message successfully sent to {phone_number}."
+        else:
+            return f"Failed to send WhatsApp: {response.text}"
+    except Exception as e:
+        return f"Error sending WhatsApp: {str(e)}"
 

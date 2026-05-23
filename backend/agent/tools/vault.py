@@ -147,6 +147,75 @@ def commit_visit_handshake_to_ledger(ticket_id: str, technician_id: str, custome
 
 
 @tool
+def commit_payment_to_ledger(transaction_id: str, customer_id: str, amount_lkr: float, date: str) -> str:
+    """
+    Hashes a successful payment transaction ID and logs it on the blockchain.
+    Acts as an un-deletable digital receipt to resolve payment disputes.
+    """
+    transaction = {
+        "type": "PAYMENT_RECEIPT",
+        "transaction_id": transaction_id,
+        "customer_id": customer_id,
+        "amount_lkr": amount_lkr,
+        "date": date
+    }
+    new_block = blockchain.add_block([transaction])
+    result = {
+        "status": "SUCCESS",
+        "message": f"Payment receipt permanently locked on Ledger Block #{new_block.index}!",
+        "block_index": new_block.index,
+        "block_hash": new_block.hash
+    }
+    return json.dumps(result, indent=2)
+
+
+@tool
+def commit_usage_snapshot_to_ledger(customer_id: str, mac_address: str, total_data_gb: float, port_id: str) -> str:
+    """
+    Generates a 'Usage Snapshot' for a heavy data user, hashing the MAC address, data used, and port.
+    Provides immutable proof of data consumption through a specific router port to resolve heavy usage disputes.
+    """
+    transaction = {
+        "type": "DATA_USAGE_SNAPSHOT",
+        "customer_id": customer_id,
+        "mac_address": mac_address,
+        "total_data_gb": total_data_gb,
+        "port_id": port_id
+    }
+    new_block = blockchain.add_block([transaction])
+    result = {
+        "status": "SUCCESS",
+        "message": f"Usage snapshot permanently locked on Ledger Block #{new_block.index}!",
+        "block_index": new_block.index,
+        "block_hash": new_block.hash
+    }
+    return json.dumps(result, indent=2)
+
+
+@tool
+def commit_equipment_transfer_to_ledger(serial_number: str, equipment_type: str, from_entity: str, to_entity: str) -> str:
+    """
+    Tracks the supply chain of equipment (e.g., ONTs, STBs). 
+    Hashes the Serial Number during transfers (e.g., Stores -> Tech, Tech -> Customer) to prove the chain of custody.
+    """
+    transaction = {
+        "type": "EQUIPMENT_TRANSFER_CHAIN_OF_CUSTODY",
+        "serial_number": serial_number,
+        "equipment_type": equipment_type,
+        "from_entity": from_entity,
+        "to_entity": to_entity
+    }
+    new_block = blockchain.add_block([transaction])
+    result = {
+        "status": "SUCCESS",
+        "message": f"Equipment transfer permanently locked on Ledger Block #{new_block.index}!",
+        "block_index": new_block.index,
+        "block_hash": new_block.hash
+    }
+    return json.dumps(result, indent=2)
+
+
+@tool
 def verify_ledger_security() -> str:
     """
     Mathematically verifies the integrity of all blocks on the SLT blockchain ledger.

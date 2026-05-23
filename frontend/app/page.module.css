@@ -1,4 +1,4 @@
-﻿/* ============================================
+/* ============================================
    LIYA Multi-Agent AI Avatar System
    Page Styles â€” Full-Screen Immersive Layout
    ============================================ */
@@ -691,3 +691,99 @@
   transform: translateY(-2px) scale(1.05) !important;
 }
 
+/* --- Vision & Camera Styles --- */
+.imagePreviewWrapper {
+  position: absolute;
+  bottom: 60px;
+  left: 20px;
+  background: rgba(10, 14, 26, 0.9);
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imagePreview {
+  max-width: 150px;
+  max-height: 150px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.removeImageBtn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--slt-red, #ff3d57);
+  color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(255, 61, 87, 0.4);
+}
+
+.cameraModal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cameraContent {
+  position: relative;
+  width: 90%;
+  max-width: 640px;
+  background: #000;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.videoFeed {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.cameraControls {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.captureBtn {
+  background: white;
+  color: black;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 99px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.3);
+}
+
+.closeCameraBtn {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 12px 24px;
+  border-radius: 99px;
+  font-weight: bold;
+  cursor: pointer;
+}

@@ -38,16 +38,22 @@ from backend.agent.tools.mcp_tools import (
     get_data_usage,
     get_daily_usage_logs,
     process_package_payment,
+    pay_slt_bill,
     record_new_connection,
     request_report_email,
+    get_active_fault_tickets,
     get_technician_diagnostics,
+    get_predictive_degradation_report,
+    get_technician_status,
+    check_kyc_status,
+    finalize_new_connection,
+    send_sms_notification,
+    send_whatsapp_notification
 )
 
-# --- RAG-Powered Tools (Vector Store) ---
 from backend.agent.tools.package_advisor import package_advisor
 from backend.agent.tools.self_fix import self_fix_internet
 from backend.agent.tools.scam_shield import scam_shield
-from backend.agent.tools.usage_analyzer import usage_analyzer
 
 # --- Vault/Blockchain Tools ---
 from backend.agent.tools.vault import (
@@ -55,6 +61,15 @@ from backend.agent.tools.vault import (
     commit_sla_to_ledger,
     commit_visit_handshake_to_ledger,
     verify_ledger_security,
+    commit_payment_to_ledger,
+    commit_usage_snapshot_to_ledger,
+    commit_equipment_transfer_to_ledger
+)
+
+# --- Provisioner/Operations Tools ---
+from backend.agent.tools.provisioner_tools import (
+    allocate_fiber_dp_loop,
+    dispatch_installation_job
 )
 
 # --- RAG Retriever for Context Injection ---
@@ -98,16 +113,23 @@ tools = [
     record_new_connection,
     request_report_email,
     get_technician_diagnostics,
-    # RAG-Powered Tools (Vector Store search)
+    get_active_fault_tickets,
+    pay_slt_bill,
+    get_predictive_degradation_report,
+    get_technician_status,
     package_advisor,
     self_fix_internet,
     scam_shield,
-    usage_analyzer,
+    send_sms_notification,
+    send_whatsapp_notification,
     # Vault/Blockchain Tools
     write_solidity_contract,
     commit_sla_to_ledger,
     commit_visit_handshake_to_ledger,
     verify_ledger_security,
+    # Provisioner tools
+    allocate_fiber_dp_loop,
+    dispatch_installation_job
 ]
 tool_node = ToolNode(tools)
 

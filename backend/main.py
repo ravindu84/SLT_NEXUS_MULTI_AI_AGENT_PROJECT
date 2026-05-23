@@ -236,6 +236,13 @@ app = FastAPI(
 
 app.include_router(mocks_router)
 
+# Import our new Gesture Tracker
+try:
+    from backend.agent.tools.gesture_tracker import detect_sign_language
+except ImportError:
+    print("[WARNING] gesture_tracker not found or mediapipe not installed.")
+    detect_sign_language = lambda x: "Gesture detection unavailable"
+
 import asyncio
 from datetime import datetime
 
@@ -305,7 +312,17 @@ sessions = {}
 class ChatRequest(BaseModel):
     message: str
     session_id: Optional[str] = None
-    lang: Optional[str] = None  # User's selected language (en/si/ta)
+    lang: Optional[str] = "si"
+    image_base64: Optional[str] = None
+
+class GestureRequest(BaseModel):
+    image_base64: str
+
+@app.post("/api/analyze_gesture")
+async def analyze_gesture_endpoint(req: GestureRequest):
+    """Takes a base64 frame from the webcam and returns the detected gesture."""
+    gesture = detect_sign_language(req.image_base64)
+    return {"gesture": gesture}
 
 class TTSRequest(BaseModel):
     text: str
@@ -354,14 +371,30 @@ async def chat_endpoint(request: ChatRequest):
         sessions[session_id] = []
 
     history = sessions[session_id]
-    # Censor user input before appending to session history
-    censored_user_message = censor_profanity(request.message)
-    history.append(HumanMessage(content=censored_user_message))
+    
+    # Rebuild history
+    messages = []
+    for m in history:
+        if isinstance(m, HumanMessage):
+            messages.append(HumanMessage(content=m.content))
+        else:
+            messages.append(AIMessage(content=m.content))
+            
+    # Current message with optional Vision Support
+    if request.image_base64:
+        # LangChain Multimodal Format
+        multimodal_content = [
+            {"type": "text", "text": request.message},
+            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{request.image_base64}"}}
+        ]
+        messages.append(HumanMessage(content=multimodal_content))
+    else:
+        messages.append(HumanMessage(content=request.message))
 
     try:
         # Invoke our 12-Agent swarm brain!
         result = await get_graph().ainvoke({
-            "messages": history,
+            "messages": messages,
             "user_language": request.lang or "si"  # Default to Sinhala
         })
         ai_message = result["messages"][-1]

@@ -20,6 +20,7 @@ class TicketRequest(BaseModel):
     phone_number: str
     issue_type: str
     description: str
+    assigned_technician: Optional[str] = None
 
 class TicketResponse(BaseModel):
     ticket_id: str
@@ -33,6 +34,13 @@ class UsageResponse(BaseModel):
     used_data: str
     remaining_data: str
     status: str
+    nxc_balance: int
+    billing_history: List[dict]
+
+class PayBillRequest(BaseModel):
+    phone_number: str
+    amount: float
+    use_nxc_coins: bool
 
 class PaymentRequest(BaseModel):
     amount: float
@@ -133,16 +141,75 @@ async def get_tech_diagnostics(phone_number: str):
 
 @router.post("/wfm/ticket", response_model=TicketResponse)
 async def create_fault_ticket(request: TicketRequest):
-    """Simulates WFM/Clarity fault ticketing."""
+    """Simulates WFM/Clarity fault ticketing and stores it in database."""
+    import sqlite3
+    from datetime import datetime
+    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    
     ticket_id = f"SLT-FT-{random.randint(100000, 999999)}"
     technicians = ["KOSALA", "JANITH", "SANJEEWA", "NALAKA", "LAHIRU", "ASELA", "THARINDU", "PRASAD", "KAMAL", "SOMASIRI"]
     
+    assigned_tech = request.assigned_technician if request.assigned_technician else random.choice(technicians)
+    
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT INTO fault_tickets (ticket_id, phone_number, technician, status, created_at)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (ticket_id, request.phone_number, assigned_tech, "Assigned", datetime.now().isoformat()))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Error inserting fault ticket: {e}")
+        
     return TicketResponse(
         ticket_id=ticket_id,
         status="Assigned",
-        assigned_technician=random.choice(technicians),
+        assigned_technician=assigned_tech,
         estimated_resolution="4 Hours"
     )
+
+@router.get("/wfm/technician-status")
+async def get_technician_status():
+    """Returns the fixed zones and active workloads for the 10 technicians."""
+    import sqlite3
+    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    
+    zones = {
+        "KOSALA": "Pitipana North",
+        "JANITH": "Pitipana North",
+        "SANJEEWA": "Pitipana South",
+        "NALAKA": "Pitipana South",
+        "LAHIRU": "Homagama Town",
+        "ASELA": "Homagama Town",
+        "THARINDU": "Godagama",
+        "PRASAD": "Godagama",
+        "KAMAL": "Meegoda",
+        "SOMASIRI": "Meegoda"
+    }
+    
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Count active tickets (Pending, Dispatched, In Progress, Assigned) for each tech
+        cursor.execute("SELECT technician, COUNT(*) FROM fault_tickets WHERE status != 'Closed' GROUP BY technician")
+        workloads = {row[0]: row[1] for row in cursor.fetchall()}
+        conn.close()
+        
+        status_report = []
+        for tech, zone in zones.items():
+            status_report.append({
+                "technician": tech,
+                "assigned_zone": zone,
+                "active_tickets": workloads.get(tech, 0)
+            })
+            
+        return {"technician_status": status_report}
+    except Exception as e:
+        print(f"Technician status DB error: {e}")
+        return {"error": "Could not fetch technician status"}
 
 @router.get("/wfm/active-faults")
 async def get_active_faults():
@@ -170,6 +237,54 @@ async def get_active_faults():
         print(f"Mock active faults DB error: {e}")
         return {"error": "Could not fetch faults"}
 
+@router.get("/wfm/predictive-degradation")
+async def get_predictive_degradation():
+    """Returns a list of lines with degrading signals for predictive maintenance."""
+    import sqlite3
+    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Query for Copper with Bad SNR (< 20) or Bad Attenuation (> 20)
+        # OR Fiber with bad Power Level (< -25)
+        # Exclude already DOWN/Fault lines to only get pre-emptive degradation
+        
+        query = """
+            SELECT c.phone_number, c.registered_name, c.address, c.contact_number, 
+                   n.line_state, n.power_level, n.snr, n.attenuation, n.clarity_path, c.telephone_type
+            FROM customers c
+            JOIN network_status n ON c.phone_number = n.phone_number
+            WHERE n.status = 'UP' AND n.line_state != 'Fault' AND (
+                (c.telephone_type = 'Copper' AND (CAST(n.snr AS REAL) < 20.0 OR CAST(n.attenuation AS REAL) > 20.0))
+                OR
+                (c.telephone_type = 'Fiber' AND CAST(n.power_level AS REAL) < -25.0)
+            )
+            LIMIT 20
+        """
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        conn.close()
+        
+        degraded = []
+        for r in rows:
+            degraded.append({
+                "phone_number": r[0],
+                "customer_name": r[1],
+                "address": r[2],
+                "contact_number": r[3],
+                "line_type": r[9],
+                "power_level": r[5],
+                "snr": r[6],
+                "attenuation": r[7],
+                "dp_loop": r[8]
+            })
+            
+        return {"at_risk_lines": degraded, "total_found": len(degraded)}
+    except Exception as e:
+        print(f"Predictive degradation DB error: {e}")
+        return {"error": "Could not fetch predictive report"}
+
 @router.get("/billing/usage/{phone_number}", response_model=UsageResponse)
 async def get_usage(phone_number: str):
     """Simulates SLT Billing/Usage system by querying live data_usage and billing tables."""
@@ -183,21 +298,39 @@ async def get_usage(phone_number: str):
         row = cursor.fetchone()
         
         # Check total dues too
-        cursor.execute("SELECT total_due, payment_status FROM billing WHERE phone_number = ?", (phone_number,))
+        cursor.execute("SELECT total_due, payment_status, nxc_balance FROM billing WHERE phone_number = ?", (phone_number,))
         bill_row = cursor.fetchone()
+        
+        # Get 3 month history
+        cursor.execute("SELECT month, year, amount_billed, amount_paid, arrears FROM billing_history WHERE phone_number = ? ORDER BY id ASC", (phone_number,))
+        history_rows = cursor.fetchall()
+        
         conn.close()
         
+        billing_history = []
+        for h in history_rows:
+            billing_history.append({
+                "month": h[0],
+                "year": h[1],
+                "amount_billed": h[2],
+                "amount_paid": h[3],
+                "arrears": h[4]
+            })
+            
         if row:
             total, used, remaining, status = row
             due_str = f"LKR {bill_row[0]:.2f}" if bill_row else "LKR 0.00"
             pay_status = bill_row[1] if bill_row else "Paid"
+            nxc = bill_row[2] if bill_row else 0
             
             return UsageResponse(
                 phone_number=phone_number,
                 total_data=f"{total} GB",
                 used_data=f"{used} GB",
                 remaining_data=f"{remaining} GB",
-                status=f"Quota: {status} | Bills: {pay_status} (Due: {due_str})"
+                status=f"Quota: {status} | Bills: {pay_status} (Due: {due_str})",
+                nxc_balance=nxc,
+                billing_history=billing_history
             )
     except Exception as e:
         print(f"Mock usage DB error: {e}")
@@ -207,7 +340,9 @@ async def get_usage(phone_number: str):
         total_data="300 GB",
         used_data="45 GB",
         remaining_data="255 GB",
-        status="Active"
+        status="Active",
+        nxc_balance=0,
+        billing_history=[]
     )
 
 @router.get("/billing/daily-usage/{phone_number}")
@@ -255,6 +390,58 @@ async def mock_payment(request: PaymentRequest):
         "amount": request.amount,
         "message": f"Payment of {request.amount} {request.currency} for {request.package_name} processed successfully."
     }
+
+@router.post("/billing/pay")
+async def pay_bill_endpoint(request: PayBillRequest):
+    """Simulates paying an SLT bill, optionally using NXC coins for discount."""
+    import sqlite3
+    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT total_due, nxc_balance FROM billing WHERE phone_number = ?", (request.phone_number,))
+        row = cursor.fetchone()
+        
+        if not row:
+            conn.close()
+            return {"status": "error", "message": "Phone number not found."}
+            
+        total_due, nxc_balance = row
+        discount = 0.0
+        coins_used = 0
+        
+        if request.use_nxc_coins and nxc_balance > 0:
+            # Conversion rate: 1 NXC = 1 LKR
+            coins_used = nxc_balance
+            discount = float(coins_used)
+            nxc_balance = 0
+            
+        final_amount_to_pay = max(0.0, total_due - discount)
+        
+        # We assume the user pays the remaining `final_amount_to_pay` immediately.
+        # But wait, the request has `amount`. Let's assume the user pays `request.amount` after discount.
+        
+        amount_paid_by_user = request.amount
+        total_value_paid = amount_paid_by_user + discount
+        
+        new_due = max(0.0, total_due - total_value_paid)
+        
+        cursor.execute(
+            "UPDATE billing SET total_due = ?, nxc_balance = ? WHERE phone_number = ?",
+            (new_due, nxc_balance, request.phone_number)
+        )
+        conn.commit()
+        conn.close()
+        
+        return {
+            "status": "success",
+            "message": f"Bill payment processed. Used {coins_used} NXC coins for LKR {discount} discount. Paid LKR {amount_paid_by_user}. New Due: LKR {new_due:.2f}"
+        }
+        
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 @router.post("/provisioning/new-connection")
 async def mock_provision(request: ProvisionRequest):
@@ -316,6 +503,240 @@ async def email_report(request: ReportEmailRequest):
         "image_url": image_url
     }
 
+class FinalizeRequest(BaseModel):
+    mobile_number: str
+    package_name: str
+
+@router.get("/auth/kyc-status/{mobile_number}")
+async def check_kyc(mobile_number: str):
+    """Simulates checking if a user has uploaded their KYC selfie. We will mock it to always return True for prototype."""
+    return {"mobile_number": mobile_number, "kyc_verified": True, "message": "KYC Document Approved"}
+
+@router.post("/provisioning/finalize")
+async def finalize_connection(request: FinalizeRequest):
+    """Generates the new SLT number and inserts into new_connections."""
+    import sqlite3
+    from datetime import datetime
+    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Get count to generate sequential number
+        cursor.execute("SELECT COUNT(*) FROM new_connections")
+        count = cursor.fetchone()[0]
+        
+        # Generate new number: 0112800100 + count
+        new_slt_number = f"011280{str(100 + count).zfill(4)}"
+        connection_id = f"SLT-NC-{uuid_gen()}"
+        
+        cursor.execute('''
+            INSERT INTO new_connections (connection_id, mobile_number, slt_number, package, payment_status, status, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (connection_id, request.mobile_number, new_slt_number, request.package_name, "Paid", "Pending Provisioning", datetime.now().isoformat()))
+        
+        conn.commit()
+        conn.close()
+        
+        return {
+            "status": "success",
+            "message": f"Connection finalized! Your new SLT number is {new_slt_number}",
+            "slt_number": new_slt_number,
+            "connection_id": connection_id
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 def uuid_gen():
     import uuid
     return str(uuid.uuid4())[:8].upper()
+
+# --- ADMIN NOC DASHBOARD ENDPOINTS ---
+
+@router.get("/admin/tickets")
+async def get_admin_tickets():
+    import sqlite3
+    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM fault_tickets ORDER BY created_at DESC LIMIT 20")
+    rows = cursor.fetchall()
+    conn.close()
+    return {"tickets": [dict(r) for r in rows]}
+
+@router.get("/admin/technicians")
+async def get_admin_technicians():
+    import sqlite3
+    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM technicians ORDER BY active_tickets DESC")
+    rows = cursor.fetchall()
+    conn.close()
+    return {"technicians": [dict(r) for r in rows]}
+
+@router.get("/admin/dps")
+async def get_admin_dps():
+    import sqlite3
+    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    # Fetch DPs and their allocated loops
+    cursor.execute('''
+        SELECT dp.dp_id, dp.location_lat, dp.location_lon, dp.status, dp.total_capacity, dp.available_capacity,
+               COUNT(l.loop_id) as loops_used
+        FROM fiber_dp dp
+        LEFT JOIN fiber_dp_loops l ON dp.dp_id = l.dp_id
+        GROUP BY dp.dp_id
+        ORDER BY dp.created_at DESC
+    ''')
+    dps = [dict(r) for r in cursor.fetchall()]
+    
+    cursor.execute("SELECT * FROM fiber_dp_loops ORDER BY allocated_at DESC LIMIT 50")
+    loops = [dict(r) for r in cursor.fetchall()]
+    
+    conn.close()
+    return {"dps": dps, "loops": loops}
+
+@router.get("/admin/ledger")
+async def get_admin_ledger():
+    import sqlite3
+    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM ledger ORDER BY created_at DESC LIMIT 50")
+    rows = cursor.fetchall()
+    conn.close()
+    return {"ledger": [dict(r) for r in rows]}
+
+@router.get("/admin/customer/{phone}")
+async def get_admin_customer(phone: str):
+    import sqlite3
+    from fastapi import HTTPException
+    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        # We need data from customers, network_status, and data_usage
+        cursor.execute("SELECT * FROM customers WHERE phone_number = ?", (phone,))
+        customer = cursor.fetchone()
+        
+        if not customer:
+            conn.close()
+            raise HTTPException(status_code=404, detail="Customer not found")
+            
+        cursor.execute("SELECT * FROM network_status WHERE phone_number = ?", (phone,))
+        network = cursor.fetchone()
+        
+        cursor.execute("SELECT * FROM data_usage WHERE phone_number = ?", (phone,))
+        usage = cursor.fetchone()
+        
+        conn.close()
+        
+        return {
+            "user_id": customer['user_id'],
+            "phone_number": customer['phone_number'],
+            "name": customer['registered_name'],
+            "status": network['status'] if network else 'Unknown',
+            "speed_mbps": 200 if network and network['status'] == 'UP' else 0,
+            "data_used_gb": usage['used_data_gb'] if usage else 0,
+            "data_total_gb": usage['total_data_gb'] if usage else 0
+        }
+    except Exception as e:
+        print(f"Customer search error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/admin/customers")
+async def get_all_customers():
+    import sqlite3
+    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT c.user_id, c.phone_number, c.registered_name as name, c.address, c.telephone_type as type, 
+                   n.status, n.line_state, 
+                   b.payment_status, b.total_due
+            FROM customers c
+            LEFT JOIN network_status n ON c.phone_number = n.phone_number
+            LEFT JOIN billing b ON c.phone_number = b.phone_number
+            LIMIT 200
+        ''')
+        rows = cursor.fetchall()
+        conn.close()
+        
+        return {"customers": [dict(r) for r in rows]}
+    except Exception as e:
+        return {"error": str(e), "customers": []}
+
+# --- TWILIO INTEGRATION ENDPOINTS ---
+
+class SMSRequest(BaseModel):
+    to_number: str
+    message: str
+
+class WhatsAppRequest(BaseModel):
+    to_number: str
+    message: str
+    media_url: str = None
+
+TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID", "YOUR_TWILIO_SID")
+TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "YOUR_TWILIO_TOKEN")
+# The user needs to update this with their Twilio phone number
+TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER", "+16402321133")
+
+@router.post("/admin/send-sms")
+async def send_sms(request: SMSRequest):
+    from twilio.rest import Client
+    try:
+        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+        
+        # Ensure numbers have '+'
+        to_num = request.to_number if request.to_number.startswith('+') else f"+{request.to_number}"
+        
+        message = client.messages.create(
+            body=request.message,
+            from_=TWILIO_PHONE_NUMBER,
+            to=to_num
+        )
+        return {"status": "success", "message_sid": message.sid, "details": "SMS queued successfully"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+@router.post("/admin/send-whatsapp")
+async def send_whatsapp(request: WhatsAppRequest):
+    from twilio.rest import Client
+    try:
+        client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+        
+        # Format for WhatsApp
+        to_num = f"whatsapp:{request.to_number}" if not request.to_number.startswith('whatsapp:') else request.to_number
+        if not to_num.startswith('whatsapp:+'):
+            to_num = to_num.replace('whatsapp:', 'whatsapp:+')
+            
+        # Sandbox number is typically +14155238886, but it's best to let user set it if different
+        from_num = f"whatsapp:{TWILIO_PHONE_NUMBER}"
+        
+        kwargs = {
+            "body": request.message,
+            "from_": from_num,
+            "to": to_num
+        }
+        if request.media_url:
+            kwargs["media_url"] = [request.media_url]
+            
+        message = client.messages.create(**kwargs)
+        return {"status": "success", "message_sid": message.sid, "details": "WhatsApp message queued successfully"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
+
