@@ -1,0 +1,8 @@
+node_modules
+__pycache__
+.env
+.git
+frontend/
+mobile/
+mobile_customer/
+mobile_technician/
