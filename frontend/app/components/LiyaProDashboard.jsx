@@ -758,7 +758,7 @@ export default function LiyaProDashboard({
         <div className="proInfoAlert">
           <ShieldAlert size={16} className="alertIcon" />
           <p>
-            <strong>Physics Active:</strong> Model uses <strong>maya.glb</strong> with 57 high-fidelity skeletal blendshapes, resolving mouth opening limitations.
+            <strong>Physics Active:</strong> Model uses <strong>liya.glb</strong> with 57 high-fidelity skeletal blendshapes, resolving mouth opening limitations.
           </p>
         </div>
       </div>

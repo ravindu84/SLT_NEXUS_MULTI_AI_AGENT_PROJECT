@@ -27,8 +27,8 @@ export default function LiyaAvatarPro({
   const group = useRef();
   const [modelReady, setModelReady] = useState(false);
   
-  // 1. Load the maya.glb model
-  const { scene, animations } = useGLTF("/assets/maya.glb");
+  // 1. Load the liya.glb model
+  const { scene, animations } = useGLTF("/assets/liya.glb");
   const { actions } = useAnimations(animations, group);
 
   // Apply visual refinements and natural arms-down posture
@@ -271,4 +271,4 @@ export default function LiyaAvatarPro({
   );
 }
 
-useGLTF.preload("/assets/maya.glb");
+useGLTF.preload("/assets/liya.glb");

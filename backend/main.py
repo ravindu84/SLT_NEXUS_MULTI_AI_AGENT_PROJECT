@@ -405,6 +405,10 @@ async def chat_endpoint(request: ChatRequest):
     
     # Rebuild history
     messages = []
+    
+    # Inject Context
+    messages.append(SystemMessage(content=f"IMPORTANT CONTEXT: The user is currently logged in. Their SLT phone number/account number is {session_id}. Do not ask for their phone number again. Whenever checking usage, bills, or diagnostics, use this exact number automatically without asking."))
+    
     for m in history:
         if isinstance(m, HumanMessage):
             messages.append(HumanMessage(content=m.content))
