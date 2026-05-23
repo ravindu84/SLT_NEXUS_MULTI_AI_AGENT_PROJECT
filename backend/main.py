@@ -295,11 +295,12 @@ async def start_scheduler():
 origins = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "https://slt-nexus-multi-ai-agent-project.vercel.app",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],  # Allow all origins for hackathon demo
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -345,6 +346,36 @@ async def health_check():
         "system": "SLT NEXUS",
         "azure_speech_active": HAS_AZURE_SPEECH
     }
+
+# --- /api/admin/* proxy routes (frontend calls /api/admin/* but mocks router is at /mocks/admin/*) ---
+from backend.mocks import (
+    get_admin_tickets, get_admin_technicians, get_admin_dps,
+    get_admin_ledger, get_all_customers, get_admin_customer
+)
+
+@app.get("/api/admin/tickets")
+async def proxy_admin_tickets():
+    return await get_admin_tickets()
+
+@app.get("/api/admin/technicians")
+async def proxy_admin_technicians():
+    return await get_admin_technicians()
+
+@app.get("/api/admin/dps")
+async def proxy_admin_dps():
+    return await get_admin_dps()
+
+@app.get("/api/admin/ledger")
+async def proxy_admin_ledger():
+    return await get_admin_ledger()
+
+@app.get("/api/admin/customers")
+async def proxy_admin_customers():
+    return await get_all_customers()
+
+@app.get("/api/admin/customer/{phone}")
+async def proxy_admin_customer(phone: str):
+    return await get_admin_customer(phone)
 
 AGENT_INFO = {
     "liya_agent": {"label": "LIYA", "emoji": "🧠"},

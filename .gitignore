@@ -31,3 +31,10 @@ build/
 Thumbs.db
 
 .vercel
+
+# Deploy scripts with secrets & temp files
+deploy_aws.py
+*.pem
+docker_*.txt
+ps_output.txt
+docker_deploy_out.txt
