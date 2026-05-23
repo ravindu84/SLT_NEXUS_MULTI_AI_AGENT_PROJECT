@@ -87,9 +87,10 @@ export default function AdminDashboard() {
         customers: resCustomers.customers || []
       });
       setLastUpdated(new Date());
-      setIsLoading(false);
     } catch (error) {
       console.error("Failed to fetch admin data:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
