@@ -410,7 +410,9 @@ async def chat_endpoint(request: ChatRequest):
     
     try:
         import sqlite3
-        conn = sqlite3.connect("c:/SLT_NEXUS/backend/slt_dummy.db")
+        import os
+        db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'slt_dummy.db')
+        conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         cursor.execute("SELECT memory_summary FROM user_memory WHERE phone_number = ?", (session_id,))
         row = cursor.fetchone()

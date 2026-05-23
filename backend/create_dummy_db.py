@@ -1,9 +1,11 @@
 import sqlite3
 import random
+import os
 from datetime import datetime, timedelta
 
 def create_db():
-    conn = sqlite3.connect('c:/SLT_NEXUS/backend/slt_dummy.db')
+    db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'slt_dummy.db')
+    conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
     # Drop existing tables
