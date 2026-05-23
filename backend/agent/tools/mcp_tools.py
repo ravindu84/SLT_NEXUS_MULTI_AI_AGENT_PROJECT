@@ -180,3 +180,37 @@ async def send_whatsapp_notification(phone_number: str, message: str, media_url:
     except Exception as e:
         return f"Error sending WhatsApp: {str(e)}"
 
+@tool
+async def check_area_outages(phone_number: str) -> str:
+    """Checks if there are other customers connected to the same DP (Distribution Point) box currently facing an outage. Use this to determine if a reported issue is an isolated line fault or an area-wide cable/DP fault."""
+    import sqlite3
+    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT dp_loop FROM customers WHERE phone_number = ?", (phone_number,))
+        user_row = cursor.fetchone()
+        if not user_row or not user_row[0]:
+            conn.close()
+            return "Could not find DP loop for this number."
+        
+        dp_loop = user_row[0]
+        dp_box = dp_loop.rsplit('-', 1)[0]
+        
+        query = '''
+            SELECT count(*) 
+            FROM network_status n 
+            JOIN customers c ON n.phone_number = c.phone_number
+            WHERE c.dp_loop LIKE ? AND n.status = 'DOWN' AND n.phone_number != ?
+        '''
+        cursor.execute(query, (f"{dp_box}%", phone_number))
+        down_count = cursor.fetchone()[0]
+        conn.close()
+        
+        if down_count > 0:
+            return f"CRITICAL ALERT: Detected an area outage! There are {down_count} other customers connected to the same Distribution Point ({dp_box}) currently offline. Dispatch a maintenance team immediately."
+        else:
+            return f"No area outage detected. The distribution point {dp_box} is healthy for other customers. This is an isolated line issue."
+    except Exception as e:
+        return f"Error checking area outages: {str(e)}"

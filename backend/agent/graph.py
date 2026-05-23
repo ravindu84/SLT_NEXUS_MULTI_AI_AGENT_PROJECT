@@ -129,7 +129,8 @@ tools = [
     verify_ledger_security,
     # Provisioner tools
     allocate_fiber_dp_loop,
-    dispatch_installation_job
+    dispatch_installation_job,
+    check_area_outages
 ]
 tool_node = ToolNode(tools)
 

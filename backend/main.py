@@ -405,10 +405,22 @@ async def chat_endpoint(request: ChatRequest):
     
     # Rebuild history
     messages = []
+    # Inject Context and Memory
+    context_msg = f"IMPORTANT CONTEXT: The user is currently logged in. Their SLT phone number/account number is {session_id}. Do not ask for their phone number again. Whenever checking usage, bills, or diagnostics, use this exact number automatically without asking."
     
-    # Inject Context
-    messages.append(SystemMessage(content=f"IMPORTANT CONTEXT: The user is currently logged in. Their SLT phone number/account number is {session_id}. Do not ask for their phone number again. Whenever checking usage, bills, or diagnostics, use this exact number automatically without asking."))
-    
+    try:
+        import sqlite3
+        conn = sqlite3.connect("c:/SLT_NEXUS/backend/slt_dummy.db")
+        cursor = conn.cursor()
+        cursor.execute("SELECT memory_summary FROM user_memory WHERE phone_number = ?", (session_id,))
+        row = cursor.fetchone()
+        conn.close()
+        if row and row[0]:
+            context_msg += f"\n\nLONG-TERM AI MEMORY FOR THIS USER: {row[0]}"
+    except Exception as e:
+        pass
+
+    messages.append(SystemMessage(content=context_msg))    
     for m in history:
         if isinstance(m, HumanMessage):
             messages.append(HumanMessage(content=m.content))

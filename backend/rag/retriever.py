@@ -7,7 +7,8 @@ import os
 from pathlib import Path
 
 import chromadb
-from langchain_openai import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain.schema import HumanMessage
 
 
 CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", str(Path(__file__).parent.parent / "chroma_db"))
@@ -20,6 +21,22 @@ class SLTRetriever:
         self.client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
         self.collection = self.client.get_or_create_collection("slt_knowledge")
         self.embeddings = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
+        self.llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+
+    def expand_query(self, query_text: str) -> str:
+        """Use an LLM to rewrite and expand vague/Sinhala queries into perfect English search terms."""
+        prompt = f"""
+        You are an expert search query generator for SLT-MOBITEL's knowledge base.
+        The user has provided a query which might be in Sinhala, Singlish, or vague English.
+        Rewrite it into a highly specific, keyword-rich English search query optimized for vector semantic search.
+        ONLY output the rewritten query string. No quotes, no intro.
+        
+        Original Query: {query_text}
+        """
+        try:
+            return self.llm.invoke([HumanMessage(content=prompt)]).content.strip()
+        except Exception:
+            return query_text
 
     def query(self, query_text: str, n_results: int = 5, source_filter: str = None) -> list[dict]:
         """
@@ -33,7 +50,11 @@ class SLTRetriever:
         Returns:
             List of relevant document dicts with text and metadata
         """
-        query_embedding = self.embeddings.embed_query(query_text)
+        # Expand query for better semantic match
+        expanded_query = self.expand_query(query_text)
+        print(f"[RAG] Original Query: {query_text} | Expanded: {expanded_query}")
+        
+        query_embedding = self.embeddings.embed_query(expanded_query)
 
         where_filter = None
         if source_filter:

@@ -16,8 +16,18 @@ def create_db():
     cursor.execute("DROP TABLE IF EXISTS fault_tickets")
     cursor.execute("DROP TABLE IF EXISTS prospects")
     cursor.execute("DROP TABLE IF EXISTS new_connections")
+    cursor.execute("DROP TABLE IF EXISTS user_memory")
 
-    # 0. Prospects Table (New App Users who haven't bought yet)
+    # 0. User Memory Table (Long-Term AI Memory)
+    cursor.execute('''
+        CREATE TABLE user_memory (
+            phone_number TEXT PRIMARY KEY,
+            memory_summary TEXT,
+            last_updated TEXT
+        )
+    ''')
+
+    # 0.1 Prospects Table (New App Users who haven't bought yet)
     cursor.execute('''
         CREATE TABLE prospects (
             mobile_number TEXT PRIMARY KEY,
@@ -370,9 +380,15 @@ def create_db():
             VALUES (?, ?, ?, ?, ?)
         ''', (t_id, f_phone, tech, status, ticket_time.strftime("%Y-%m-%d %H:%M:%S")))
 
+    # Add mock long-term memory for the first user (0112895800)
+    cursor.execute('''
+        INSERT INTO user_memory (phone_number, memory_summary, last_updated)
+        VALUES (?, ?, ?)
+    ''', ('0112895800', 'Customer is highly sensitive to internet drops. Frequently complains about ping issues during gaming. Prefers quick resolutions and is interested in upgrading to Fiber if ping improves. Remind them about the Fiber upgrade option next time they contact.', datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+
     conn.commit()
     conn.close()
-    print("SUCCESS: SLT NEXUS Database Rebuilt with Fault Tickets & Technicians!")
+    print("SUCCESS: SLT NEXUS Database Rebuilt with Fault Tickets, Technicians & Memory!")
 
 if __name__ == "__main__":
     create_db()
