@@ -17,4 +17,4 @@ langchain-google-genai
 gTTS
 google-cloud-texttospeech
 azure-cognitiveservices-speech
-
+chromadb
