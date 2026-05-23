@@ -8,11 +8,17 @@ import styles from "../page.module.css";
 import "./LiyaProLab.css";
 
 export default function LiyaProDashboard({
+  agent = "liya", // "liya" or "maya"
   language = "en",
   isMuted = false,
   API_URL = "http://127.0.0.1:8000",
   onInteraction
 }) {
+  const isMaya = agent === "maya";
+  const agentName = isMaya ? "MAYA" : "LIYA";
+  const agentVersion = isMaya ? "2.0" : "3.0 (Head of AI)";
+  const modelPath = isMaya ? "/assets/maya.glb" : "/assets/liya.glb";
+
   // Mode selection
   const [controlMode, setControlMode] = useState("chat"); // "chat", "ai" or "manual"
   
@@ -24,7 +30,7 @@ export default function LiyaProDashboard({
   
   // Chat States for Pro Lab
   const [chatMessages, setChatMessages] = useState([
-    { id: 1, role: "assistant", content: "Hello! I am MAYA 2.0. Let's test my advanced swarm intelligence. Ask me anything!", agent_label: "MAYA", agent_emoji: "🧠" }
+    { id: 1, role: "assistant", content: `Hello! I am ${agentName} ${agentVersion}. Let's test my advanced swarm intelligence. Ask me anything!`, agent_label: agentName, agent_emoji: "🧠" }
   ]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
@@ -248,7 +254,7 @@ export default function LiyaProDashboard({
         content: data.response,
         agent_used: data.agent_used,
         agent_emoji: data.agent_emoji || "🧠",
-        agent_label: data.agent_label || "MAYA",
+        agent_label: data.agent_label || agentName,
       };
 
       setChatMessages((prev) => [...prev, aiMsg]);
@@ -338,6 +344,7 @@ export default function LiyaProDashboard({
       <div className="proCanvasSection">
         <div className={styles.avatarCanvas} style={{ zIndex: 3 }}>
           <AvatarScenePro
+            modelPath={modelPath}
             isSpeaking={isSpeaking}
             audioLevel={audioLevel}
             manualOverride={controlMode === "manual"}
@@ -385,7 +392,7 @@ export default function LiyaProDashboard({
         {/* Ambient Overlay Title */}
         <div className="proFloatingBadge" style={{ zIndex: 10 }}>
           <div className="pulsingDot red"></div>
-          <span>Maya Assistant</span>
+          <span>{agentName} Assistant</span>
         </div>
       </div>
 
@@ -394,7 +401,7 @@ export default function LiyaProDashboard({
         <div className="sidebarHeader">
           <Cpu className="sidebarIcon glowIcon" size={24} />
           <div>
-            <h3>Maya Assistant</h3>
+            <h3>{agentName} Assistant</h3>
             <p>Advanced Real-Time Lip Sync & Diagnostics</p>
           </div>
         </div>
@@ -436,75 +443,77 @@ export default function LiyaProDashboard({
           </button>
         </div>
 
-        {/* Real-time Diagnostics (Viseme Metrics) */}
-        <div className="diagnosticCard">
-          <div className="cardHeader">
-            <Layers size={16} className="cardHeaderIcon" />
-            <h4>3D Morph Target Diagnostics (Live)</h4>
+        {/* Real-time Diagnostics (Viseme Metrics) - Hidden in Chat Mode to give space to the beautiful chat */}
+        {controlMode !== "chat" && (
+          <div className="diagnosticCard">
+            <div className="cardHeader">
+              <Layers size={16} className="cardHeaderIcon" />
+              <h4>3D Morph Target Diagnostics (Live)</h4>
+            </div>
+            
+            <div className="metricsList">
+              <div className="metricRow">
+                <div className="metricLabels">
+                  <span>Fcl_MTH_A (Mouth Open)</span>
+                  <span>{(liveMetrics.mthA * 100).toFixed(0)}%</span>
+                </div>
+                <div className="barContainer">
+                  <div className="barFill neonBlue" style={{ width: `${liveMetrics.mthA * 100}%` }}></div>
+                </div>
+              </div>
+
+              <div className="metricRow">
+                <div className="metricLabels">
+                  <span>Fcl_MTH_O (Vowel O)</span>
+                  <span>{(liveMetrics.mthO * 100).toFixed(0)}%</span>
+                </div>
+                <div className="barContainer">
+                  <div className="barFill neonPurple" style={{ width: `${liveMetrics.mthO * 100}%` }}></div>
+                </div>
+              </div>
+
+              <div className="metricRow">
+                <div className="metricLabels">
+                  <span>Fcl_MTH_I (Vowel I)</span>
+                  <span>{(liveMetrics.mthI * 100).toFixed(0)}%</span>
+                </div>
+                <div className="barContainer">
+                  <div className="barFill neonCyan" style={{ width: `${liveMetrics.mthI * 100}%` }}></div>
+                </div>
+              </div>
+
+              <div className="metricRow">
+                <div className="metricLabels">
+                  <span>Fcl_MTH_Large (Jaw Drop)</span>
+                  <span>{(liveMetrics.mthLarge * 100).toFixed(0)}%</span>
+                </div>
+                <div className="barContainer">
+                  <div className="barFill neonGreen" style={{ width: `${liveMetrics.mthLarge * 100}%` }}></div>
+                </div>
+              </div>
+
+              <div className="metricRow">
+                <div className="metricLabels">
+                  <span>Fcl_EYE_Close (Blink Rate)</span>
+                  <span>{(liveMetrics.eyeBlink * 100).toFixed(0)}%</span>
+                </div>
+                <div className="barContainer">
+                  <div className="barFill neonAmber" style={{ width: `${liveMetrics.eyeBlink * 100}%` }}></div>
+                </div>
+              </div>
+
+              <div className="metricRow">
+                <div className="metricLabels">
+                  <span>Fcl_ALL_Joy (Smiling)</span>
+                  <span>{(liveMetrics.joy * 100).toFixed(0)}%</span>
+                </div>
+                <div className="barContainer">
+                  <div className="barFill neonPink" style={{ width: `${liveMetrics.joy * 100}%` }}></div>
+                </div>
+              </div>
+            </div>
           </div>
-          
-          <div className="metricsList">
-            <div className="metricRow">
-              <div className="metricLabels">
-                <span>Fcl_MTH_A (Mouth Open)</span>
-                <span>{(liveMetrics.mthA * 100).toFixed(0)}%</span>
-              </div>
-              <div className="barContainer">
-                <div className="barFill neonBlue" style={{ width: `${liveMetrics.mthA * 100}%` }}></div>
-              </div>
-            </div>
-
-            <div className="metricRow">
-              <div className="metricLabels">
-                <span>Fcl_MTH_O (Vowel O)</span>
-                <span>{(liveMetrics.mthO * 100).toFixed(0)}%</span>
-              </div>
-              <div className="barContainer">
-                <div className="barFill neonPurple" style={{ width: `${liveMetrics.mthO * 100}%` }}></div>
-              </div>
-            </div>
-
-            <div className="metricRow">
-              <div className="metricLabels">
-                <span>Fcl_MTH_I (Vowel I)</span>
-                <span>{(liveMetrics.mthI * 100).toFixed(0)}%</span>
-              </div>
-              <div className="barContainer">
-                <div className="barFill neonCyan" style={{ width: `${liveMetrics.mthI * 100}%` }}></div>
-              </div>
-            </div>
-
-            <div className="metricRow">
-              <div className="metricLabels">
-                <span>Fcl_MTH_Large (Jaw Drop)</span>
-                <span>{(liveMetrics.mthLarge * 100).toFixed(0)}%</span>
-              </div>
-              <div className="barContainer">
-                <div className="barFill neonGreen" style={{ width: `${liveMetrics.mthLarge * 100}%` }}></div>
-              </div>
-            </div>
-
-            <div className="metricRow">
-              <div className="metricLabels">
-                <span>Fcl_EYE_Close (Blink Rate)</span>
-                <span>{(liveMetrics.eyeBlink * 100).toFixed(0)}%</span>
-              </div>
-              <div className="barContainer">
-                <div className="barFill neonAmber" style={{ width: `${liveMetrics.eyeBlink * 100}%` }}></div>
-              </div>
-            </div>
-
-            <div className="metricRow">
-              <div className="metricLabels">
-                <span>Fcl_ALL_Joy (Smiling)</span>
-                <span>{(liveMetrics.joy * 100).toFixed(0)}%</span>
-              </div>
-              <div className="barContainer">
-                <div className="barFill neonPink" style={{ width: `${liveMetrics.joy * 100}%` }}></div>
-              </div>
-            </div>
-          </div>
-        </div>
+        )}
 
         {/* Dynamic Panels based on Mode */}
         {controlMode === "chat" && (
@@ -556,7 +565,7 @@ export default function LiyaProDashboard({
                 onKeyDown={(e) => {
                   if (e.key === "Enter") sendChatPro();
                 }}
-                placeholder={isListening ? "Listening... Speak now!" : "Type your message to MAYA..."}
+                placeholder={isListening ? "Listening... Speak now!" : `Type your message to ${agentName}...`}
                 className="labChatInput"
                 disabled={chatLoading}
               />
@@ -601,7 +610,7 @@ export default function LiyaProDashboard({
               <textarea
                 value={customText}
                 onChange={(e) => setCustomText(e.target.value)}
-                placeholder="Type anything here (Sinhala, English, or Tamil) and let MAYA speak it with full lip sync..."
+                placeholder={`Type anything here (Sinhala, English, or Tamil) and let ${agentName} speak it with full lip sync...`}
                 className="proTextArea"
                 rows={3}
               />
@@ -651,7 +660,7 @@ export default function LiyaProDashboard({
             </div>
 
             <p className="manualInstruction">
-              Move the sliders below to manually control MAYA's face meshes in real-time. This bypasses the AI mouth voice movement and maps directly to her 3D structure!
+              Move the sliders below to manually control {agentName}'s face meshes in real-time. This bypasses the AI mouth voice movement and maps directly to her 3D structure!
             </p>
 
             <div className="sliderControlList">
@@ -758,7 +767,7 @@ export default function LiyaProDashboard({
         <div className="proInfoAlert">
           <ShieldAlert size={16} className="alertIcon" />
           <p>
-            <strong>Physics Active:</strong> Model uses <strong>liya.glb</strong> with 57 high-fidelity skeletal blendshapes, resolving mouth opening limitations.
+            <strong>Physics Active:</strong> Model uses <strong>{isMaya ? "maya.glb" : "liya.glb"}</strong> with 57 high-fidelity skeletal blendshapes, resolving mouth opening limitations.
           </p>
         </div>
       </div>

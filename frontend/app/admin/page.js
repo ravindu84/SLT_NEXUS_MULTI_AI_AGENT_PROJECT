@@ -603,9 +603,9 @@ export default function AdminDashboard() {
                   
                   {/* Sub-tab content */}
                   <div className="flex-1 relative overflow-hidden bg-[#13141a]">
-                    {aiChatTab === 'liya' && <LiyaProDashboard isAdmin={true} />}
+                    {aiChatTab === 'liya' && <LiyaProDashboard isAdmin={true} agent="liya" />}
                     {aiChatTab === 'neo' && <NeoDashboard isAdmin={true} />}
-                    {aiChatTab === 'maya' && <LiyaProDashboard isAdmin={true} />}
+                    {aiChatTab === 'maya' && <LiyaProDashboard isAdmin={true} agent="maya" />}
                   </div>
                 </div>
               )}

@@ -6,6 +6,7 @@ import { Suspense } from "react";
 import LiyaAvatarPro from "./LiyaAvatarPro";
 
 export default function AvatarScenePro({
+  modelPath = "/assets/liya.glb",
   isSpeaking = false,
   isListening = false,
   isThinking = false,
@@ -30,6 +31,7 @@ export default function AvatarScenePro({
         <directionalLight position={[0, 2, 5]} intensity={1.2} color="#ffedd6" />
 
         <LiyaAvatarPro
+          modelPath={modelPath}
           isSpeaking={isSpeaking}
           isListening={isListening}
           isThinking={isThinking}

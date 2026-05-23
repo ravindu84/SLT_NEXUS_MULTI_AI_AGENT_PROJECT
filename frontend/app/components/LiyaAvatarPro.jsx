@@ -10,6 +10,7 @@ import * as THREE from "three";
  * Uses liya_2.glb with full morph-target based lip sync (A-I-U-E-O / Large / Blink)
  */
 export default function LiyaAvatarPro({
+  modelPath = "/assets/liya.glb",
   isSpeaking = false,
   isListening = false,
   isThinking = false,
@@ -27,8 +28,8 @@ export default function LiyaAvatarPro({
   const group = useRef();
   const [modelReady, setModelReady] = useState(false);
   
-  // 1. Load the liya.glb model
-  const { scene, animations } = useGLTF("/assets/liya.glb");
+  // 1. Load the model dynamically
+  const { scene, animations } = useGLTF(modelPath);
   const { actions } = useAnimations(animations, group);
 
   // Apply visual refinements and natural arms-down posture
@@ -84,11 +85,11 @@ export default function LiyaAvatarPro({
     if (scene && wrapperRef.current) {
       wrapperRef.current.rotation.set(0, 0, 0); 
       
-      // Scale: optimized for liya_2.glb with X widened to 9.4 to make her fuller and "piripun" (not skinny)
-      wrapperRef.current.scale.set(9.4, 8.2, 8.5);
+      // Standard scale
+      wrapperRef.current.scale.set(6.85, 6.85, 6.85);
 
-      // Position: adjusted Y offset to align waist-up portrait perfectly in camera view
-      wrapperRef.current.position.set(0, -4.4, 0);
+      // Position to show waist-up
+      wrapperRef.current.position.set(0, -5.5, 0);
 
       setModelReady(true);
       console.log("LIYA 2.0 (Pro) Transforms Applied Safely.");
