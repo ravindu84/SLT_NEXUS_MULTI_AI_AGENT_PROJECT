@@ -565,7 +565,7 @@ export default function AdminDashboard() {
         </header>
 
         {/* SCROLLABLE MAIN CONTENT */}
-        <div className="flex-1 overflow-y-auto p-6 sm:p-8 custom-scrollbar">
+        <div className={`flex-1 overflow-y-auto custom-scrollbar ${activeTab === 'ai-chat' ? '' : 'p-6 sm:p-8'}`}>
           {isLoading ? (
             <div className="h-full flex items-center justify-center">
                <div className="w-8 h-8 border-4 border-rose-500 border-t-transparent rounded-full animate-spin"></div>
@@ -578,7 +578,7 @@ export default function AdminDashboard() {
               {activeTab === 'dispatch' && renderDispatch()}
               {activeTab === 'vault' && renderVault()}
               {activeTab === 'ai-chat' && (
-                <div className="h-full w-full flex flex-col bg-[#1c1d25] rounded-xl overflow-hidden border border-slate-800/50 shadow-lg">
+                <div className="h-full w-full flex flex-col bg-[#1c1d25] overflow-hidden shadow-lg">
                   {/* Internal Sub-tabs for AI Chat */}
                   <div className="flex border-b border-slate-800/50 bg-[#13141a]">
                     <button 

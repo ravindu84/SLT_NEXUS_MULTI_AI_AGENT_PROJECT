@@ -11,7 +11,8 @@ export default function NeoDashboard({
   language = "en",
   isMuted = false,
   API_URL = "http://127.0.0.1:8000",
-  onInteraction
+  onInteraction,
+  isAdmin = false
 }) {
   // Mode selection
   const [controlMode, setControlMode] = useState("chat"); // "chat", "ai" or "manual"

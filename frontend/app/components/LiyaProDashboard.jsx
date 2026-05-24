@@ -12,7 +12,8 @@ export default function LiyaProDashboard({
   language = "en",
   isMuted = false,
   API_URL = "http://127.0.0.1:8000",
-  onInteraction
+  onInteraction,
+  isAdmin = false
 }) {
   const isMaya = agent === "maya";
   const agentName = isMaya ? "MAYA" : "LIYA";
