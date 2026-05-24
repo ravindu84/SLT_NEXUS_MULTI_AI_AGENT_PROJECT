@@ -51,11 +51,11 @@ export default function LiyaAvatar({
     if (scene && wrapperRef.current) {
       wrapperRef.current.rotation.set(0, 0, 0); 
       
-      // SCALE: Carefully balanced to 6.85 (not skinny, not crushed at the edges)
-      wrapperRef.current.scale.set(6.85, 6.85, 6.85);
+      // SCALE: Standard scale for full-screen customer app
+      wrapperRef.current.scale.set(7.5, 7.5, 7.5);
 
-      // POSITION: Brought down slightly as requested
-      wrapperRef.current.position.set(0, -4.2, 0);
+      // POSITION: Original perfect position for customer app
+      wrapperRef.current.position.set(0, -6.0, 0);
 
       setModelReady(true);
       console.log("LIYA: Wrapper Transforms Applied Safely.");
@@ -190,9 +190,9 @@ export default function LiyaAvatar({
       const targetRotY = isSpeaking ? (Math.sin(time * 1.2) * 0.08) : (Math.sin(time * 0.3) * 0.03);
       wrapperRef.current.rotation.y = THREE.MathUtils.lerp(wrapperRef.current.rotation.y, targetRotY, 0.05);
       
-      // Slight leaning forward when speaking
-      const targetRotX = isSpeaking ? 0.02 : 0;
-      wrapperRef.current.rotation.x = THREE.MathUtils.lerp(wrapperRef.current.rotation.x, targetRotX, 0.05);
+      // Subtle breathing translation
+      const targetPosY = -6.0 + Math.sin(time * 1.2) * 0.025;
+      wrapperRef.current.position.y = THREE.MathUtils.lerp(wrapperRef.current.position.y, targetPosY, 0.05);
     }
   });
 

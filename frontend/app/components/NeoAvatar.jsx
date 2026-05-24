@@ -23,7 +23,8 @@ export default function NeoAvatar({
     mouthLarge: 0,
     blink: 0,
     joy: 0,
-  }
+  },
+  isAdmin = false
 }) {
   const group = useRef();
   const [modelReady, setModelReady] = useState(false);
@@ -100,11 +101,20 @@ export default function NeoAvatar({
     if (scene && wrapperRef.current) {
       wrapperRef.current.rotation.set(0, 0, 0); 
       
-      // Scale: optimized for neo.glb
-      wrapperRef.current.scale.set(6.85, 6.85, 6.85);
+      let baseScale = 6.85;
+      let baseY = -4.2;
 
-      // Position: adjusted Y offset to align waist-up portrait perfectly in camera view
-      wrapperRef.current.position.set(0, -4.2, 0);
+      if (isAdmin) {
+        baseScale = 4.0;
+        baseY = -3.2;
+      } else {
+        baseScale = 6.85;
+        baseY = -4.2;
+      }
+
+      wrapperRef.current.userData = { baseY };
+      wrapperRef.current.scale.set(baseScale, baseScale, baseScale);
+      wrapperRef.current.position.set(0, baseY, 0);
 
       setModelReady(true);
       console.log("NEO Avatar Transforms Applied Safely.");
@@ -252,7 +262,8 @@ export default function NeoAvatar({
       wrapperRef.current.rotation.x = THREE.MathUtils.lerp(wrapperRef.current.rotation.x, targetRotX, 0.05);
 
       // Subtle breathing translation
-      const targetPosY = -4.4 + Math.sin(time * 1.2) * 0.025;
+      const baseY = wrapperRef.current.userData.baseY || -4.4;
+      const targetPosY = baseY + Math.sin(time * 1.2) * 0.025;
       wrapperRef.current.position.y = THREE.MathUtils.lerp(wrapperRef.current.position.y, targetPosY, 0.05);
     }
   });

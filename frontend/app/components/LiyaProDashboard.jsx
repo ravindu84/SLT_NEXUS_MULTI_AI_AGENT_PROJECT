@@ -345,7 +345,10 @@ export default function LiyaProDashboard({
         <div className={styles.avatarCanvas} style={{ zIndex: 3 }}>
           <AvatarScenePro
             modelPath={modelPath}
+            isAdmin={isAdmin}
             isSpeaking={isSpeaking}
+            isListening={isListening}
+            isThinking={isThinking}
             audioLevel={audioLevel}
             manualOverride={controlMode === "manual"}
             overrideValues={manualValues}

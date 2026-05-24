@@ -23,7 +23,8 @@ export default function LiyaAvatarPro({
     mouthLarge: 0,
     blink: 0,
     joy: 0,
-  }
+  },
+  isAdmin = false
 }) {
   const group = useRef();
   const [modelReady, setModelReady] = useState(false);
@@ -85,11 +86,33 @@ export default function LiyaAvatarPro({
     if (scene && wrapperRef.current) {
       wrapperRef.current.rotation.set(0, 0, 0); 
       
-      // Standard scale
-      wrapperRef.current.scale.set(6.85, 6.85, 6.85);
+      const isMaya = modelPath.includes("maya");
+      let baseScale = 6.85;
+      let baseY = -4.2;
 
-      // Position to show waist-up
-      wrapperRef.current.position.set(0, -4.2, 0);
+      if (isAdmin) {
+        if (isMaya) {
+          baseScale = 6.85;
+          baseY = -3.7;
+        } else {
+          baseScale = 4.0;
+          baseY = -3.2;
+        }
+      } else {
+        // Customer App (Maya tab uses LiyaAvatarPro)
+        if (isMaya) {
+          baseScale = 6.85;
+          baseY = -4.2;
+        } else {
+          // Fallback if Liya happens to use Pro locally
+          baseScale = 7.5;
+          baseY = -6.0;
+        }
+      }
+      
+      wrapperRef.current.userData = { baseY };
+      wrapperRef.current.scale.set(baseScale, baseScale, baseScale);
+      wrapperRef.current.position.set(0, baseY, 0);
 
       setModelReady(true);
       console.log("LIYA 2.0 (Pro) Transforms Applied Safely.");
@@ -241,7 +264,8 @@ export default function LiyaAvatarPro({
       wrapperRef.current.rotation.x = THREE.MathUtils.lerp(wrapperRef.current.rotation.x, targetRotX, 0.05);
 
       // Subtle breathing translation (up and down)
-      const targetPosY = -4.4 + Math.sin(time * 1.2) * 0.025;
+      const baseY = wrapperRef.current.userData.baseY || -4.4;
+      const targetPosY = baseY + Math.sin(time * 1.2) * 0.025;
       wrapperRef.current.position.y = THREE.MathUtils.lerp(wrapperRef.current.position.y, targetPosY, 0.05);
     }
   });

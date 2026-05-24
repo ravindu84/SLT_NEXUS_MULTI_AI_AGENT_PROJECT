@@ -337,8 +337,11 @@ export default function NeoDashboard({
       {/* 3D Render Area */}
       <div className="neoCanvasSection">
         <div className={styles.avatarCanvas} style={{ zIndex: 3 }}>
-          <NeoAvatarScene
+          <NeoAvatarScene 
+            isAdmin={isAdmin}
             isSpeaking={isSpeaking}
+            isListening={isListening}
+            isThinking={isThinking}
             audioLevel={audioLevel}
             manualOverride={controlMode === "manual"}
             overrideValues={manualValues}

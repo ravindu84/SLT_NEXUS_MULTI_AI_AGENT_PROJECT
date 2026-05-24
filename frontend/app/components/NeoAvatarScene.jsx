@@ -11,7 +11,8 @@ export default function NeoAvatarScene({
   isThinking = false,
   audioLevel = 0,
   manualOverride = false,
-  overrideValues = {}
+  overrideValues = {},
+  isAdmin = false
 }) {
   return (
     <Canvas
@@ -30,6 +31,7 @@ export default function NeoAvatarScene({
         <directionalLight position={[0, 2, 5]} intensity={1.2} color="#ffedd6" />
 
         <NeoAvatar
+          isAdmin={isAdmin}
           isSpeaking={isSpeaking}
           isListening={isListening}
           isThinking={isThinking}

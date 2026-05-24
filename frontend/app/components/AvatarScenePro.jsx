@@ -12,7 +12,8 @@ export default function AvatarScenePro({
   isThinking = false,
   audioLevel = 0,
   manualOverride = false,
-  overrideValues = {}
+  overrideValues = {},
+  isAdmin = false
 }) {
   return (
     <Canvas
@@ -32,6 +33,7 @@ export default function AvatarScenePro({
 
         <LiyaAvatarPro
           modelPath={modelPath}
+          isAdmin={isAdmin}
           isSpeaking={isSpeaking}
           isListening={isListening}
           isThinking={isThinking}
