@@ -20,7 +20,7 @@ import AvatarScene from './components/AvatarScene';
 import * as Speech from 'expo-speech';
 
 const { width, height } = Dimensions.get('window');
-const BACKEND_URL = 'http://192.168.1.10:8000'; // Updated to match your local IP
+const BACKEND_URL = 'http://13.61.4.78:8000';
 
 const AGENTS = [
   { id: 'liya', name: 'LIYA', color: '#0052cc', icon: Zap },
@@ -268,6 +268,10 @@ export default function App() {
       />
 
       {/* Bottom Controls */}
+      <KeyboardAvoidingView 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.bottomSection}
+      >
         <View style={styles.inputRow}>
           <TouchableOpacity style={styles.micButton} onPress={() => alert('Voice Recording (STT) requires a custom Expo Dev Client or Native Eject. Please use the text input for this preview.')}>
             <Mic size={24} color="#64748b" />

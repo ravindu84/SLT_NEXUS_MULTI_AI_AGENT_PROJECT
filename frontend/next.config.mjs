@@ -7,6 +7,14 @@ const nextConfig = {
     // your project has ESLint errors. Needed to bypass strict react-hooks rules.
     ignoreDuringBuilds: true,
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/:path*',
+        destination: 'http://13.61.4.78:8000/:path*', // Proxy to AWS Backend
+      },
+    ];
+  },
 };
 
 export default nextConfig;
