@@ -17,7 +17,7 @@ export default function NeoAvatarScene({
   return (
     <Canvas
       key="neo-avatar-canvas"
-      camera={{ position: [0, -0.1, 4.6], fov: 42 }}
+      camera={{ position: [0, -0.2, 5.0], fov: 45 }}
       style={{ width: "100%", height: "100%", background: "transparent" }}
       gl={{ 
         antialias: true, 

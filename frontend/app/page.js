@@ -678,6 +678,7 @@ export default function Home() {
         >
           {hasMounted && (
             <LiyaProDashboard
+              agent="maya"
               language={language}
               isMuted={isMuted}
               API_URL={API_URL}

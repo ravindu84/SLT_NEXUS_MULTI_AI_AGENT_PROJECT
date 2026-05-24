@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Activity, Server, Users, Shield, Terminal, Settings, 
-  MapPin, CheckCircle, AlertTriangle, Clock, ChevronRight, 
+  MapPin, CheckCircle, AlertTriangle, Clock, ChevronRight, ChevronLeft,
   Search, Bell, Menu, Zap, Globe, Cpu, Database, User, MessageSquare
 } from 'lucide-react';
 import {
@@ -146,6 +146,20 @@ export default function AdminDashboard() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* SWARM AI CHAT QUICK LAUNCH */}
+      <div className="bg-gradient-to-r from-rose-600 to-rose-800 rounded-xl p-8 flex flex-col sm:flex-row items-center justify-between shadow-lg shadow-rose-900/50 border border-rose-500/50 group cursor-pointer" onClick={() => setActiveTab('ai-chat')}>
+         <div>
+            <h2 className="text-2xl font-black text-white flex items-center gap-3">
+              <Cpu className="w-8 h-8 text-rose-200" />
+              NEXUS SWARM AI
+            </h2>
+            <p className="text-rose-200 mt-2">Engage with Liya, Neo, and Maya in the full-screen immersive command center.</p>
+         </div>
+         <button className="mt-6 sm:mt-0 px-6 py-3 bg-white text-rose-600 font-bold rounded-full hover:bg-rose-100 transition-colors shadow-lg flex items-center gap-2 group-hover:scale-105 duration-300">
+           Launch Terminal <ChevronRight className="w-5 h-5" />
+         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -474,7 +488,7 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-[#13141a] text-slate-200 font-sans selection:bg-rose-500/30 flex overflow-hidden">
       
       {/* SIDEBAR (DarkPan Style) */}
-      <div className="w-64 bg-[#1c1d25] border-r border-slate-800/50 flex-col hidden md:flex shrink-0">
+      <div className={`w-64 bg-[#1c1d25] border-r border-slate-800/50 flex-col shrink-0 ${activeTab === 'ai-chat' ? 'hidden' : 'hidden md:flex'}`}>
         <div className="h-20 flex items-center px-6 border-b border-slate-800/50 shrink-0">
           <div className="flex items-center gap-3">
              <div className="w-8 h-8 rounded bg-rose-500 flex items-center justify-center shrink-0 shadow-lg shadow-rose-500/20">
@@ -530,7 +544,7 @@ export default function AdminDashboard() {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         
         {/* TOP NAVBAR (DarkPan Style) */}
-        <header className="h-20 px-8 flex justify-between items-center bg-[#1c1d25] border-b border-slate-800/50 shrink-0">
+        <header className={`h-20 px-8 justify-between items-center bg-[#1c1d25] border-b border-slate-800/50 shrink-0 ${activeTab === 'ai-chat' ? 'hidden' : 'flex'}`}>
           <div className="flex items-center gap-4">
             <button className="md:hidden p-2 text-slate-400 hover:text-white">
               <Menu className="w-6 h-6" />
@@ -581,6 +595,13 @@ export default function AdminDashboard() {
                 <div className="h-full w-full flex flex-col bg-[#1c1d25] overflow-hidden shadow-lg">
                   {/* Internal Sub-tabs for AI Chat */}
                   <div className="flex border-b border-slate-800/50 bg-[#13141a]">
+                    <button 
+                      onClick={() => setActiveTab('overview')}
+                      className="px-4 py-3 text-slate-400 hover:text-white border-r border-slate-800/50 flex items-center justify-center transition-colors"
+                      title="Back to Admin Dashboard"
+                    >
+                      <ChevronLeft className="w-6 h-6" />
+                    </button>
                     <button 
                       onClick={() => setAiChatTab('liya')}
                       className={`flex-1 py-3 text-sm font-bold transition-colors ${aiChatTab === 'liya' ? 'text-rose-500 border-b-2 border-rose-500' : 'text-slate-400 hover:text-white'}`}

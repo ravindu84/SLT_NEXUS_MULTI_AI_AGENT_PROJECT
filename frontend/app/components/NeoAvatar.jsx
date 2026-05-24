@@ -101,16 +101,8 @@ export default function NeoAvatar({
     if (scene && wrapperRef.current) {
       wrapperRef.current.rotation.set(0, 0, 0); 
       
-      let baseScale = 6.85;
-      let baseY = -4.2;
-
-      if (isAdmin) {
-        baseScale = 4.0;
-        baseY = -3.2;
-      } else {
-        baseScale = 6.85;
-        baseY = -4.2;
-      }
+      const baseScale = 7.5;
+      const baseY = -6.0;
 
       wrapperRef.current.userData = { baseY };
       wrapperRef.current.scale.set(baseScale, baseScale, baseScale);

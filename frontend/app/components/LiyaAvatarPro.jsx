@@ -87,27 +87,16 @@ export default function LiyaAvatarPro({
       wrapperRef.current.rotation.set(0, 0, 0); 
       
       const isMaya = modelPath.includes("maya");
-      let baseScale = 6.85;
-      let baseY = -4.2;
+      let baseScale = 7.5;
+      let baseY = -6.0;
 
-      if (isAdmin) {
-        if (isMaya) {
-          baseScale = 6.85;
-          baseY = -3.7;
-        } else {
-          baseScale = 4.0;
-          baseY = -3.2;
-        }
+      // Customer App (Maya tab uses LiyaAvatarPro)
+      if (isMaya) {
+        baseScale = 7.5;
+        baseY = -6.0;
       } else {
-        // Customer App (Maya tab uses LiyaAvatarPro)
-        if (isMaya) {
-          baseScale = 6.85;
-          baseY = -4.2;
-        } else {
-          // Fallback if Liya happens to use Pro locally
-          baseScale = 7.5;
-          baseY = -6.0;
-        }
+        baseScale = 7.5;
+        baseY = -6.0;
       }
       
       wrapperRef.current.userData = { baseY };
@@ -297,3 +286,4 @@ export default function LiyaAvatarPro({
 }
 
 useGLTF.preload("/assets/liya.glb");
+useGLTF.preload("/assets/maya.glb");
