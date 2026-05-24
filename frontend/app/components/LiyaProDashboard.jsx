@@ -30,9 +30,7 @@ export default function LiyaProDashboard({
   const [activePhrase, setActivePhrase] = useState("");
   
   // Chat States for Pro Lab
-  const [chatMessages, setChatMessages] = useState([
-    { id: 1, role: "assistant", content: `Hello! I am ${agentName} ${agentVersion}. Let's test my advanced swarm intelligence. Ask me anything!`, agent_label: agentName, agent_emoji: "🧠" }
-  ]);
+  const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const isThinking = chatLoading;
@@ -346,6 +344,7 @@ export default function LiyaProDashboard({
       <div className="proCanvasSection">
         <div className={styles.avatarCanvas} style={{ zIndex: 3 }}>
           <AvatarScenePro
+            key={modelPath}
             modelPath={modelPath}
             isAdmin={isAdmin}
             isSpeaking={isSpeaking}
@@ -402,132 +401,61 @@ export default function LiyaProDashboard({
       </div>
 
       {/* Control & Diagnostic Center (Right Side) */}
-      <div className="proControlSidebar">
-        <div className="sidebarHeader">
-          <Cpu className="sidebarIcon glowIcon" size={24} />
-          <div>
-            <h3>{agentName} Assistant</h3>
-            <p>Advanced Real-Time Lip Sync & Diagnostics</p>
-          </div>
-        </div>
+      <div className="proControlSidebar" style={{ display: controlMode === "chat" ? "none" : "flex" }}>
+        {/* Hide header and mode switcher in chat mode to match customer app */}
+        {controlMode !== "chat" && (
+          <>
+            <div className="sidebarHeader">
+              <Cpu className="sidebarIcon glowIcon" size={24} />
+              <div>
+                <h3>{agentName} Assistant</h3>
+                <p>Advanced Real-Time Lip Sync & Diagnostics</p>
+              </div>
+            </div>
 
-        {/* Mode Selector */}
-        <div className="controlModeSwitcher">
-          <button
-            onClick={() => {
-              if (audioRef.current) audioRef.current.pause();
-              setIsSpeaking(false);
-              setControlMode("chat");
-            }}
-            className={`modeSwitchBtn ${controlMode === "chat" ? "activeMode" : ""}`}
-          >
-            <MessageSquare size={14} />
-            🤖 Swarm Chat
-          </button>
-          <button
-            onClick={() => {
-              if (audioRef.current) audioRef.current.pause();
-              setIsSpeaking(false);
-              setControlMode("ai");
-            }}
-            className={`modeSwitchBtn ${controlMode === "ai" ? "activeMode" : ""}`}
-          >
-            <Volume2 size={14} />
-            🗣️ Speech Synth
-          </button>
-          <button
-            onClick={() => {
-              if (audioRef.current) audioRef.current.pause();
-              setIsSpeaking(false);
-              setControlMode("manual");
-            }}
-            className={`modeSwitchBtn ${controlMode === "manual" ? "activeMode" : ""}`}
-          >
-            <Sliders size={14} />
-            🎛️ Override
-          </button>
-        </div>
+            {/* Mode Selector */}
+            <div className="controlModeSwitcher">
+              <button
+                onClick={() => {
+                  if (audioRef.current) audioRef.current.pause();
+                  setIsSpeaking(false);
+                  setControlMode("chat");
+                }}
+                className={`modeSwitchBtn ${controlMode === "chat" ? "activeMode" : ""}`}
+              >
+                <MessageSquare size={14} />
+                🤖 Swarm Chat
+              </button>
+              <button
+                onClick={() => {
+                  if (audioRef.current) audioRef.current.pause();
+                  setIsSpeaking(false);
+                  setControlMode("ai");
+                }}
+                className={`modeSwitchBtn ${controlMode === "ai" ? "activeMode" : ""}`}
+              >
+                <Volume2 size={14} />
+                🗣️ Speech Synth
+              </button>
+              <button
+                onClick={() => {
+                  if (audioRef.current) audioRef.current.pause();
+                  setIsSpeaking(false);
+                  setControlMode("manual");
+                }}
+                className={`modeSwitchBtn ${controlMode === "manual" ? "activeMode" : ""}`}
+              >
+                <Sliders size={14} />
+                🎛️ Override
+              </button>
+            </div>
+          </>
+        )}
 
         {/* Real-time Diagnostics (Viseme Metrics) - Hidden in Chat Mode to give space to the beautiful chat */}
 
 
-        {/* Dynamic Panels based on Mode */}
-        {controlMode === "chat" && (
-          <div className="dashboardPanel">
-            <div className="cardHeader">
-              <MessageSquare size={16} className="cardHeaderIcon" />
-              <h4>Swarm Agent Live Chat</h4>
-            </div>
 
-            <div className="labChatHistory">
-              {chatMessages.map((msg) => (
-                <div 
-                  key={msg.id} 
-                  className={`labChatMsg ${msg.role === 'user' ? 'labChatMsgUser' : 'labChatMsgBot'}`}
-                >
-                  <div className="labChatMeta">
-                    <span className="labChatEmoji">{msg.agent_emoji || "🤖"}</span>
-                    <span className="labChatLabel">{msg.agent_label}</span>
-                  </div>
-                  <p className="labChatContent">{msg.content}</p>
-                </div>
-              ))}
-              {chatLoading && (
-                <div className="labChatMsg labChatMsgBot">
-                  <div className="typingIndicator">
-                    <div className="typingDot"></div>
-                    <div className="typingDot"></div>
-                    <div className="typingDot"></div>
-                  </div>
-                </div>
-              )}
-              <div ref={messagesEndRef} />
-            </div>
-
-            <div className="labChatInputArea">
-              <button 
-                className={`labChatMicBtn ${isListening ? 'labChatMicBtnActive' : ''}`}
-                onClick={startListeningPro}
-                disabled={chatLoading}
-                title={`Speak to ${agentName}`}
-              >
-                {isListening ? <MicOff size={16} /> : <Mic size={16} />}
-              </button>
-              <button 
-                className="labChatMicBtn"
-                title="Capture Photo"
-              >
-                <Camera size={16} />
-              </button>
-              <button 
-                className="labChatMicBtn"
-                title="Upload Image"
-              >
-                <Upload size={16} />
-              </button>
-
-              <input
-                type="text"
-                value={chatInput}
-                onChange={(e) => setChatInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") sendChatPro();
-                }}
-                placeholder={isListening ? "Listening... Speak now!" : `Type your message to ${agentName}...`}
-                className="labChatInput"
-                disabled={chatLoading}
-              />
-              <button 
-                onClick={() => sendChatPro()} 
-                className="labChatSendBtn"
-                disabled={chatLoading || !chatInput.trim()}
-              >
-                <Zap size={14} />
-                Send
-              </button>
-            </div>
-          </div>
-        )}
 
         {controlMode === "ai" && (
           <div className="dashboardPanel">
@@ -712,13 +640,89 @@ export default function LiyaProDashboard({
         )}
 
         {/* Information Alert Badge */}
-        <div className="proInfoAlert">
-          <ShieldAlert size={16} className="alertIcon" />
-          <p>
-            <strong>Physics Active:</strong> Model uses <strong>{isMaya ? "maya.glb" : "liya.glb"}</strong> with 57 high-fidelity skeletal blendshapes, resolving mouth opening limitations.
-          </p>
-        </div>
+        {controlMode !== "chat" && (
+          <div className="proInfoAlert">
+            <ShieldAlert size={16} className="alertIcon" />
+            <p>
+              <strong>Physics Active:</strong> Model uses <strong>{isMaya ? "maya.glb" : "liya.glb"}</strong> with 57 high-fidelity skeletal blendshapes, resolving mouth opening limitations.
+            </p>
+          </div>
+        )}
       </div>
+
+      {/* Floating transcript panel (EXACTLY like Customer App Liya) */}
+      {controlMode === "chat" && chatMessages.length > 0 && (
+        <div className={styles.transcriptPanel}>
+          <div className={styles.transcriptHeader}>
+            <span className={styles.transcriptTitle}>
+              {chatMessages[chatMessages.length - 1]?.agent_emoji || "🤖"} {chatMessages[chatMessages.length - 1]?.agent_label || agentName}
+            </span>
+          </div>
+          <div className={styles.transcriptMessages}>
+            {chatMessages.slice(-4).map((msg) => (
+              <div key={msg.id} className={`${styles.transcriptMsg} ${msg.role === 'user' ? styles.transcriptMsgUser : styles.transcriptMsgBot}`}>
+                {msg.role === 'assistant' && msg.agent_emoji && (
+                  <span className={styles.transcriptAgent}>{msg.agent_emoji}</span>
+                )}
+                <p>{msg.content}</p>
+              </div>
+            ))}
+            {chatLoading && (
+              <div className={`${styles.transcriptMsg} ${styles.transcriptMsgBot}`}>
+                <div className={styles.typingIndicator}>
+                  <div className={styles.typingDot}></div>
+                  <div className={styles.typingDot}></div>
+                  <div className={styles.typingDot}></div>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+        </div>
+      )}
+
+      {controlMode === "chat" && (
+        <div className="proBottomInputContainer">
+          <div className="labChatInputArea" style={{ background: 'rgba(10, 14, 26, 0.8)', padding: '12px 24px', borderRadius: '99px', border: '1px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(20px)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <button 
+              className={`labChatMicBtn ${isListening ? 'labChatMicBtnActive' : ''}`}
+              onClick={startListeningPro}
+              disabled={chatLoading}
+              title={`Speak to ${agentName}`}
+            >
+              {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+            </button>
+            <button className="labChatMicBtn" title="Capture Photo">
+              <Camera size={18} />
+            </button>
+            <button className="labChatMicBtn" title="Upload Image">
+              <Upload size={18} />
+            </button>
+
+            <input
+              type="text"
+              value={chatInput}
+              onChange={(e) => setChatInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") sendChatPro();
+              }}
+              placeholder={isListening ? "Listening... Speak now!" : `Type your message to ${agentName}...`}
+              className="labChatInput"
+              style={{ border: 'none', background: 'transparent', boxShadow: 'none' }}
+              disabled={chatLoading}
+            />
+            <button 
+              onClick={() => sendChatPro()} 
+              className="labChatSendBtn"
+              disabled={chatLoading || !chatInput.trim()}
+              style={{ padding: '10px 24px', fontSize: '12px' }}
+            >
+              <Zap size={14} />
+              Send
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

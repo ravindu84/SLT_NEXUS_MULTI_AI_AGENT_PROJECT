@@ -101,8 +101,8 @@ export default function NeoAvatar({
     if (scene && wrapperRef.current) {
       wrapperRef.current.rotation.set(0, 0, 0); 
       
-      const baseScale = 7.5;
-      const baseY = -6.0;
+      const baseScale = 6.85;
+      const baseY = -4.0;
 
       wrapperRef.current.userData = { baseY };
       wrapperRef.current.scale.set(baseScale, baseScale, baseScale);

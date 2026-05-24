@@ -92,8 +92,8 @@ export default function LiyaAvatarPro({
 
       // Customer App (Maya tab uses LiyaAvatarPro)
       if (isMaya) {
-        baseScale = 7.5;
-        baseY = -6.0;
+        baseScale = 6.85;
+        baseY = -4.0;
       } else {
         baseScale = 7.5;
         baseY = -6.0;

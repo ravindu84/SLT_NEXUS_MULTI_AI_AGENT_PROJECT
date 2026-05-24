@@ -52,19 +52,38 @@
 }
 
 .proControlSidebar {
+  position: absolute;
+  right: 0px;
+  top: 80px;
   width: 440px;
-  height: 100%;
-  background: rgba(10, 14, 26, 0.8);
-  backdrop-filter: blur(32px);
-  -webkit-backdrop-filter: blur(32px);
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  height: calc(100% - 180px);
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  border-left: none;
   display: flex;
   flex-direction: column;
   padding: 24px;
   z-index: 10;
   overflow-y: auto;
   gap: 16px;
-  box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+  box-shadow: none;
+  pointer-events: none; /* Let clicks pass through to canvas */
+}
+
+.proControlSidebar > * {
+  pointer-events: auto; /* Re-enable clicks on children */
+}
+
+.proBottomInputContainer {
+  position: absolute;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  max-width: 800px;
+  z-index: 20;
+  pointer-events: auto;
 }
 
 .sidebarHeader {
@@ -481,6 +500,13 @@
 }
 
 /* --- Pro Swarm Chat Glassmorphic Panel --- */
+.chatTransparentPanel {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
 .labChatHistory {
   flex: 1;
   background: rgba(0, 0, 0, 0.4);

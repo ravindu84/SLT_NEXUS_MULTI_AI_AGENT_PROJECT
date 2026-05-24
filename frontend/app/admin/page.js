@@ -11,6 +11,7 @@ import {
   PieChart, Pie, Cell, BarChart, Bar
 } from 'recharts';
 import dynamic from 'next/dynamic';
+import { useLanguage } from '../context/LanguageContext';
 
 const LiyaProDashboard = dynamic(() => import('../components/LiyaProDashboard'), {
   ssr: false,
@@ -61,6 +62,9 @@ export default function AdminDashboard() {
   const [aiChatTab, setAiChatTab] = useState('liya');
   const [isLoading, setIsLoading] = useState(true);
   
+  // Language Context
+  const { language, setLanguage } = useLanguage();
+  
   // Search State
   const [searchQuery, setSearchQuery] = useState('');
   const [customerData, setCustomerData] = useState(null);
@@ -71,11 +75,11 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     try {
       const [resTickets, resTechs, resDps, resLedger, resCustomers] = await Promise.all([
-        fetch(`${API_URL}/api/admin/tickets`).then(r => r.json()),
-        fetch(`${API_URL}/api/admin/technicians`).then(r => r.json()),
-        fetch(`${API_URL}/api/admin/dps`).then(r => r.json()),
-        fetch(`${API_URL}/api/admin/ledger`).then(r => r.json()),
-        fetch(`${API_URL}/api/admin/customers`).then(r => r.json())
+        fetch(`${API_URL}/api/admin/tickets`).then(r => r.json()).catch(e => ({ tickets: [] })),
+        fetch(`${API_URL}/api/admin/technicians`).then(r => r.json()).catch(e => ({ technicians: [] })),
+        fetch(`${API_URL}/api/admin/dps`).then(r => r.json()).catch(e => ({ dps: [], loops: [] })),
+        fetch(`${API_URL}/api/admin/ledger`).then(r => r.json()).catch(e => ({ ledger: [] })),
+        fetch(`${API_URL}/api/admin/customers`).then(r => r.json()).catch(e => ({ customers: [] }))
       ]);
 
       setData({
@@ -149,16 +153,16 @@ export default function AdminDashboard() {
       </div>
 
       {/* SWARM AI CHAT QUICK LAUNCH */}
-      <div className="bg-gradient-to-r from-rose-600 to-rose-800 rounded-xl p-8 flex flex-col sm:flex-row items-center justify-between shadow-lg shadow-rose-900/50 border border-rose-500/50 group cursor-pointer" onClick={() => setActiveTab('ai-chat')}>
+      <div className="bg-gradient-to-r from-rose-600 to-rose-800 rounded-xl p-8 flex flex-col sm:flex-row items-center justify-between shadow-lg shadow-rose-900/50 border border-rose-500/50 group cursor-pointer" onClick={() => window.open('/', '_blank')}>
          <div>
             <h2 className="text-2xl font-black text-white flex items-center gap-3">
               <Cpu className="w-8 h-8 text-rose-200" />
-              NEXUS SWARM AI
+              NEXUS SWARM AI (Customer App)
             </h2>
             <p className="text-rose-200 mt-2">Engage with Liya, Neo, and Maya in the full-screen immersive command center.</p>
          </div>
          <button className="mt-6 sm:mt-0 px-6 py-3 bg-white text-rose-600 font-bold rounded-full hover:bg-rose-100 transition-colors shadow-lg flex items-center gap-2 group-hover:scale-105 duration-300">
-           Launch Terminal <ChevronRight className="w-5 h-5" />
+           Launch Full Screen <ChevronRight className="w-5 h-5" />
          </button>
       </div>
 
@@ -485,18 +489,17 @@ export default function AdminDashboard() {
   );
 
   return (
-    <div className="min-h-screen bg-[#13141a] text-slate-200 font-sans selection:bg-rose-500/30 flex overflow-hidden">
+    <div className="flex h-screen bg-[#060913] text-slate-300 font-sans overflow-hidden">
       
-      {/* SIDEBAR (DarkPan Style) */}
-      <div className={`w-64 bg-[#1c1d25] border-r border-slate-800/50 flex-col shrink-0 ${activeTab === 'ai-chat' ? 'hidden' : 'hidden md:flex'}`}>
-        <div className="h-20 flex items-center px-6 border-b border-slate-800/50 shrink-0">
-          <div className="flex items-center gap-3">
-             <div className="w-8 h-8 rounded bg-rose-500 flex items-center justify-center shrink-0 shadow-lg shadow-rose-500/20">
-               <Globe className="text-white w-5 h-5" />
-             </div>
-             <h1 className="text-xl font-black text-rose-500 tracking-wide">NEXUS</h1>
+      {/* SIDEBAR */}
+      {activeTab !== 'ai-chat' && (
+        <div className="w-64 bg-[#13141a] border-r border-slate-800/50 flex flex-col shrink-0 transition-all duration-300">
+          <div className="p-6 flex items-center gap-3">
+            <div className="w-10 h-10 bg-rose-500 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(244,63,94,0.5)]">
+              <Activity className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-xl font-black text-white tracking-tight">NEXUS<span className="text-rose-500">.</span></h1>
           </div>
-        </div>
         
         {/* User Info Profile */}
         <div className="p-6 flex items-center gap-4">
@@ -539,6 +542,7 @@ export default function AdminDashboard() {
           ))}
         </div>
       </div>
+      )}
 
       {/* MAIN CONTENT AREA */}
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
@@ -620,13 +624,36 @@ export default function AdminDashboard() {
                     >
                       Maya (AI Assistant 2)
                     </button>
+
+                    {/* Language Selector in Admin AI Chat */}
+                    <div className="flex items-center px-4 ml-auto border-l border-slate-800/50 gap-2">
+                      {['en', 'si', 'ta'].map((ln) => (
+                        <button
+                          key={ln}
+                          onClick={() => setLanguage(ln)}
+                          className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${
+                            language === ln 
+                              ? 'bg-rose-500 text-white shadow-md' 
+                              : 'bg-[#1c1d25] text-slate-400 border border-slate-700 hover:border-slate-500 hover:text-white'
+                          }`}
+                        >
+                          {ln === 'en' ? 'EN' : ln === 'si' ? 'සිං' : 'த'}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                   
                   {/* Sub-tab content */}
                   <div className="flex-1 relative overflow-hidden bg-[#13141a]">
-                    {aiChatTab === 'liya' && <LiyaProDashboard isAdmin={true} agent="liya" />}
-                    {aiChatTab === 'neo' && <NeoDashboard isAdmin={true} />}
-                    {aiChatTab === 'maya' && <LiyaProDashboard isAdmin={true} agent="maya" />}
+                    <div style={{ display: aiChatTab === 'liya' ? 'block' : 'none', width: '100%', height: '100%' }}>
+                      <LiyaProDashboard isAdmin={true} agent="liya" />
+                    </div>
+                    <div style={{ display: aiChatTab === 'neo' ? 'block' : 'none', width: '100%', height: '100%' }}>
+                      <NeoDashboard isAdmin={true} />
+                    </div>
+                    <div style={{ display: aiChatTab === 'maya' ? 'block' : 'none', width: '100%', height: '100%' }}>
+                      <LiyaProDashboard isAdmin={true} agent="maya" />
+                    </div>
                   </div>
                 </div>
               )}
