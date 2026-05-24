@@ -29,6 +29,7 @@ export default function NeoDashboard({
   ]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const isThinking = chatLoading;
   const [sessionId, setSessionId] = useState(`neo-${Date.now()}`);
   const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef(null);

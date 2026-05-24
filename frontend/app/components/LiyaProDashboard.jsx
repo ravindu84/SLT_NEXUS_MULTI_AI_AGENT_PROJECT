@@ -35,6 +35,7 @@ export default function LiyaProDashboard({
   ]);
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
+  const isThinking = chatLoading;
   const [sessionId, setSessionId] = useState(`pro-${Date.now()}`);
   const [isListening, setIsListening] = useState(false);
   const messagesEndRef = useRef(null);
