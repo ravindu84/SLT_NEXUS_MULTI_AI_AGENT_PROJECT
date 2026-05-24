@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import AvatarScenePro from "./AvatarScenePro";
 import TechBackground from "./TechBackground";
-import { Zap, Play, RotateCcw, Volume2, ShieldAlert, Cpu, Layers, Sliders, MessageSquare, Mic, MicOff } from "lucide-react";
+import { Zap, Play, RotateCcw, Volume2, ShieldAlert, Cpu, Layers, Sliders, MessageSquare, Mic, MicOff, Camera, Upload } from "lucide-react";
 import styles from "../page.module.css";
 import "./LiyaProLab.css";
 
@@ -444,76 +444,7 @@ export default function LiyaProDashboard({
         </div>
 
         {/* Real-time Diagnostics (Viseme Metrics) - Hidden in Chat Mode to give space to the beautiful chat */}
-        {controlMode !== "chat" && (
-          <div className="diagnosticCard">
-            <div className="cardHeader">
-              <Layers size={16} className="cardHeaderIcon" />
-              <h4>3D Morph Target Diagnostics (Live)</h4>
-            </div>
-            
-            <div className="metricsList">
-              <div className="metricRow">
-                <div className="metricLabels">
-                  <span>Fcl_MTH_A (Mouth Open)</span>
-                  <span>{(liveMetrics.mthA * 100).toFixed(0)}%</span>
-                </div>
-                <div className="barContainer">
-                  <div className="barFill neonBlue" style={{ width: `${liveMetrics.mthA * 100}%` }}></div>
-                </div>
-              </div>
 
-              <div className="metricRow">
-                <div className="metricLabels">
-                  <span>Fcl_MTH_O (Vowel O)</span>
-                  <span>{(liveMetrics.mthO * 100).toFixed(0)}%</span>
-                </div>
-                <div className="barContainer">
-                  <div className="barFill neonPurple" style={{ width: `${liveMetrics.mthO * 100}%` }}></div>
-                </div>
-              </div>
-
-              <div className="metricRow">
-                <div className="metricLabels">
-                  <span>Fcl_MTH_I (Vowel I)</span>
-                  <span>{(liveMetrics.mthI * 100).toFixed(0)}%</span>
-                </div>
-                <div className="barContainer">
-                  <div className="barFill neonCyan" style={{ width: `${liveMetrics.mthI * 100}%` }}></div>
-                </div>
-              </div>
-
-              <div className="metricRow">
-                <div className="metricLabels">
-                  <span>Fcl_MTH_Large (Jaw Drop)</span>
-                  <span>{(liveMetrics.mthLarge * 100).toFixed(0)}%</span>
-                </div>
-                <div className="barContainer">
-                  <div className="barFill neonGreen" style={{ width: `${liveMetrics.mthLarge * 100}%` }}></div>
-                </div>
-              </div>
-
-              <div className="metricRow">
-                <div className="metricLabels">
-                  <span>Fcl_EYE_Close (Blink Rate)</span>
-                  <span>{(liveMetrics.eyeBlink * 100).toFixed(0)}%</span>
-                </div>
-                <div className="barContainer">
-                  <div className="barFill neonAmber" style={{ width: `${liveMetrics.eyeBlink * 100}%` }}></div>
-                </div>
-              </div>
-
-              <div className="metricRow">
-                <div className="metricLabels">
-                  <span>Fcl_ALL_Joy (Smiling)</span>
-                  <span>{(liveMetrics.joy * 100).toFixed(0)}%</span>
-                </div>
-                <div className="barContainer">
-                  <div className="barFill neonPink" style={{ width: `${liveMetrics.joy * 100}%` }}></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Dynamic Panels based on Mode */}
         {controlMode === "chat" && (
@@ -553,9 +484,21 @@ export default function LiyaProDashboard({
                 className={`labChatMicBtn ${isListening ? 'labChatMicBtnActive' : ''}`}
                 onClick={startListeningPro}
                 disabled={chatLoading}
-                title="Speak to MAYA"
+                title={`Speak to ${agentName}`}
               >
                 {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+              </button>
+              <button 
+                className="labChatMicBtn"
+                title="Capture Photo"
+              >
+                <Camera size={16} />
+              </button>
+              <button 
+                className="labChatMicBtn"
+                title="Upload Image"
+              >
+                <Upload size={16} />
               </button>
 
               <input

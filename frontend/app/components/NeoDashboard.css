@@ -439,14 +439,15 @@
 
 .neoChatInput {
   flex: 1;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(0, 230, 118, 0.1);
-  border-radius: 8px;
-  padding: 8px 12px;
+  background: rgba(10, 14, 26, 0.7);
+  border: 1.5px solid rgba(0, 230, 118, 0.1);
+  border-radius: 99px;
+  padding: 8px 16px;
   color: white;
   font-size: 11px;
   outline: none;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(16px);
 }
 
 .neoChatInput:focus {
@@ -455,18 +456,18 @@
 }
 
 .neoChatSendBtn {
-  background: #00c853;
+  background: linear-gradient(135deg, #00c853 0%, #00e676 100%);
   color: #0a0e1a;
   border: none;
-  border-radius: 8px;
-  padding: 8px 14px;
+  border-radius: 99px;
+  padding: 8px 18px;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .neoChatSendBtn:hover:not(:disabled) {
@@ -480,18 +481,19 @@
 }
 
 .neoChatMicBtn {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(0, 230, 118, 0.1);
-  border-radius: 8px;
+  background: rgba(10, 14, 26, 0.7);
+  border: 1.5px solid rgba(0, 230, 118, 0.12);
+  border-radius: 50%;
   color: var(--text-muted);
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   flex-shrink: 0;
+  backdrop-filter: blur(12px);
 }
 
 .neoChatMicBtn:hover:not(:disabled) {

@@ -101,10 +101,10 @@ export default function NeoAvatar({
       wrapperRef.current.rotation.set(0, 0, 0); 
       
       // Scale: optimized for neo.glb
-      wrapperRef.current.scale.set(9.4, 8.2, 8.5);
+      wrapperRef.current.scale.set(6.85, 6.85, 6.85);
 
       // Position: adjusted Y offset to align waist-up portrait perfectly in camera view
-      wrapperRef.current.position.set(0, -4.4, 0);
+      wrapperRef.current.position.set(0, -4.2, 0);
 
       setModelReady(true);
       console.log("NEO Avatar Transforms Applied Safely.");

@@ -89,7 +89,7 @@ export default function LiyaAvatarPro({
       wrapperRef.current.scale.set(6.85, 6.85, 6.85);
 
       // Position to show waist-up
-      wrapperRef.current.position.set(0, -5.5, 0);
+      wrapperRef.current.position.set(0, -4.2, 0);
 
       setModelReady(true);
       console.log("LIYA 2.0 (Pro) Transforms Applied Safely.");

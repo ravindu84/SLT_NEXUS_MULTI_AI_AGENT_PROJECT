@@ -559,14 +559,15 @@
 
 .labChatInput {
   flex: 1;
-  background: rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  padding: 8px 12px;
+  background: rgba(10, 14, 26, 0.7);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 99px;
+  padding: 8px 16px;
   color: white;
   font-size: 11px;
   outline: none;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(16px);
 }
 
 .labChatInput:focus {
@@ -575,18 +576,18 @@
 }
 
 .labChatSendBtn {
-  background: var(--slt-blue);
+  background: var(--gradient-primary);
   color: white;
   border: none;
-  border-radius: 8px;
-  padding: 8px 14px;
+  border-radius: 99px;
+  padding: 8px 18px;
   font-size: 11px;
   font-weight: 700;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 6px;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .labChatSendBtn:hover:not(:disabled) {
@@ -600,18 +601,19 @@
 }
 
 .labChatMicBtn {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
+  background: rgba(10, 14, 26, 0.7);
+  border: 1.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 50%;
   color: var(--text-muted);
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   flex-shrink: 0;
+  backdrop-filter: blur(12px);
 }
 
 .labChatMicBtn:hover:not(:disabled) {

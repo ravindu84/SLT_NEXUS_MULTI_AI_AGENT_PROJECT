@@ -55,7 +55,7 @@ export default function LiyaAvatar({
       wrapperRef.current.scale.set(6.85, 6.85, 6.85);
 
       // POSITION: Brought down slightly as requested
-      wrapperRef.current.position.set(0, -6.0, 0);
+      wrapperRef.current.position.set(0, -4.2, 0);
 
       setModelReady(true);
       console.log("LIYA: Wrapper Transforms Applied Safely.");
