@@ -16,6 +16,8 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { Send, Mic, Sparkles, Shield, Cpu, Zap, Activity, Info, Menu } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import AvatarScene from './components/AvatarScene';
+import * as Speech from 'expo-speech';
 
 const { width, height } = Dimensions.get('window');
 const BACKEND_URL = 'http://192.168.1.10:8000'; // Updated to match your local IP
@@ -39,6 +41,7 @@ export default function App() {
   // Technician Login State
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [pin, setPin] = useState('');
+  const [lang, setLang] = useState('en');
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
 
@@ -73,7 +76,7 @@ export default function App() {
         body: JSON.stringify({ 
           message: currentInput,
           session_id: `tech-${pin}`,
-          lang: "si"
+          lang: lang
         })
       });
       
@@ -87,8 +90,16 @@ export default function App() {
       };
       setMessages(prev => [...prev, botMessage]);
       setLoading(false);
-      setIsSpeaking(true);
-      setTimeout(() => setIsSpeaking(false), 3000);
+      
+      // Use Expo Speech for TTS
+      Speech.speak(botMessage.text, {
+        language: lang === 'si' ? 'si-LK' : lang === 'ta' ? 'ta-LK' : 'en-US',
+        pitch: 1.0,
+        rate: 0.9,
+        onStart: () => setIsSpeaking(true),
+        onDone: () => setIsSpeaking(false),
+        onError: () => setIsSpeaking(false)
+      });
     } catch (error) {
       console.error(error);
       const errorMessage = { 
@@ -120,13 +131,13 @@ export default function App() {
   );
 
   const handleLogin = () => {
-    if (pin.length === 6) {
+    if (pin.length > 2) {
       setIsLoggedIn(true);
       setMessages([
         { id: '1', text: `Authentication successful for Service ID ${pin}. I am LIYA. How can I assist you with your field operations today? DP diagnostics, fault tickets, or signal checks?`, sender: 'bot', agent: 'liya' }
       ]);
     } else {
-      alert("Please enter a valid 6-digit Service ID.");
+      alert("Please enter a valid Service ID (minimum 3 characters).");
     }
   };
 
@@ -144,21 +155,19 @@ export default function App() {
           <Text style={styles.loginSubtitle}>Technician Access Portal</Text>
           
           <View style={styles.loginCard}>
-            <Text style={styles.inputLabel}>Enter 6-Digit Service ID</Text>
+            <Text style={styles.inputLabel}>Enter Service ID</Text>
             <TextInput 
               style={styles.pinInput}
               value={pin}
               onChangeText={setPin}
-              keyboardType="number-pad"
-              maxLength={6}
-              secureTextEntry
-              placeholder="••••••"
+              autoCapitalize="characters"
+              placeholder="EMP123"
               placeholderTextColor="#64748b"
             />
             <TouchableOpacity 
-              style={[styles.loginBtn, pin.length === 6 ? styles.loginBtnActive : {}]} 
+              style={[styles.loginBtn, pin.length > 2 ? styles.loginBtnActive : {}]} 
               onPress={handleLogin}
-              disabled={pin.length !== 6}
+              disabled={pin.length <= 2}
             >
               <Text style={styles.loginBtnText}>AUTHENTICATE</Text>
             </TouchableOpacity>
@@ -182,10 +191,25 @@ export default function App() {
       <View style={styles.header}>
         <TouchableOpacity><Menu size={24} color="white" /></TouchableOpacity>
         <View style={styles.logoRow}>
-          <Zap size={20} color="#2684ff" fill="#2684ff" />
-          <Text style={styles.headerTitle}>SLT NEXUS</Text>
+          <Cpu size={20} color="#2684ff" />
+          <Text style={styles.headerTitle}>NEXUS FIELD OPS</Text>
         </View>
-        <TouchableOpacity><Info size={24} color="white" /></TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 5 }}>
+          {['en', 'si', 'ta'].map(l => (
+            <TouchableOpacity 
+              key={l} 
+              onPress={() => setLang(l)}
+              style={{
+                backgroundColor: lang === l ? '#2684ff' : 'rgba(255,255,255,0.1)',
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                borderRadius: 4
+              }}
+            >
+              <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>{l.toUpperCase()}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
 
       {/* Immersive Avatar Section */}
@@ -201,10 +225,7 @@ export default function App() {
         </Animated.View>
         
         <View style={styles.avatarContainer}>
-          {/* Placeholder for LIYA Avatar Image */}
-          <View style={styles.avatarPlaceholder}>
-             <Zap size={60} color="#2684ff" />
-          </View>
+          <AvatarScene isSpeaking={isSpeaking} audioLevel={isSpeaking ? 1.0 : 0} />
         </View>
 
         <View style={styles.statusBadge}>
@@ -247,12 +268,8 @@ export default function App() {
       />
 
       {/* Bottom Controls */}
-      <KeyboardAvoidingView 
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.bottomSection}
-      >
         <View style={styles.inputRow}>
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity style={styles.micButton} onPress={() => alert('Voice Recording (STT) requires a custom Expo Dev Client or Native Eject. Please use the text input for this preview.')}>
             <Mic size={24} color="#64748b" />
           </TouchableOpacity>
           

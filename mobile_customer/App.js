@@ -16,6 +16,8 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { Send, Mic, Sparkles, Shield, Cpu, Zap, Activity, Info, Menu } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import AvatarScene from './components/AvatarScene';
+import * as Speech from 'expo-speech';
 
 const { width, height } = Dimensions.get('window');
 const BACKEND_URL = 'http://192.168.1.10:8000'; // Updated to match your local IP
@@ -51,6 +53,34 @@ export default function App() {
     }
   }, [isSpeaking, loading]);
 
+
+
+  // Customer Login State
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [loginStep, setLoginStep] = useState(1); // 1 = Phone, 2 = OTP
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [otp, setOtp] = useState('');
+  const [lang, setLang] = useState('en');
+
+  const handlePhoneSubmit = () => {
+    if (phoneNumber.length >= 9) {
+      setLoginStep(2);
+    } else {
+      alert("Please enter a valid SLT-MOBITEL phone number.");
+    }
+  };
+
+  const handleOtpSubmit = () => {
+    if (otp.length === 6) {
+      setIsLoggedIn(true);
+      setMessages([
+        { id: '1', text: `Welcome back! I am LIYA. How can I help you with your SLT-MOBITEL account today?`, sender: 'bot', agent: 'liya' }
+      ]);
+    } else {
+      alert("Please enter the 6-digit OTP code sent to your phone.");
+    }
+  };
+
   const sendMessage = async () => {
     if (!input.trim()) return;
 
@@ -69,7 +99,7 @@ export default function App() {
         body: JSON.stringify({ 
           message: currentInput,
           session_id: "mobile-customer-1",
-          lang: "si"
+          lang: lang
         })
       });
       
@@ -83,8 +113,16 @@ export default function App() {
       };
       setMessages(prev => [...prev, botMessage]);
       setLoading(false);
-      setIsSpeaking(true);
-      setTimeout(() => setIsSpeaking(false), 3000);
+      
+      // Use Expo Speech for TTS
+      Speech.speak(botMessage.text, {
+        language: lang === 'si' ? 'si-LK' : lang === 'ta' ? 'ta-LK' : 'en-US',
+        pitch: 1.1,
+        rate: 0.9,
+        onStart: () => setIsSpeaking(true),
+        onDone: () => setIsSpeaking(false),
+        onError: () => setIsSpeaking(false)
+      });
     } catch (error) {
       console.error(error);
       const errorMessage = { 
@@ -115,6 +153,69 @@ export default function App() {
     </View>
   );
 
+  if (!isLoggedIn) {
+    return (
+      <View style={styles.container}>
+        <StatusBar style="light" />
+        <LinearGradient colors={['#0a0e1a', '#1a1f35', '#0a0e1a']} style={StyleSheet.absoluteFill} />
+        
+        <View style={styles.loginContainer}>
+          <View style={styles.loginLogo}>
+            <Zap size={48} color="#2684ff" fill="#2684ff" />
+          </View>
+          <Text style={styles.loginTitle}>SLT NEXUS</Text>
+          <Text style={styles.loginSubtitle}>Customer Portal</Text>
+          
+          {loginStep === 1 ? (
+            <View style={styles.loginCard}>
+              <Text style={styles.inputLabel}>Enter Phone Number</Text>
+              <TextInput 
+                style={styles.pinInput}
+                value={phoneNumber}
+                onChangeText={setPhoneNumber}
+                keyboardType="phone-pad"
+                placeholder="07X XXX XXXX"
+                placeholderTextColor="#64748b"
+              />
+              <TouchableOpacity 
+                style={[styles.loginBtn, phoneNumber.length >= 9 ? styles.loginBtnActive : {}]} 
+                onPress={handlePhoneSubmit}
+                disabled={phoneNumber.length < 9}
+              >
+                <Text style={styles.loginBtnText}>SEND OTP</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={styles.loginCard}>
+              <Text style={styles.inputLabel}>Enter 6-Digit OTP</Text>
+              <TextInput 
+                style={styles.pinInput}
+                value={otp}
+                onChangeText={setOtp}
+                keyboardType="number-pad"
+                maxLength={6}
+                secureTextEntry
+                placeholder="••••••"
+                placeholderTextColor="#64748b"
+              />
+              <TouchableOpacity 
+                style={[styles.loginBtn, otp.length === 6 ? styles.loginBtnActive : {}]} 
+                onPress={handleOtpSubmit}
+                disabled={otp.length !== 6}
+              >
+                <Text style={styles.loginBtnText}>VERIFY & LOGIN</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity onPress={() => setLoginStep(1)} style={{ marginTop: 15, alignItems: 'center' }}>
+                <Text style={{ color: '#2684ff', fontSize: 12 }}>Change Phone Number</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar style="light" />
@@ -132,7 +233,22 @@ export default function App() {
           <Zap size={20} color="#2684ff" fill="#2684ff" />
           <Text style={styles.headerTitle}>SLT NEXUS</Text>
         </View>
-        <TouchableOpacity><Info size={24} color="white" /></TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 5 }}>
+          {['en', 'si', 'ta'].map(l => (
+            <TouchableOpacity 
+              key={l} 
+              onPress={() => setLang(l)}
+              style={{
+                backgroundColor: lang === l ? '#2684ff' : 'rgba(255,255,255,0.1)',
+                paddingHorizontal: 8,
+                paddingVertical: 4,
+                borderRadius: 4
+              }}
+            >
+              <Text style={{ color: 'white', fontSize: 12, fontWeight: 'bold' }}>{l.toUpperCase()}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
 
       {/* Immersive Avatar Section */}
@@ -148,10 +264,7 @@ export default function App() {
         </Animated.View>
         
         <View style={styles.avatarContainer}>
-          {/* Placeholder for LIYA Avatar Image */}
-          <View style={styles.avatarPlaceholder}>
-             <Zap size={60} color="#2684ff" />
-          </View>
+          <AvatarScene isSpeaking={isSpeaking} audioLevel={isSpeaking ? 1.0 : 0} />
         </View>
 
         <View style={styles.statusBadge}>
@@ -199,7 +312,7 @@ export default function App() {
         style={styles.bottomSection}
       >
         <View style={styles.inputRow}>
-          <TouchableOpacity style={styles.iconButton}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => alert('Voice Recording (STT) requires a custom Expo Dev Client or Native Eject. Please use the text input for this preview.')}>
             <Mic size={24} color="#64748b" />
           </TouchableOpacity>
           
@@ -415,6 +528,81 @@ const styles = StyleSheet.create({
   sendButtonDisabled: {
     backgroundColor: '#1a1f35',
     opacity: 0.5,
+  },
+  loginContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  loginLogo: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: 'rgba(38, 132, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(38, 132, 255, 0.3)',
+    marginBottom: 20,
+  },
+  loginTitle: {
+    color: 'white',
+    fontSize: 24,
+    fontWeight: '900',
+    letterSpacing: 2,
+    marginBottom: 5,
+  },
+  loginSubtitle: {
+    color: '#64748b',
+    fontSize: 14,
+    marginBottom: 40,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  loginCard: {
+    width: '100%',
+    backgroundColor: 'rgba(26, 31, 53, 0.8)',
+    padding: 25,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+  },
+  inputLabel: {
+    color: '#64748b',
+    fontSize: 12,
+    fontWeight: '700',
+    marginBottom: 10,
+    textTransform: 'uppercase',
+  },
+  pinInput: {
+    backgroundColor: '#0a0e1a',
+    borderWidth: 1,
+    borderColor: '#334155',
+    borderRadius: 12,
+    color: 'white',
+    fontSize: 24,
+    padding: 15,
+    textAlign: 'center',
+    marginBottom: 20,
+    letterSpacing: 2,
+  },
+  loginBtn: {
+    backgroundColor: '#1a1f35',
+    padding: 18,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  loginBtnActive: {
+    backgroundColor: '#2684ff',
+    borderColor: '#2684ff',
+  },
+  loginBtnText: {
+    color: 'white',
+    fontWeight: 'bold',
+    letterSpacing: 2,
   },
 });
 
