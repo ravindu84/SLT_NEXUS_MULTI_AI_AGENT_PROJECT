@@ -19,8 +19,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import AvatarScene from './components/AvatarScene';
 import * as Speech from 'expo-speech';
 
+// Global error handler to catch fatal JS errors in Release Mode
+if (!__DEV__) {
+  global.ErrorUtils.setGlobalHandler((error, isFatal) => {
+    alert('JS Crash: ' + error.message + '\n\nPlease take a screenshot of this error.');
+  });
+}
+
 const { width, height } = Dimensions.get('window');
-const BACKEND_URL = 'http://13.61.4.78:8000';
+const BACKEND_URL = 'https://51.21.160.246.nip.io';
 
 const AGENTS = [
   { id: 'liya', name: 'LIYA', color: '#0052cc', icon: Zap },
@@ -95,6 +102,7 @@ export default function App() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Bypass-Tunnel-Reminder': 'true'
         },
         body: JSON.stringify({ 
           message: currentInput,
@@ -174,7 +182,7 @@ export default function App() {
                 value={phoneNumber}
                 onChangeText={setPhoneNumber}
                 keyboardType="phone-pad"
-                placeholder="07X XXX XXXX"
+                placeholder="011 XXX XXXX"
                 placeholderTextColor="#64748b"
               />
               <TouchableOpacity 
@@ -258,7 +266,7 @@ export default function App() {
           { transform: [{ scale: pulseAnim }] }
         ]}>
           <LinearGradient
-            colors={['rgba(38, 132, 255, 0.3)', 'transparent']}
+            colors={['rgba(38, 132, 255, 0.1)', 'transparent']}
             style={styles.glowCircle}
           />
         </Animated.View>
@@ -312,7 +320,7 @@ export default function App() {
         style={styles.bottomSection}
       >
         <View style={styles.inputRow}>
-          <TouchableOpacity style={styles.iconButton} onPress={() => alert('Voice Recording (STT) requires a custom Expo Dev Client or Native Eject. Please use the text input for this preview.')}>
+          <TouchableOpacity style={styles.iconButton} onPress={() => alert('Voice Input feature coming soon in the next update!')}>
             <Mic size={24} color="#64748b" />
           </TouchableOpacity>
           
@@ -364,21 +372,20 @@ const styles = StyleSheet.create({
     letterSpacing: -1,
   },
   avatarSection: {
-    height: height * 0.25,
+    height: height * 0.45,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 20,
+    justifyContent: 'flex-end',
+    marginTop: 0,
+    zIndex: 2,
   },
   avatarContainer: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#1a1f35',
-    borderWidth: 2,
-    borderColor: 'rgba(38, 132, 255, 0.3)',
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'transparent',
     alignItems: 'center',
-    justifyContent: 'center',
-    overflow: 'hidden',
+    justifyContent: 'flex-end',
+    position: 'absolute',
+    bottom: 0,
     zIndex: 2,
   },
   avatarPlaceholder: {

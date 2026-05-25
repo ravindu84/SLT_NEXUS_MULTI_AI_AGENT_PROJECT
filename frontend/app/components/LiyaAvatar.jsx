@@ -88,7 +88,7 @@ export default function LiyaAvatar({
           const lowerKey = key.toLowerCase();
           
           // MOUTH / JAW
-          if (lowerKey.includes("mouth") || lowerKey.includes("jaw") || lowerKey.includes("lip") || lowerKey.includes("viseme") || lowerKey.includes("key")) {
+          if (lowerKey.includes("mouth") || lowerKey.includes("jaw") || lowerKey.includes("lip") || lowerKey.includes("viseme")) {
             child.morphTargetInfluences[index] = THREE.MathUtils.lerp(
               child.morphTargetInfluences[index],
               level,
@@ -98,7 +98,7 @@ export default function LiyaAvatar({
           }
           
           // EYES / BLINK
-          if (lowerKey.includes("eye") || lowerKey.includes("blink")) {
+          if (lowerKey.includes("blink") || lowerKey.includes("eyeclose")) {
             child.morphTargetInfluences[index] = THREE.MathUtils.lerp(
               child.morphTargetInfluences[index],
               blinkLevel,

@@ -38,7 +38,7 @@ export default function TechnicianPortal() {
 
   const fetchTickets = async (techName) => {
     try {
-      const res = await fetch(`http://localhost:8000/wfm/active-faults`);
+      const res = await fetch(`https://51.21.160.246.nip.io/wfm/active-faults`);
       const data = await res.json();
       const myTickets = data.fault_tickets.filter(t => t.technician === techName);
       setTickets(myTickets);

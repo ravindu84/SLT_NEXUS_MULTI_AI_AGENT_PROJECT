@@ -11,7 +11,7 @@ export default function LiyaProDashboard({
   agent = "liya", // "liya" or "maya"
   language = "en",
   isMuted = false,
-  API_URL = "http://127.0.0.1:8000",
+  API_URL = "https://51.21.160.246.nip.io",
   onInteraction,
   isAdmin = false
 }) {
@@ -239,7 +239,10 @@ export default function LiyaProDashboard({
     try {
       const response = await fetch(`${API_URL}/api/chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Bypass-Tunnel-Reminder": "true"
+        },
         body: JSON.stringify({ message: text, session_id: sessionId, lang: language }),
       });
 

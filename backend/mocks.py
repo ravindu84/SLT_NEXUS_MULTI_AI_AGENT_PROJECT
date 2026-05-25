@@ -66,7 +66,7 @@ class ReportEmailRequest(BaseModel):
 async def router_diagnostics(device_id: str):
     """Simulates Huawei/ZTE/iMaster NCE router diagnostics by pulling live NMS signal values from database."""
     import sqlite3
-    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
     
     try:
         conn = sqlite3.connect(DB_PATH)
@@ -103,7 +103,7 @@ async def router_diagnostics(device_id: str):
 async def get_tech_diagnostics(phone_number: str):
     """Simulates B2B full technician diagnostics sheet for one of the 200 numbers."""
     import sqlite3
-    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
@@ -146,7 +146,7 @@ async def create_fault_ticket(request: TicketRequest):
     """Simulates WFM/Clarity fault ticketing and stores it in database."""
     import sqlite3
     from datetime import datetime
-    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
     
     ticket_id = f"SLT-FT-{random.randint(100000, 999999)}"
     technicians = ["KOSALA", "JANITH", "SANJEEWA", "NALAKA", "LAHIRU", "ASELA", "THARINDU", "PRASAD", "KAMAL", "SOMASIRI"]
@@ -176,7 +176,7 @@ async def create_fault_ticket(request: TicketRequest):
 async def get_technician_status():
     """Returns the fixed zones and active workloads for the 10 technicians."""
     import sqlite3
-    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
     
     zones = {
         "KOSALA": "Pitipana North",
@@ -217,7 +217,7 @@ async def get_technician_status():
 async def get_active_faults():
     """Returns all active fault tickets from the database."""
     import sqlite3
-    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
@@ -243,7 +243,7 @@ async def get_active_faults():
 async def get_predictive_degradation():
     """Returns a list of lines with degrading signals for predictive maintenance."""
     import sqlite3
-    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
@@ -291,7 +291,7 @@ async def get_predictive_degradation():
 async def get_usage(phone_number: str):
     """Simulates SLT Billing/Usage system by querying live data_usage and billing tables."""
     import sqlite3
-    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
     
     try:
         conn = sqlite3.connect(DB_PATH)
@@ -351,7 +351,7 @@ async def get_usage(phone_number: str):
 async def get_daily_usage(phone_number: str):
     """Simulates daily usage logs query to see daily GB and site consumption."""
     import sqlite3
-    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
     
     try:
         conn = sqlite3.connect(DB_PATH)
@@ -397,7 +397,7 @@ async def mock_payment(request: PaymentRequest):
 async def pay_bill_endpoint(request: PayBillRequest):
     """Simulates paying an SLT bill, optionally using NXC coins for discount."""
     import sqlite3
-    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
     
     try:
         conn = sqlite3.connect(DB_PATH)
@@ -519,7 +519,7 @@ async def finalize_connection(request: FinalizeRequest):
     """Generates the new SLT number and inserts into new_connections."""
     import sqlite3
     from datetime import datetime
-    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
     
     try:
         conn = sqlite3.connect(DB_PATH)
@@ -559,7 +559,7 @@ def uuid_gen():
 @router.get("/admin/tickets")
 async def get_admin_tickets():
     import sqlite3
-    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -571,7 +571,7 @@ async def get_admin_tickets():
 @router.get("/admin/technicians")
 async def get_admin_technicians():
     import sqlite3
-    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -583,7 +583,7 @@ async def get_admin_technicians():
 @router.get("/admin/dps")
 async def get_admin_dps():
     import sqlite3
-    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -607,7 +607,7 @@ async def get_admin_dps():
 @router.get("/admin/ledger")
 async def get_admin_ledger():
     import sqlite3
-    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
@@ -620,7 +620,7 @@ async def get_admin_ledger():
 async def get_admin_customer(phone: str):
     import sqlite3
     from fastapi import HTTPException
-    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
     try:
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
@@ -658,7 +658,7 @@ async def get_admin_customer(phone: str):
 @router.get("/admin/customers")
 async def get_all_customers():
     import sqlite3
-    DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
     try:
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row

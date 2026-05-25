@@ -35,7 +35,7 @@ const NeoDashboard = dynamic(() => import("./components/NeoDashboard"), {
   ssr: false,
 });
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://51.21.160.246.nip.io";
 
 export default function Home() {
   const [view, setView] = useState("avatar");
@@ -212,7 +212,10 @@ export default function Home() {
 
         const response = await fetch(`${API_URL}/api/chat`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "Bypass-Tunnel-Reminder": "true"
+          },
           body: JSON.stringify(payload),
         });
         

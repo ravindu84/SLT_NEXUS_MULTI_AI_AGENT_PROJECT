@@ -210,7 +210,7 @@ def normalize_telecom_terms(text: str, target_lang: str) -> str:
 
 # Import our LangGraph 12-Agent Swarm brain
 from backend.agent.graph import get_graph
-from langchain_core.messages import HumanMessage, AIMessage
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from backend.mocks import router as mocks_router
 
 load_dotenv(override=True)

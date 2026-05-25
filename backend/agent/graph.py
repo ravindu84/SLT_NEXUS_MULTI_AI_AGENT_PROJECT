@@ -48,7 +48,8 @@ from backend.agent.tools.mcp_tools import (
     check_kyc_status,
     finalize_new_connection,
     send_sms_notification,
-    send_whatsapp_notification
+    send_whatsapp_notification,
+    check_area_outages
 )
 
 from backend.agent.tools.package_advisor import package_advisor

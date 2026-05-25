@@ -228,7 +228,10 @@ export default function ChatPanel({
     try {
       const response = await fetch(`${API_URL}/api/chat`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Bypass-Tunnel-Reminder": "true"
+        },
         body: JSON.stringify({ message: messageText, session_id: sessionId }),
       });
 

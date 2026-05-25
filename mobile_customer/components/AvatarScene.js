@@ -1,7 +1,7 @@
 import React, { Suspense, useRef, useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import { Canvas, useFrame } from '@react-three/fiber';
-import { useGLTF, Environment } from '@react-three/drei';
+import { useGLTF, useAnimations, Environment } from '@react-three/drei/native';
 import * as THREE from 'three';
 
 // Use require for local assets in Expo
@@ -10,7 +10,19 @@ const modelUrl = require('../assets/maya.glb');
 function MayaModel({ isSpeaking, audioLevel }) {
   const group = useRef();
   const [modelReady, setModelReady] = useState(false);
-  const { scene } = useGLTF(modelUrl);
+  const { scene, animations } = useGLTF(modelUrl);
+  const { actions } = useAnimations(animations, group);
+
+  useEffect(() => {
+    if (actions && Object.keys(actions).length > 0) {
+      // Find 'idle' or play first
+      let idleKey = Object.keys(actions).find(k => k.toLowerCase().includes('idle'));
+      if (!idleKey) idleKey = Object.keys(actions)[0];
+      if (idleKey && actions[idleKey]) {
+        actions[idleKey].play();
+      }
+    }
+  }, [actions]);
 
   useEffect(() => {
     if (scene) {
@@ -24,6 +36,21 @@ function MayaModel({ isSpeaking, audioLevel }) {
               child.material.alphaTest = 0.5;
               child.material.depthWrite = true;
             }
+          }
+        }
+        // Force arms down to fix T-pose
+        if (child.isBone) {
+          if (child.name.includes("L_Shoulder")) {
+            child.rotation.z = -1.2;
+          }
+          if (child.name.includes("R_Shoulder")) {
+            child.rotation.z = 1.2;
+          }
+          if (child.name.includes("L_UpperArm")) {
+             child.rotation.z = -0.5;
+          }
+          if (child.name.includes("R_UpperArm")) {
+             child.rotation.z = 0.5;
           }
         }
       });
@@ -52,12 +79,8 @@ function MayaModel({ isSpeaking, audioLevel }) {
             appliedBlendshape = true;
           }
           
-          if (lowerKey.includes("eye") || lowerKey.includes("blink")) {
-            child.morphTargetInfluences[index] = THREE.MathUtils.lerp(
-              child.morphTargetInfluences[index],
-              blinkLevel,
-              0.3
-            );
+          if (lowerKey.includes("blink") || lowerKey.includes("eyeclose")) {
+            child.morphTargetInfluences[index] = blinkLevel;
           }
         }
       }
@@ -65,24 +88,26 @@ function MayaModel({ isSpeaking, audioLevel }) {
 
     if (!appliedBlendshape && group.current) {
       if (isSpeaking) {
-        group.current.position.y = Math.sin(time * 10) * 0.05 - 6.0;
+        group.current.position.y = Math.sin(time * 10) * 0.05 - 7.5;
       } else {
-        group.current.position.y = -6.0;
+        group.current.position.y = -7.5;
       }
     }
   });
 
-  // Position specific for Mobile Viewport
-  return <primitive ref={group} object={scene} scale={7.5} position={[0, -6.0, 0]} rotation={[0, 0, 0]} />;
+  // Position specific for Mobile Viewport (Upper body framed)
+  return <primitive ref={group} object={scene} scale={5.5} position={[0, -7.5, 0]} rotation={[0, 0, 0]} />;
 }
 
 export default function AvatarScene({ isSpeaking = false, audioLevel = 0 }) {
   return (
     <View style={styles.container}>
-      <Canvas camera={{ position: [0, -0.2, 5.0], fov: 45 }} gl={{ antialias: true, alpha: true }}>
+      <Canvas camera={{ position: [0, 0, 5.0], fov: 45 }} gl={{ antialias: true, alpha: true }}>
         <Suspense fallback={null}>
-          <ambientLight intensity={0.6} color="#ffe8cc" />
-          <directionalLight position={[0, 2, 5]} intensity={1.0} color="#ffedd6" />
+          <ambientLight intensity={1.5} color="#ffffff" />
+          <directionalLight position={[2, 5, 5]} intensity={2.5} color="#ffffff" />
+          <directionalLight position={[-2, -5, -5]} intensity={0.5} color="#ffffff" />
+          <Environment preset="city" />
           <MayaModel isSpeaking={isSpeaking} audioLevel={audioLevel} />
         </Suspense>
       </Canvas>

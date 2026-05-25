@@ -8,7 +8,7 @@ from pathlib import Path
 
 import chromadb
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
-from langchain.schema import HumanMessage
+from langchain_core.messages import HumanMessage
 
 
 CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", str(Path(__file__).parent.parent / "chroma_db"))
