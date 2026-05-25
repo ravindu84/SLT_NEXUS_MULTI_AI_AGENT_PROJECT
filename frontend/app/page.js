@@ -122,7 +122,8 @@ export default function Home() {
             text: text.length > 500 
               ? text.slice(0, text.lastIndexOf(' ', 500) || 500) 
               : text,
-            lang: language 
+            lang: language,
+            voice: view === "neo" ? "male" : "female"
           }),
         });
         if (!response.ok) return;

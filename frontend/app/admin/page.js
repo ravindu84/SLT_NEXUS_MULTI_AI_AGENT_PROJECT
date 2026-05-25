@@ -646,13 +646,13 @@ export default function AdminDashboard() {
                   {/* Sub-tab content */}
                   <div className="flex-1 relative overflow-hidden bg-[#13141a]">
                     <div style={{ display: aiChatTab === 'liya' ? 'block' : 'none', width: '100%', height: '100%' }}>
-                      <LiyaProDashboard isAdmin={true} agent="liya" />
+                      <LiyaProDashboard isAdmin={true} agent="liya" language={language} />
                     </div>
                     <div style={{ display: aiChatTab === 'neo' ? 'block' : 'none', width: '100%', height: '100%' }}>
-                      <NeoDashboard isAdmin={true} />
+                      <NeoDashboard isAdmin={true} language={language} />
                     </div>
                     <div style={{ display: aiChatTab === 'maya' ? 'block' : 'none', width: '100%', height: '100%' }}>
-                      <LiyaProDashboard isAdmin={true} agent="maya" />
+                      <LiyaProDashboard isAdmin={true} agent="maya" language={language} />
                     </div>
                   </div>
                 </div>

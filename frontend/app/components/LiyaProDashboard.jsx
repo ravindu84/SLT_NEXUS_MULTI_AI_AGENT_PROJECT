@@ -156,7 +156,8 @@ export default function LiyaProDashboard({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           text: text,
-          lang: language 
+          lang: language,
+          voice: "female"
         }),
       });
 
@@ -365,7 +366,6 @@ export default function LiyaProDashboard({
           muted 
           loop 
           playsInline 
-          className={styles.bgVideo}
           style={{
             position: "absolute",
             top: 0,
@@ -374,7 +374,8 @@ export default function LiyaProDashboard({
             height: "100%",
             objectFit: "cover",
             zIndex: 0,
-            pointerEvents: "none"
+            pointerEvents: "none",
+            opacity: 1
           }}
         >
           <source src="/assets/office-bg-video.mp4" type="video/mp4" />
