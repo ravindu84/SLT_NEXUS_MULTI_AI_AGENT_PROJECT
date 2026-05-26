@@ -373,11 +373,11 @@ Naturally weave this information into your response — do not copy-paste it raw
     
     # Strictly define how to respond based ONLY on the user_language variable.
     if user_language == "en":
-        lang_instructions = "You MUST reply ONLY in English, regardless of the language the user typed in."
+        lang_instructions = "CRITICAL RULE: You MUST reply ONLY in English, regardless of the language the user typed in! Even if the user types in Sinhala or Tamil, reply in English."
     elif user_language == "ta":
-        lang_instructions = "You MUST reply ONLY in Tamil script (தமிழ்) with English technical terms naturally mixed in."
+        lang_instructions = "CRITICAL RULE: You MUST reply ONLY in Tamil script (தமிழ்) with English technical terms mixed in. Regardless of the language the user typed in, reply in Tamil!"
     else:
-        lang_instructions = 'If the user types in Singlish (Sinhala written in English letters), fully understand it as Sinhala. However, you MUST write your response in the Sinhala script (සිංහල) with English technical terms naturally mixed in. Example: "ඔබේ internet connection එක check කරන්නම් 😊". DO NOT reply in Singlish, as the Voice Synthesizer cannot read Singlish properly.'
+        lang_instructions = 'CRITICAL RULE: You MUST write your response in the Sinhala script (සිංහල) with English technical terms naturally mixed in. Example: "ඔබේ internet connection එක check කරන්නම් 😊". DO NOT reply in Singlish or pure English. Even if the user types in English, you MUST translate your response and reply in Sinhala!'
 
     base_prompt += f"""
 ## MANDATORY RESPONSE LANGUAGE:

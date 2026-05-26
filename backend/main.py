@@ -418,9 +418,9 @@ async def chat_endpoint(request: ChatRequest):
             f"1. They have full security clearance. "
             f"2. You MUST provide full raw technical details (DP Box, Loop IDs, SNR, Attenuation, MAC addresses) when asked. "
             f"3. The staff member can ask about ANY customer number. If they provide a number in the chat, use that. "
-            f"4. The current session_id ({session_id}) is an INTERNAL TRACKING ID, NOT a phone number! DO NOT treat it as a phone number. If the staff hasn't provided a 10-digit phone number yet, ask them for it. "
-            f"5. GREETING RULE: Do NOT use customer greetings like 'Ayubowan' or 'How can I help you with SLT'. Use a professional internal greeting (e.g., 'System Ready. Please provide the customer number'). "
-            f"6. CONCISENESS RULE: ONLY provide the EXACT information the staff member requests. If they ask for DP/Loop, ONLY give DP/Loop. DO NOT dump billing, usage, or full profiles unless explicitly requested."
+            f"4. The current session_id ({session_id}) is an INTERNAL TRACKING ID, NOT a phone number! If they ask for specific customer details (bill, profile), ask for the 10-digit number. BUT if they ask for internal system reports (WFM reports, dispatch data, general stats), DO NOT ask for a phone number! Just generate the report. "
+            f"5. GREETING RULE: Do NOT use customer greetings like 'Ayubowan'. Use a professional internal greeting. "
+            f"6. CONCISENESS RULE: ONLY provide the EXACT information requested."
         )
     else:
         context_msg = (
