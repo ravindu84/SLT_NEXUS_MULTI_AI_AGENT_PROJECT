@@ -792,11 +792,14 @@ async def send_whatsapp(request: WhatsAppRequest):
             "to": to_num
         }
         if request.media_url:
-            # Twilio cannot fetch from localhost. If testing locally, send a placeholder public image so it doesn't fail.
-            if "localhost" in request.media_url or "127.0.0.1" in request.media_url:
-                kwargs["media_url"] = ["https://picsum.photos/400/600"]
-            else:
-                kwargs["media_url"] = [request.media_url]
+            # If the media URL contains localhost (because the frontend sent it locally), 
+            # replace it with the live AWS URL so Twilio can download it successfully.
+            final_url = request.media_url
+            if "localhost" in final_url or "127.0.0.1" in final_url:
+                final_url = final_url.replace("http://localhost:3000", "https://slt-nexus-multi-ai-agent-project.vercel.app")
+                final_url = final_url.replace("http://127.0.0.1:3000", "https://slt-nexus-multi-ai-agent-project.vercel.app")
+            
+            kwargs["media_url"] = [final_url]
             
         message = client.messages.create(**kwargs)
         return {"status": "success", "message_sid": message.sid, "details": "WhatsApp message queued successfully"}
