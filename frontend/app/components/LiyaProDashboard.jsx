@@ -11,7 +11,7 @@ export default function LiyaProDashboard({
   agent = "liya", // "liya" or "maya"
   language = "en",
   isMuted = false,
-  API_URL = "https://51.21.160.246.nip.io",
+  API_URL = process.env.NEXT_PUBLIC_API_URL || "https://16.171.166.199.nip.io",
   onInteraction,
   isAdmin = false
 }) {

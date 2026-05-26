@@ -72,7 +72,7 @@ export default function AdminDashboard() {
   const [isSearching, setIsSearching] = useState(false);
   const [globalSearch, setGlobalSearch] = useState('');
 
-  const API_URL = "http://localhost:8000";
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://16.171.166.199.nip.io";
 
   const fetchData = async () => {
     try {
