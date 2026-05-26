@@ -8,7 +8,7 @@ import styles from "../page.module.css";
 import "./NeoDashboard.css";
 
 export default function NeoDashboard({
-  language = "en",
+  language = "si",
   isMuted = false,
   API_URL = "https://16.171.166.199.nip.io",
   onInteraction,

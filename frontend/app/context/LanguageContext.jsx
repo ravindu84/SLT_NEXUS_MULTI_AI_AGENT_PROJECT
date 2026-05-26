@@ -6,7 +6,7 @@ import translations from '../i18n/translations';
 const LanguageContext = createContext();
 
 export const LanguageProvider = ({ children }) => {
-  const [language, setLanguage] = useState('en');
+  const [language, setLanguage] = useState('si');
 
   // Default to Sinhala for voice/conversational AI as per requirements
   const [voiceLanguage, setVoiceLanguage] = useState('si');

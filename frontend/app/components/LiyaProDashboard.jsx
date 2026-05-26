@@ -9,7 +9,7 @@ import "./LiyaProLab.css";
 
 export default function LiyaProDashboard({
   agent = "liya", // "liya" or "maya"
-  language = "en",
+  language = "si",
   isMuted = false,
   API_URL = "https://16.171.166.199.nip.io",
   onInteraction,
