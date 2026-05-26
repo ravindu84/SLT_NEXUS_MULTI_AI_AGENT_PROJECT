@@ -5,11 +5,11 @@ ssh_client = paramiko.SSHClient()
 ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
 try:
-    ssh_client.connect(hostname='51.21.160.246', username='ubuntu', pkey=key)
+    ssh_client.connect(hostname='16.171.166.199', username='ubuntu', pkey=key)
     
     nginx_conf = """server {
     listen 80;
-    server_name 51.21.160.246.nip.io;
+    server_name 16.171.166.199.nip.io;
 
     location / {
         proxy_pass http://localhost:8000;
@@ -40,7 +40,7 @@ try:
         'sudo ln -sf /etc/nginx/sites-available/nexus /etc/nginx/sites-enabled/',
         'sudo rm -f /etc/nginx/sites-enabled/default',
         'sudo systemctl restart nginx',
-        'sudo certbot --nginx -d 51.21.160.246.nip.io --non-interactive --agree-tos -m dev@slt.lk --redirect'
+        'sudo certbot --nginx -d 16.171.166.199.nip.io --non-interactive --agree-tos -m dev@slt.lk --redirect'
     ]
     
     for cmd in commands:

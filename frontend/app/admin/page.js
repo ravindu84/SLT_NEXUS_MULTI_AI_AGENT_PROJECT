@@ -72,7 +72,7 @@ export default function AdminDashboard() {
   const [vaultAction, setVaultAction] = useState("");
   const [vaultLoading, setVaultLoading] = useState(false);
 
-  const API_URL = "";
+  const API_URL = "https://16.171.166.199.nip.io";
 
   // Data states
   const [data, setData] = useState({

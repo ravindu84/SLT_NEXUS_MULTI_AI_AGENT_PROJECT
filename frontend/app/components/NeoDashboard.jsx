@@ -10,7 +10,7 @@ import "./NeoDashboard.css";
 export default function NeoDashboard({
   language = "en",
   isMuted = false,
-  API_URL = "",
+  API_URL = "https://16.171.166.199.nip.io",
   onInteraction,
   isAdmin = false
 }) {
