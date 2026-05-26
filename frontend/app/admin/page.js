@@ -69,10 +69,23 @@ export default function AdminDashboard() {
   // Search State
   const [searchQuery, setSearchQuery] = useState('');
   const [customerData, setCustomerData] = useState(null);
+  const [vaultAction, setVaultAction] = useState("");
+  const [vaultLoading, setVaultLoading] = useState(false);
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
+
+  // Data states
+  const [data, setData] = useState({
+    tickets: [],
+    technicians: [],
+    dps: [],
+    loops: [],
+    ledger: [],
+    customers: []
+  });
+  
   const [isSearching, setIsSearching] = useState(false);
   const [globalSearch, setGlobalSearch] = useState('');
-
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://16.171.166.199.nip.io";
 
   const fetchData = async () => {
     try {
@@ -730,13 +743,13 @@ export default function AdminDashboard() {
                   
                   {/* Sub-tab content */}
                   <div className="flex-1 relative overflow-hidden bg-[#13141a]">
-                    <div style={{ display: aiChatTab === 'liya' ? 'block' : 'none', width: '100%', height: '100%' }}>
+                    <div style={{ opacity: aiChatTab === 'liya' ? 1 : 0, pointerEvents: aiChatTab === 'liya' ? 'auto' : 'none', position: 'absolute', inset: 0 }}>
                       <LiyaProDashboard isAdmin={true} agent="liya" language={language} />
                     </div>
-                    <div style={{ display: aiChatTab === 'neo' ? 'block' : 'none', width: '100%', height: '100%' }}>
+                    <div style={{ opacity: aiChatTab === 'neo' ? 1 : 0, pointerEvents: aiChatTab === 'neo' ? 'auto' : 'none', position: 'absolute', inset: 0 }}>
                       <NeoDashboard isAdmin={true} language={language} />
                     </div>
-                    <div style={{ display: aiChatTab === 'maya' ? 'block' : 'none', width: '100%', height: '100%' }}>
+                    <div style={{ opacity: aiChatTab === 'maya' ? 1 : 0, pointerEvents: aiChatTab === 'maya' ? 'auto' : 'none', position: 'absolute', inset: 0 }}>
                       <LiyaProDashboard isAdmin={true} agent="maya" language={language} />
                     </div>
                   </div>
