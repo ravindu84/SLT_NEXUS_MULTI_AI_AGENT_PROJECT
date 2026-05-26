@@ -72,7 +72,7 @@ export default function AdminDashboard() {
   const [vaultAction, setVaultAction] = useState("");
   const [vaultLoading, setVaultLoading] = useState(false);
 
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "";
+  const API_URL = "";
 
   // Data states
   const [data, setData] = useState({

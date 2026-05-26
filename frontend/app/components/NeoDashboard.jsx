@@ -10,7 +10,7 @@ import "./NeoDashboard.css";
 export default function NeoDashboard({
   language = "en",
   isMuted = false,
-  API_URL = process.env.NEXT_PUBLIC_API_URL || "",
+  API_URL = "",
   onInteraction,
   isAdmin = false
 }) {
