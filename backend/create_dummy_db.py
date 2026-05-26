@@ -19,160 +19,38 @@ def create_db():
     cursor.execute("DROP TABLE IF EXISTS prospects")
     cursor.execute("DROP TABLE IF EXISTS new_connections")
     cursor.execute("DROP TABLE IF EXISTS user_memory")
+    cursor.execute("DROP TABLE IF EXISTS technicians")
+    cursor.execute("DROP TABLE IF EXISTS fiber_dp")
+    cursor.execute("DROP TABLE IF EXISTS fiber_dp_loops")
+    cursor.execute("DROP TABLE IF EXISTS ledger")
 
-    # 0. User Memory Table (Long-Term AI Memory)
-    cursor.execute('''
-        CREATE TABLE user_memory (
-            phone_number TEXT PRIMARY KEY,
-            memory_summary TEXT,
-            last_updated TEXT
-        )
-    ''')
+    # Table creation statements...
+    cursor.execute('''CREATE TABLE user_memory (phone_number TEXT PRIMARY KEY, memory_summary TEXT, last_updated TEXT)''')
+    cursor.execute('''CREATE TABLE prospects (mobile_number TEXT PRIMARY KEY, name TEXT, nic TEXT, email TEXT, location_verified INTEGER, human_verified INTEGER, kyc_verified INTEGER, created_at TEXT)''')
+    cursor.execute('''CREATE TABLE new_connections (connection_id TEXT PRIMARY KEY, mobile_number TEXT, slt_number TEXT, package TEXT, payment_status TEXT, status TEXT, created_at TEXT)''')
+    cursor.execute('''CREATE TABLE customers (phone_number TEXT PRIMARY KEY, registered_name TEXT, address TEXT, contact_number TEXT, telephone_type TEXT, registered_date TEXT, has_voice INTEGER, has_internet INTEGER, has_iptv INTEGER, iptv_account_id TEXT, dp_loop TEXT)''')
+    cursor.execute('''CREATE TABLE network_status (phone_number TEXT PRIMARY KEY, status TEXT, line_state TEXT, power_level TEXT, snr TEXT, attenuation TEXT, ont_type TEXT, tid TEXT, clarity_path TEXT, FOREIGN KEY(phone_number) REFERENCES customers(phone_number))''')
+    cursor.execute('''CREATE TABLE billing (phone_number TEXT PRIMARY KEY, monthly_rental REAL, extra_gb_charges REAL, total_due REAL, unpaid_bills INTEGER, last_payment_date TEXT, payment_status TEXT, nxc_balance INTEGER, FOREIGN KEY(phone_number) REFERENCES customers(phone_number))''')
+    cursor.execute('''CREATE TABLE billing_history (id INTEGER PRIMARY KEY AUTOINCREMENT, phone_number TEXT, month TEXT, year INTEGER, amount_billed REAL, amount_paid REAL, arrears REAL, FOREIGN KEY(phone_number) REFERENCES customers(phone_number))''')
+    cursor.execute('''CREATE TABLE data_usage (phone_number TEXT PRIMARY KEY, total_data_gb REAL, used_data_gb REAL, remaining_data_gb REAL, usage_status TEXT, package_name TEXT, FOREIGN KEY(phone_number) REFERENCES customers(phone_number))''')
+    cursor.execute('''CREATE TABLE daily_usage_logs (phone_number TEXT, log_date TEXT, google_gb REAL, facebook_gb REAL, youtube_gb REAL, amazon_gb REAL, tiktok_gb REAL, total_gb REAL, PRIMARY KEY (phone_number, log_date), FOREIGN KEY(phone_number) REFERENCES customers(phone_number))''')
+    cursor.execute('''CREATE TABLE fault_tickets (ticket_id TEXT PRIMARY KEY, phone_number TEXT, technician TEXT, status TEXT, created_at TEXT, FOREIGN KEY(phone_number) REFERENCES customers(phone_number))''')
+    cursor.execute('''CREATE TABLE technicians (name TEXT PRIMARY KEY, zone TEXT, status TEXT, active_tickets INTEGER)''')
+    cursor.execute('''CREATE TABLE fiber_dp (dp_id TEXT PRIMARY KEY, location_lat REAL, location_lon REAL, status TEXT, total_capacity INTEGER, available_capacity INTEGER, created_at TEXT)''')
+    cursor.execute('''CREATE TABLE fiber_dp_loops (loop_id TEXT PRIMARY KEY, dp_id TEXT, allocated_to TEXT, allocated_at TEXT, FOREIGN KEY(dp_id) REFERENCES fiber_dp(dp_id))''')
+    cursor.execute('''CREATE TABLE ledger (id INTEGER PRIMARY KEY AUTOINCREMENT, transaction_type TEXT, details TEXT, created_at TEXT)''')
 
-    # 0.1 Prospects Table (New App Users who haven't bought yet)
-    cursor.execute('''
-        CREATE TABLE prospects (
-            mobile_number TEXT PRIMARY KEY,
-            name TEXT,
-            nic TEXT,
-            email TEXT,
-            location_verified INTEGER,
-            human_verified INTEGER,
-            kyc_verified INTEGER,
-            created_at TEXT
-        )
-    ''')
-
-    # 0.5 New Connections Table (Waiting for Provisioner)
-    cursor.execute('''
-        CREATE TABLE new_connections (
-            connection_id TEXT PRIMARY KEY,
-            mobile_number TEXT,
-            slt_number TEXT,
-            package TEXT,
-            payment_status TEXT,
-            status TEXT,
-            created_at TEXT
-        )
-    ''')
-
-    # 1. CRM Table
-    cursor.execute('''
-        CREATE TABLE customers (
-            phone_number TEXT PRIMARY KEY,
-            registered_name TEXT,
-            address TEXT,
-            contact_number TEXT,
-            telephone_type TEXT,
-            registered_date TEXT,
-            has_voice INTEGER,
-            has_internet INTEGER,
-            has_iptv INTEGER,
-            iptv_account_id TEXT,
-            dp_loop TEXT
-        )
-    ''')
-
-    # 2. NMS Table
-    cursor.execute('''
-        CREATE TABLE network_status (
-            phone_number TEXT PRIMARY KEY,
-            status TEXT,
-            line_state TEXT,
-            power_level TEXT,
-            snr TEXT,
-            attenuation TEXT,
-            ont_type TEXT,
-            tid TEXT,
-            clarity_path TEXT,
-            FOREIGN KEY(phone_number) REFERENCES customers(phone_number)
-        )
-    ''')
-
-    # 3. Billing Table
-    cursor.execute('''
-        CREATE TABLE billing (
-            phone_number TEXT PRIMARY KEY,
-            monthly_rental REAL,
-            extra_gb_charges REAL,
-            total_due REAL,
-            unpaid_bills INTEGER,
-            last_payment_date TEXT,
-            payment_status TEXT,
-            nxc_balance INTEGER,
-            FOREIGN KEY(phone_number) REFERENCES customers(phone_number)
-        )
-    ''')
-
-    # 3.5 Billing History Table (Last 3 Months)
-    cursor.execute('''
-        CREATE TABLE billing_history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            phone_number TEXT,
-            month TEXT,
-            year INTEGER,
-            amount_billed REAL,
-            amount_paid REAL,
-            arrears REAL,
-            FOREIGN KEY(phone_number) REFERENCES customers(phone_number)
-        )
-    ''')
-
-    # 4. Data Usage Table
-    cursor.execute('''
-        CREATE TABLE data_usage (
-            phone_number TEXT PRIMARY KEY,
-            total_data_gb REAL,
-            used_data_gb REAL,
-            remaining_data_gb REAL,
-            usage_status TEXT,
-            package_name TEXT,
-            FOREIGN KEY(phone_number) REFERENCES customers(phone_number)
-        )
-    ''')
-
-    # 5. Daily Data Usage Logs Table
-    cursor.execute('''
-        CREATE TABLE daily_usage_logs (
-            phone_number TEXT,
-            log_date TEXT,
-            google_gb REAL,
-            facebook_gb REAL,
-            youtube_gb REAL,
-            amazon_gb REAL,
-            tiktok_gb REAL,
-            total_gb REAL,
-            PRIMARY KEY (phone_number, log_date),
-            FOREIGN KEY(phone_number) REFERENCES customers(phone_number)
-        )
-    ''')
-
-    # 6. Fault Tickets Table (WFM / Clarity)
-    cursor.execute('''
-        CREATE TABLE fault_tickets (
-            ticket_id TEXT PRIMARY KEY,
-            phone_number TEXT,
-            technician TEXT,
-            status TEXT,
-            created_at TEXT,
-            FOREIGN KEY(phone_number) REFERENCES customers(phone_number)
-        )
-    ''')
-
-    # Data lists
-    names = ["Kasun Perera", "Nimal Fernando", "Saman Kumara", "Chaminda Silva", "Ruwan Rajapaksha", 
-             "Anura Dissanayake", "Namal Weerasinghe", "Janaka Bandara", "Nuwan Pradeep", "Roshan Ranawaka",
-             "Sunil Shantha", "Tharanga Rathnayake", "Dinesh Priyankara", "Lahiru Madushanka", "Asanka De Silva"]
-    
-    # 5 Specific Zones for the Logistics/Dispatch mapping
-    zones = ["Pitipana North", "Pitipana South", "Homagama Town", "Godagama", "Meegoda"]
+    # Data setup
+    first_names = ["Kasun", "Nimal", "Saman", "Chaminda", "Ruwan", "Anura", "Namal", "Janaka", "Nuwan", "Roshan", "Sunil", "Tharanga", "Dinesh", "Lahiru", "Asanka", "Malith", "Sandun", "Nishantha", "Pradeep", "Supun", "Chathura", "Kelum", "Gayan", "Isuru", "Hasitha"]
+    last_names = ["Perera", "Fernando", "Kumara", "Silva", "Rajapaksha", "Dissanayake", "Weerasinghe", "Bandara", "Ranawaka", "Shantha", "Rathnayake", "Priyankara", "Madushanka", "De Silva", "Wickramasinghe", "Senanayake", "Jayasinghe", "Ekanayake", "Gunawardana", "Liyanage"]
+    names = list(set([f"{f} {l}" for f in first_names for l in last_names]))
+    random.shuffle(names)
+    names = names[:200]
     
     ont_types = ["ZTE", "Huawei", "Tenda", "C-DATA", "NOKIYA"]
     packages = ["Unlimited Home", "Unlimited Home Plus", "Unlimited Twin", "Unlimited Pro", "Any Beat", "Any Flix", "Any Tide"]
-
     technicians = ["KOSALA", "JANITH", "SANJEEWA", "NALAKA", "LAHIRU", "ASELA", "THARINDU", "PRASAD", "KAMAL", "SOMASIRI"]
 
-    # Sinhala mapping
     block_names = {1: "එකේ", 2: "දෙකේ", 3: "තුනේ", 4: "හතරේ"}
     item_names = {
         1: "එක", 2: "දෙක", 3: "තුන", 4: "හතර", 5: "පහ", 6: "හය", 7: "හත", 8: "අට", 9: "නවය", 10: "දහය",
@@ -181,20 +59,19 @@ def create_db():
         26: "විසිහය", 27: "විසිහත", 28: "විසිඅට", 29: "විසිනවය", 30: "තිහ", 31: "තිස්එක", 32: "තිස්දෙක"
     }
 
-    # Tracking generated numbers to randomly assign faults later
-    copper_numbers = []
-    fiber_numbers = []
+    # Tracking active non-suspended numbers for Quota Exceeded logic
+    active_numbers = []
 
     # Generate exact 200 customers
     for idx in range(200):
+        name = names[idx]
+        addr = f"No {10 + idx}, Pitipana, Homagama"
+        contact = f"0718683{idx:03d}"
+
         if idx < 100:
             # COPPER (100 numbers: 0112895800 - 0112895899)
             phone = f"01128958{idx:02d}"
             line_type = "Copper"
-            zone = zones[(idx // 20) % 5]
-            addr = f"No {10 + idx}, {zone}"
-            contact = f"07186838{idx:02d}"
-            copper_numbers.append(phone)
             
             # DP/LOOP: HO-ATR-A0300-A001-01
             dp_num = (idx // 10) + 1
@@ -218,19 +95,12 @@ def create_db():
             
             power = "N/A"
             ont = "N/A"
-            
-            # Suspended if in last 25 of copper (75 to 99)
             is_suspended = idx >= 75
-
         else:
             # FIBER (100 numbers: 0112895900 - 0112895999)
             f_idx = idx - 100
             phone = f"01128959{f_idx:02d}"
             line_type = "Fiber"
-            zone = zones[(f_idx // 20) % 5]
-            addr = f"No {110 + f_idx}, {zone}"
-            contact = f"07186839{f_idx:02d}"
-            fiber_numbers.append(phone)
             
             # DP/LOOP: HO-MHM-0500-001-01 (8 loops per DP)
             dp_num = (f_idx // 8) + 1
@@ -246,74 +116,61 @@ def create_db():
                 power = f"{random.uniform(-18.0, -25.0):.2f}"
             else:
                 power = f"{random.uniform(-26.0, -34.0):.2f}"
-
-            # Suspended if in last 25 of fiber (75 to 99)
+            
             is_suspended = f_idx >= 75
 
-        # CRM Details
-        name = random.choice(names)
-        reg_date = "2023-05-10"
-        has_v, has_i, has_ip = 1, 1, 1
-        iptv_id = f"IPTV{phone}"
+        if not is_suspended:
+            active_numbers.append(phone)
 
-        cursor.execute('''
-            INSERT INTO customers 
+        # CRM Details
+        reg_date = "2023-05-10"
+        cursor.execute('''INSERT INTO customers 
             (phone_number, registered_name, address, contact_number, telephone_type, registered_date, has_voice, has_internet, has_iptv, iptv_account_id, dp_loop)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (phone, name, addr, contact, line_type, reg_date, has_v, has_i, has_ip, iptv_id, dp_loop))
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''', 
+            (phone, name, addr, contact, line_type, reg_date, 1, 1, 1, f"IPTV{phone}", dp_loop))
 
         # NMS details
         status = "DOWN" if is_suspended else "UP"
         line_state = "Fault" if is_suspended else "Normal"
-        
-        cursor.execute('''
-            INSERT INTO network_status 
+        cursor.execute('''INSERT INTO network_status 
             (phone_number, status, line_state, power_level, snr, attenuation, ont_type, tid, clarity_path)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (phone, status, line_state, power, snr, attn, ont, tid, dp_loop))
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''', 
+            (phone, status, line_state, power, snr, attn, ont, tid, dp_loop))
 
         # Billing details
         total_due = round(random.uniform(1500.0, 50000.0), 2)
         payment_status = "Suspended" if is_suspended else "Active"
-        
-        # Give some random NXC coins to active users (0 to 2000)
         nxc_balance = 0 if is_suspended else random.randint(100, 2500)
-        
-        cursor.execute('''
-            INSERT INTO billing
+        cursor.execute('''INSERT INTO billing
             (phone_number, monthly_rental, extra_gb_charges, total_due, unpaid_bills, last_payment_date, payment_status, nxc_balance)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (phone, 2990.0, 0.0, total_due, 2 if is_suspended else 0, "2026-04-01", payment_status, nxc_balance))
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', 
+            (phone, 2990.0, 0.0, total_due, 2 if is_suspended else 0, "2026-04-01", payment_status, nxc_balance))
 
-        # 3-Month Billing History
+        # Billing History
         months = ["February", "March", "April"]
-        year = 2026
         current_arrears = 0.0
-        
-        for idx_m, m in enumerate(months):
-            amt_billed = 2990.0 + round(random.uniform(0, 1000), 2) # Rental + some extra calls/data
-            
+        for m in months:
+            amt_billed = 2990.0 + round(random.uniform(0, 1000), 2)
             if is_suspended:
-                # If suspended, they haven't paid anything for the last 3 months
                 amt_paid = 0.0
             else:
-                # Active users usually pay full, occasionally miss a bit
-                if random.random() < 0.9:
-                    amt_paid = amt_billed + current_arrears
-                else:
-                    amt_paid = amt_billed / 2 # Partial payment
-                    
-            # Calculate new arrears for this month
+                amt_paid = amt_billed + current_arrears if random.random() < 0.9 else amt_billed / 2
             current_arrears = round(current_arrears + amt_billed - amt_paid, 2)
             if current_arrears < 0: current_arrears = 0.0
-            
-            cursor.execute('''
-                INSERT INTO billing_history
-                (phone_number, month, year, amount_billed, amount_paid, arrears)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ''', (phone, m, year, amt_billed, amt_paid, current_arrears))
+            cursor.execute('''INSERT INTO billing_history (phone_number, month, year, amount_billed, amount_paid, arrears) VALUES (?, ?, ?, ?, ?, ?)''', 
+                (phone, m, 2026, amt_billed, amt_paid, current_arrears))
 
-        # Data Usage
+    # Pick exactly 15 active users to have 0 GB (Quota Exceeded)
+    quota_exceeded_numbers = set(random.sample(active_numbers, 15))
+
+    # Loop again for Data Usage & Logs since we needed to select the 15 quota exceeded first
+    cursor.execute("SELECT phone_number, payment_status FROM billing")
+    all_billing = cursor.fetchall()
+    
+    for row in all_billing:
+        phone, p_status = row[0], row[1]
+        is_suspended = p_status == "Suspended"
+        
         pkg = random.choice(packages)
         total_data = float(random.choice([50, 100, 150, 200, 300]))
         
@@ -321,21 +178,17 @@ def create_db():
             usage_status = "Suspended"
             remaining = 0.0
             used = total_data
+        elif phone in quota_exceeded_numbers:
+            usage_status = "Quota Exceeded"
+            remaining = 0.0
+            used = total_data
         else:
-            if random.random() < 0.10:
-                usage_status = "Active"
-                remaining = 0.0
-                used = total_data
-            else:
-                usage_status = "Active"
-                used = round(random.uniform(5.0, total_data - 1.0), 2)
-                remaining = total_data - used
+            usage_status = "Active"
+            used = round(random.uniform(5.0, total_data - 1.0), 2)
+            remaining = total_data - used
 
-        cursor.execute('''
-            INSERT INTO data_usage
-            (phone_number, total_data_gb, used_data_gb, remaining_data_gb, usage_status, package_name)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (phone, total_data, f"{used:.2f}", f"{remaining:.2f}", usage_status, pkg))
+        cursor.execute('''INSERT INTO data_usage (phone_number, total_data_gb, used_data_gb, remaining_data_gb, usage_status, package_name) VALUES (?, ?, ?, ?, ?, ?)''', 
+            (phone, total_data, f"{used:.2f}", f"{remaining:.2f}", usage_status, pkg))
 
         # 31 Day Daily Logs
         end_dt = datetime.now()
@@ -357,40 +210,74 @@ def create_db():
                 tk = round(day_total * splits[4], 2)
             
             tot = round(google + fb + yt + amzn + tk, 2)
-            
-            cursor.execute('''
-                INSERT INTO daily_usage_logs
-                (phone_number, log_date, google_gb, facebook_gb, youtube_gb, amazon_gb, tiktok_gb, total_gb)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-            ''', (phone, log_date, google, fb, yt, amzn, tk, tot))
+            cursor.execute('''INSERT INTO daily_usage_logs (phone_number, log_date, google_gb, facebook_gb, youtube_gb, amazon_gb, tiktok_gb, total_gb) VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', 
+                (phone, log_date, google, fb, yt, amzn, tk, tot))
 
-    # Generate 40 active fault tickets (20 copper, 20 fiber)
-    fault_copper = random.sample(copper_numbers, 20)
-    fault_fiber = random.sample(fiber_numbers, 20)
-    all_faults = fault_copper + fault_fiber
-
+    # Add fault tickets for the 50 suspended accounts so they appear in the Fault Matrix
     ticket_time = datetime.now()
-    for f_phone in all_faults:
+    cursor.execute("SELECT phone_number FROM network_status WHERE status = 'DOWN'")
+    suspended_phones = [row[0] for row in cursor.fetchall()]
+    
+    for f_phone in suspended_phones:
         t_id = f"SLT-FT-{random.randint(100000, 999999)}"
-        tech = random.choice(technicians)
-        status = random.choice(["Dispatched", "Pending", "In Progress"])
-        # Update line state in NMS to Fault
-        cursor.execute("UPDATE network_status SET status = 'DOWN', line_state = 'Fault' WHERE phone_number = ?", (f_phone,))
-        
+        if random.random() < 0.6:
+            tech = ""
+            status = "Pending"
+        else:
+            tech = random.choice(technicians)
+            status = random.choice(["Dispatched", "In Progress", "Assigned"])
         cursor.execute('''
             INSERT INTO fault_tickets (ticket_id, phone_number, technician, status, created_at)
             VALUES (?, ?, ?, ?, ?)
         ''', (t_id, f_phone, tech, status, ticket_time.strftime("%Y-%m-%d %H:%M:%S")))
 
-    # Add mock long-term memory for the first user (0112895800)
-    cursor.execute('''
-        INSERT INTO user_memory (phone_number, memory_summary, last_updated)
-        VALUES (?, ?, ?)
-    ''', ('0112895800', 'Customer is highly sensitive to internet drops. Frequently complains about ping issues during gaming. Prefers quick resolutions and is interested in upgrading to Fiber if ping improves. Remind them about the Fiber upgrade option next time they contact.', datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+    # --- Populate the new tables ---
+    
+    # 1. Technicians
+    zones = ["Colombo North", "Colombo South", "Colombo Central", "Kandy", "Galle", "Kurunegala"]
+    for tech in technicians:
+        zone = random.choice(zones)
+        status = random.choice(["Available", "Available", "Available", "Busy"])
+        active_t = random.randint(0, 3) if status == "Busy" else 0
+        cursor.execute("INSERT INTO technicians (name, zone, status, active_tickets) VALUES (?, ?, ?, ?)", (tech, zone, status, active_t))
+
+    # 2. Fiber DPs and Loops
+    dp_statuses = ["Active", "Active", "Active", "Maintenance", "Degraded"]
+    dp_ids = []
+    for i in range(1, 16):
+        dp_id = f"FDP-COL-{i:03d}"
+        dp_ids.append(dp_id)
+        cap = random.choice([8, 16, 32])
+        av_cap = cap - random.randint(0, cap)
+        cursor.execute("INSERT INTO fiber_dp (dp_id, location_lat, location_lon, status, total_capacity, available_capacity, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)", 
+                       (dp_id, 6.92 + random.uniform(-0.05, 0.05), 79.86 + random.uniform(-0.05, 0.05), random.choice(dp_statuses), cap, av_cap, datetime.now().isoformat()))
+        
+        # Populate loops for this DP
+        loops_used = cap - av_cap
+        for j in range(1, loops_used + 1):
+            loop_id = f"{dp_id}-L{j:02d}"
+            cursor.execute("INSERT INTO fiber_dp_loops (loop_id, dp_id, allocated_to, allocated_at) VALUES (?, ?, ?, ?)", 
+                           (loop_id, dp_id, f"0112{random.randint(100000, 999999)}", (datetime.now() - timedelta(days=random.randint(10, 300))).isoformat()))
+
+    # 3. Ledger
+    transaction_types = ["BLOCKCHAIN_SYNC", "PAYMENT_SECURED", "VAULT_AUDIT", "SMART_CONTRACT_EXEC", "IDENTITY_VERIFIED"]
+    for i in range(20):
+        t_type = random.choice(transaction_types)
+        if t_type == "BLOCKCHAIN_SYNC":
+            details = f"Synchronized node ledger hash: 0x{random.randint(10000000, 99999999):x}"
+        elif t_type == "PAYMENT_SECURED":
+            details = f"Verified LKR {random.randint(1500, 8000)}.00 payment for UUID: {random.randint(1000, 9999)}"
+        elif t_type == "VAULT_AUDIT":
+            details = "Automated integrity check passed for customer database."
+        else:
+            details = f"Smart contract verification complete for SLA-id-{random.randint(100, 999)}"
+            
+        cursor.execute("INSERT INTO ledger (transaction_type, details, created_at) VALUES (?, ?, ?)", 
+                       (t_type, details, (datetime.now() - timedelta(minutes=random.randint(1, 1440))).isoformat()))
 
     conn.commit()
     conn.close()
-    print("SUCCESS: SLT NEXUS Database Rebuilt with Fault Tickets, Technicians & Memory!")
+    print("SUCCESS: SLT NEXUS Dummy Database Rebuilt Perfectly!")
 
 if __name__ == "__main__":
     create_db()

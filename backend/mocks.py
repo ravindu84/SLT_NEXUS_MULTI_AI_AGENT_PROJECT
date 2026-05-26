@@ -60,6 +60,10 @@ class ReportEmailRequest(BaseModel):
     emails: List[str]
     report_type: str
 
+class AssignTicketRequest(BaseModel):
+    ticket_id: str
+    technician: str
+
 # --- Endpoints ---
 
 @router.get("/imaster/diagnostics/{device_id}", response_model=RouterStatus)
@@ -470,7 +474,8 @@ async def email_report(request: ReportEmailRequest):
     }
     
     filename = report_mapping.get(request.report_type, f"report_{request.report_type}.png")
-    image_url = f"http://localhost:3000/assets/{filename}"
+    frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+    image_url = f"{frontend_url.rstrip('/')}/assets/{filename}"
     
     # Custom details for each report type based on WFM integration
     if request.report_type in ["morning", "day_start"]:
@@ -580,6 +585,22 @@ async def get_admin_technicians():
     conn.close()
     return {"technicians": [dict(r) for r in rows]}
 
+@router.post("/admin/tickets/assign")
+async def assign_admin_ticket(req: AssignTicketRequest):
+    import sqlite3
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("UPDATE fault_tickets SET technician = ?, status = 'Assigned' WHERE ticket_id = ?", (req.technician, req.ticket_id))
+        cursor.execute("UPDATE technicians SET active_tickets = active_tickets + 1, status = 'Busy' WHERE name = ?", (req.technician,))
+        conn.commit()
+        conn.close()
+        return {"status": "success", "message": f"Ticket assigned to {req.technician}"}
+    except Exception as e:
+        return {"error": str(e)}
+
+
 @router.get("/admin/dps")
 async def get_admin_dps():
     import sqlite3
@@ -665,8 +686,8 @@ async def get_all_customers():
         cursor = conn.cursor()
         
         cursor.execute('''
-            SELECT c.user_id, c.phone_number, c.registered_name as name, c.address, c.telephone_type as type, 
-                   n.status, n.line_state, 
+            SELECT c.phone_number as user_id, c.phone_number, c.contact_number, c.registered_name as name, c.address, c.telephone_type as type, c.dp_loop,
+                   n.status, n.line_state, n.tid, n.snr, n.attenuation, n.power_level, n.ont_type,
                    b.payment_status, b.total_due
             FROM customers c
             LEFT JOIN network_status n ON c.phone_number = n.phone_number
@@ -679,6 +700,43 @@ async def get_all_customers():
         return {"customers": [dict(r) for r in rows]}
     except Exception as e:
         return {"error": str(e), "customers": []}
+
+async def get_admin_usage(phone_number: str):
+    import sqlite3
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT c.registered_name, c.address, d.package_name, d.total_data_gb, 
+                   d.used_data_gb, d.remaining_data_gb, d.usage_status
+            FROM customers c
+            LEFT JOIN data_usage d ON c.phone_number = d.phone_number
+            WHERE c.phone_number = ?
+        ''', (phone_number,))
+        user_info = cursor.fetchone()
+        
+        if not user_info:
+            conn.close()
+            return {"error": "Phone number not found in dummy database"}
+            
+        cursor.execute('''
+            SELECT log_date, google_gb, facebook_gb, youtube_gb, amazon_gb, tiktok_gb, total_gb
+            FROM daily_usage_logs
+            WHERE phone_number = ?
+            ORDER BY log_date DESC
+        ''', (phone_number,))
+        logs = cursor.fetchall()
+        conn.close()
+        
+        return {
+            "customer": dict(user_info),
+            "logs": [dict(r) for r in logs]
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 # --- TWILIO INTEGRATION ENDPOINTS ---
 
@@ -734,7 +792,11 @@ async def send_whatsapp(request: WhatsAppRequest):
             "to": to_num
         }
         if request.media_url:
-            kwargs["media_url"] = [request.media_url]
+            # Twilio cannot fetch from localhost. If testing locally, send a placeholder public image so it doesn't fail.
+            if "localhost" in request.media_url or "127.0.0.1" in request.media_url:
+                kwargs["media_url"] = ["https://picsum.photos/400/600"]
+            else:
+                kwargs["media_url"] = [request.media_url]
             
         message = client.messages.create(**kwargs)
         return {"status": "success", "message_sid": message.sid, "details": "WhatsApp message queued successfully"}

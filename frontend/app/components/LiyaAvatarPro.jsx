@@ -57,7 +57,6 @@ export default function LiyaAvatarPro({
             }
           }
         }
-        
         // Drop the arms from T-pose to natural elegant rest position
         if (child.isBone) {
           const name = child.name;
@@ -285,5 +284,3 @@ export default function LiyaAvatarPro({
   );
 }
 
-useGLTF.preload("/assets/liya.glb");
-useGLTF.preload("/assets/maya.glb");

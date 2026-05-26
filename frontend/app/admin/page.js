@@ -19,6 +19,7 @@ const LiyaProDashboard = dynamic(() => import('../components/LiyaProDashboard'),
 const NeoDashboard = dynamic(() => import('../components/NeoDashboard'), {
   ssr: false,
 });
+import UsageMeter from '../components/UsageMeter';
 
 // --- MOCK DATA FOR CHARTS ---
 const loadData = [
@@ -69,8 +70,9 @@ export default function AdminDashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [customerData, setCustomerData] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [globalSearch, setGlobalSearch] = useState('');
 
-  const API_URL = "https://51.21.160.246.nip.io";
+  const API_URL = "http://localhost:8000";
 
   const fetchData = async () => {
     try {
@@ -323,33 +325,39 @@ export default function AdminDashboard() {
     </div>
   );
 
-  const renderCustomers = () => (
+  const renderCustomers = () => {
+    const filtered = globalSearch 
+      ? data.customers.filter(c => c.phone_number.includes(globalSearch) || c.name.toLowerCase().includes(globalSearch.toLowerCase()))
+      : data.customers;
+      
+    return (
     <div className="bg-[#1c1d25] border border-slate-800/50 rounded-xl overflow-hidden flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500 shadow-lg">
       <div className="p-5 flex justify-between items-center shrink-0">
         <h3 className="text-base font-bold text-white flex items-center gap-2">
            <Database className="w-5 h-5 text-rose-500"/> SLT Customer Database (CRM)
         </h3>
         <span className="px-3 py-1 bg-rose-500/10 text-rose-500 rounded-lg text-xs font-bold border border-rose-500/20">
-          {data.customers.length} Records Loaded
+          {filtered.length} Records Loaded
         </span>
       </div>
       <div className="flex-1 overflow-y-auto p-2">
         <table className="w-full text-left border-collapse">
           <thead className="sticky top-0 bg-[#1c1d25] z-10">
             <tr className="text-sm text-white border-b border-slate-800/50">
-              <th className="p-4 font-semibold">User ID</th>
               <th className="p-4 font-semibold">Phone Number</th>
+              <th className="p-4 font-semibold">Contact Number</th>
               <th className="p-4 font-semibold">Name</th>
               <th className="p-4 font-semibold">Line Type</th>
+              <th className="p-4 font-semibold">DP/LOOP</th>
               <th className="p-4 font-semibold">Network Status</th>
               <th className="p-4 font-semibold text-right">Bill Due</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800/50">
-            {data.customers.map((c, i) => (
+            {filtered.map((c, i) => (
               <tr key={i} className="hover:bg-slate-800/30 transition-colors">
-                <td className="p-4 text-xs font-mono text-slate-500">{c.user_id}</td>
                 <td className="p-4 text-sm font-bold text-slate-200">{c.phone_number}</td>
+                <td className="p-4 text-xs font-mono text-slate-500">{c.contact_number}</td>
                 <td className="p-4 text-sm text-slate-400">{c.name}</td>
                 <td className="p-4 text-sm text-slate-400">
                   <span className={`inline-flex items-center px-2 py-1 rounded text-[10px] font-bold tracking-wider uppercase ${
@@ -358,6 +366,7 @@ export default function AdminDashboard() {
                     {c.type}
                   </span>
                 </td>
+                <td className="p-4 text-xs font-mono text-slate-400">{c.dp_loop || 'N/A'}</td>
                 <td className="p-4">
                   <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium ${
                     c.status === 'UP' ? 'bg-emerald-500/10 text-emerald-500' : 
@@ -377,6 +386,79 @@ export default function AdminDashboard() {
       </div>
     </div>
   );
+  }
+
+  const renderFullDB = () => {
+    const filtered = globalSearch 
+      ? data.customers.filter(c => c.phone_number.includes(globalSearch) || c.name.toLowerCase().includes(globalSearch.toLowerCase()))
+      : data.customers;
+      
+    return (
+    <div className="bg-[#1c1d25] border border-slate-800/50 rounded-xl overflow-hidden flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500 shadow-lg">
+      <div className="p-5 flex justify-between items-center shrink-0 border-b border-slate-800/50">
+        <h3 className="text-base font-bold text-white flex items-center gap-2">
+           <Server className="w-5 h-5 text-rose-500"/> Full Dummy DB (200 Records)
+        </h3>
+        <span className="px-3 py-1 bg-rose-500/10 text-rose-500 rounded-lg text-xs font-bold border border-rose-500/20">
+          {filtered.length} Records Loaded
+        </span>
+      </div>
+      <div className="flex-1 overflow-auto p-0">
+        <table className="w-full text-left border-collapse whitespace-nowrap">
+          <thead className="sticky top-0 bg-[#1c1d25] z-10 shadow-md">
+            <tr className="text-xs text-slate-400 border-b border-slate-800/50 uppercase tracking-wider">
+              <th className="p-4 font-bold">Phone</th>
+              <th className="p-4 font-bold">Name</th>
+              <th className="p-4 font-bold">Type</th>
+              <th className="p-4 font-bold">DP/LOOP</th>
+              <th className="p-4 font-bold">TID (Copper)</th>
+              <th className="p-4 font-bold">SNR/Attn (Copper)</th>
+              <th className="p-4 font-bold">Power (Fiber)</th>
+              <th className="p-4 font-bold">ONT</th>
+              <th className="p-4 font-bold">Bill Status</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-800/50">
+            {filtered.map((c, i) => (
+              <tr key={i} className="hover:bg-slate-800/30 transition-colors text-sm">
+                <td className="p-4 font-bold text-rose-400">{c.phone_number}</td>
+                <td className="p-4 text-slate-300">{c.name}</td>
+                <td className="p-4 text-slate-400">
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-wider uppercase ${
+                    c.type === 'Fiber' ? 'bg-cyan-500/10 text-cyan-500' : 'bg-slate-700/50 text-slate-300'
+                  }`}>
+                    {c.type}
+                  </span>
+                </td>
+                <td className="p-4 font-mono text-xs text-slate-400">{c.dp_loop || 'N/A'}</td>
+                <td className="p-4 font-mono text-xs text-slate-400">{c.tid || 'N/A'}</td>
+                <td className="p-4 text-xs text-slate-400">
+                  {c.type === 'Copper' ? (
+                     <span>SNR: <span className="text-emerald-400">{c.snr || 'N/A'}</span> | Attn: <span className="text-rose-400">{c.attenuation || 'N/A'}</span></span>
+                  ) : 'N/A'}
+                </td>
+                <td className="p-4 text-xs text-slate-400">
+                   {c.type === 'Fiber' ? (
+                     <span><span className="text-emerald-400">{c.power_level || 'N/A'}</span> dBm</span>
+                   ) : 'N/A'}
+                </td>
+                <td className="p-4 text-xs text-slate-400">{c.ont_type || 'N/A'}</td>
+                <td className="p-4 text-xs">
+                  <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded font-medium ${
+                    c.payment_status === 'Active' || c.payment_status === 'Paid' ? 'bg-emerald-500/10 text-emerald-500' : 
+                    'bg-rose-500/10 text-rose-500'
+                  }`}>
+                    {c.payment_status || c.status}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+  }
 
   const renderFaultMatrix = () => (
     <div className="bg-[#1c1d25] border border-slate-800/50 rounded-xl overflow-hidden flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500 shadow-lg">
@@ -494,11 +576,8 @@ export default function AdminDashboard() {
       {/* SIDEBAR */}
       {activeTab !== 'ai-chat' && (
         <div className="w-64 bg-[#13141a] border-r border-slate-800/50 flex flex-col shrink-0 transition-all duration-300">
-          <div className="p-6 flex items-center gap-3">
-            <div className="w-10 h-10 bg-rose-500 rounded-lg flex items-center justify-center shadow-[0_0_15px_rgba(244,63,94,0.5)]">
-              <Activity className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-xl font-black text-white tracking-tight">NEXUS<span className="text-rose-500">.</span></h1>
+          <div className="p-6 flex items-center justify-center">
+            <img src="/assets/logo.png" alt="SLT NEXUS" className="h-14 object-contain" />
           </div>
         
         {/* User Info Profile */}
@@ -510,7 +589,7 @@ export default function AdminDashboard() {
               <div className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-[#1c1d25]"></div>
            </div>
            <div>
-              <p className="text-sm font-bold text-white">Jhon Doe</p>
+              <p className="text-sm font-bold text-white">Ravindu Chinthana</p>
               <p className="text-xs text-slate-400">Admin</p>
            </div>
         </div>
@@ -521,7 +600,9 @@ export default function AdminDashboard() {
             { id: 'customers', icon: Database, label: 'CRM Database' },
             { id: 'tickets', icon: AlertTriangle, label: 'Fault Matrix' },
             { id: 'dispatch', icon: Users, label: 'Dispatch Center' },
+            { id: 'usage-meter', icon: Globe, label: 'Usage Meter' },
             { id: 'vault', icon: Terminal, label: 'Ledger Terminal' },
+            { id: 'full-db', icon: Server, label: 'Full Dummy DB' },
             { id: 'ai-chat', icon: MessageSquare, label: 'Swarm AI Chat' },
           ].map(item => (
             <button
@@ -556,7 +637,9 @@ export default function AdminDashboard() {
             <div className="relative hidden sm:block w-72">
                <input 
                  type="text" 
-                 placeholder="Search"
+                 placeholder="Search phone or name..."
+                 value={globalSearch}
+                 onChange={(e) => setGlobalSearch(e.target.value)}
                  className="w-full bg-[#13141a] border-none text-white text-sm rounded-full pl-5 pr-10 py-2.5 focus:outline-none focus:ring-1 focus:ring-rose-500 transition-shadow"
                />
                <Search className="absolute right-4 top-3 w-4 h-4 text-slate-500" />
@@ -577,7 +660,7 @@ export default function AdminDashboard() {
                <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center">
                  <User className="w-4 h-4 text-slate-400" />
                </div>
-               <span className="text-sm font-medium text-white">Jhon Doe</span>
+               <span className="text-sm font-medium text-white">Ravindu Chinthana</span>
             </div>
           </div>
         </header>
@@ -592,8 +675,10 @@ export default function AdminDashboard() {
             <div className="h-full flex flex-col">
               {activeTab === 'overview' && renderOverview()}
               {activeTab === 'customers' && renderCustomers()}
+              {activeTab === 'full-db' && renderFullDB()}
               {activeTab === 'tickets' && renderFaultMatrix()}
               {activeTab === 'dispatch' && renderDispatch()}
+              {activeTab === 'usage-meter' && <UsageMeter API_URL={API_URL} />}
               {activeTab === 'vault' && renderVault()}
               {activeTab === 'ai-chat' && (
                 <div className="h-full w-full flex flex-col bg-[#1c1d25] overflow-hidden shadow-lg">

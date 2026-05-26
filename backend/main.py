@@ -315,6 +315,7 @@ class ChatRequest(BaseModel):
     session_id: Optional[str] = None
     lang: Optional[str] = "si"
     image_base64: Optional[str] = None
+    is_admin: Optional[bool] = False
 
 class GestureRequest(BaseModel):
     image_base64: str
@@ -350,7 +351,7 @@ async def health_check():
 # --- /api/admin/* proxy routes (frontend calls /api/admin/* but mocks router is at /mocks/admin/*) ---
 from backend.mocks import (
     get_admin_tickets, get_admin_technicians, get_admin_dps,
-    get_admin_ledger, get_all_customers, get_admin_customer
+    get_admin_ledger, get_all_customers, get_admin_customer, get_admin_usage
 )
 
 @app.get("/api/admin/tickets")
@@ -376,6 +377,10 @@ async def proxy_admin_customers():
 @app.get("/api/admin/customer/{phone}")
 async def proxy_admin_customer(phone: str):
     return await get_admin_customer(phone)
+
+@app.get("/api/admin/usage/{phone}")
+async def proxy_admin_usage(phone: str):
+    return await get_admin_usage(phone)
 
 AGENT_INFO = {
     "liya_agent": {"label": "LIYA", "emoji": "🧠"},
@@ -405,8 +410,26 @@ async def chat_endpoint(request: ChatRequest):
     
     # Rebuild history
     messages = []
-    # Inject Context and Memory
-    context_msg = f"IMPORTANT CONTEXT: The user is currently logged in. Their SLT phone number/account number is {session_id}. Do not ask for their phone number again. Whenever checking usage, bills, or diagnostics, use this exact number automatically without asking."
+    
+    # Inject Context and Memory based on Admin/Customer Role
+    if request.is_admin:
+        context_msg = (
+            f"IMPORTANT SECURITY CONTEXT: You are communicating with an INTERNAL SLT OFFICE STAFF MEMBER (Admin). "
+            f"1. They have full security clearance. "
+            f"2. You MUST provide full raw technical details (DP Box, Loop IDs, SNR, Attenuation, MAC addresses) when asked. "
+            f"3. The staff member can ask about ANY customer number. If they provide a number in the chat, use that. "
+            f"4. The current session_id ({session_id}) is an INTERNAL TRACKING ID, NOT a phone number! DO NOT treat it as a phone number. If the staff hasn't provided a 10-digit phone number yet, ask them for it. "
+            f"5. GREETING RULE: Do NOT use customer greetings like 'Ayubowan' or 'How can I help you with SLT'. Use a professional internal greeting (e.g., 'System Ready. Please provide the customer number'). "
+            f"6. CONCISENESS RULE: ONLY provide the EXACT information the staff member requests. If they ask for DP/Loop, ONLY give DP/Loop. DO NOT dump billing, usage, or full profiles unless explicitly requested."
+        )
+    else:
+        context_msg = (
+            f"IMPORTANT SECURITY CONTEXT: You are communicating with a CUSTOMER (B2C). "
+            f"1. You MUST NEVER provide raw technical details like DP Box, Loop IDs, SNR, or Attenuation. Keep answers simple. "
+            f"2. SECURITY RULE: The customer's authenticated phone number is exactly {session_id}. "
+            f"3. You are STRICTLY FORBIDDEN from providing details, usage, bills, or tickets for ANY other phone number. If they ask about another number, politely refuse. "
+            f"4. Do not ask for their phone number again, use {session_id} automatically for all tool calls."
+        )
     
     try:
         import sqlite3
@@ -444,7 +467,8 @@ async def chat_endpoint(request: ChatRequest):
         # Invoke our 12-Agent swarm brain!
         result = await get_graph().ainvoke({
             "messages": messages,
-            "user_language": request.lang or "si"  # Default to Sinhala
+            "user_language": request.lang or "si",  # Default to Sinhala
+            "is_admin": request.is_admin
         })
         ai_message = result["messages"][-1]
         # Censor AI response to prevent bad words being generated/spoken
@@ -484,6 +508,15 @@ def enhance_sinhala_pronunciation(text: str) -> str:
     
     # 1. Fix numbers with units — add natural pauses so TTS reads "rupees 1490" not "one-four-nine-zero"
     text = re.sub(r'Rs\.?\s*(\d[\d,]*)', r'රුපියල් \1', text)
+    text = re.sub(r'LKR\s*(\d[\d,]*)', r'රුපියල් \1', text, flags=re.IGNORECASE)
+    
+    # 1.5 Convert decimal rupees to "සත" (cents) instead of reading as decimals
+    def replace_cents(match):
+        prefix = match.group(1).strip()
+        rupees = match.group(2).replace(",", "")
+        cents = match.group(3)
+        return f"{prefix} {rupees} යි සත {cents}"
+    text = re.sub(r'(රුපියල්)\s*([\d,]+)\.(\d{1,2})', replace_cents, text)
     
     # 2. Fix "Mbps" — spell out for clear pronunciation
     text = re.sub(r'(\d+)\s*Mbps', r'\1 Megabits per second', text, flags=re.IGNORECASE)
@@ -568,7 +601,9 @@ async def text_to_speech(request: TTSRequest):
     # Construct a valid SSML payload
     ssml_text = f"""<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="{lang_code}">
         <voice name="{voice_name}">
-            {processed_text}
+            <prosody rate="-10%">
+                {processed_text}
+            </prosody>
         </voice>
     </speak>"""
 

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import AvatarScenePro from "./AvatarScenePro";
 import TechBackground from "./TechBackground";
-import { Zap, Play, RotateCcw, Volume2, ShieldAlert, Cpu, Layers, Sliders, MessageSquare, Mic, MicOff, Camera, Upload } from "lucide-react";
+import { Zap, Play, RotateCcw, Volume2, ShieldAlert, Cpu, Layers, Sliders, MessageSquare, Mic, MicOff, Camera, Upload, X } from "lucide-react";
 import styles from "../page.module.css";
 import "./LiyaProLab.css";
 
@@ -36,6 +36,8 @@ export default function LiyaProDashboard({
   const isThinking = chatLoading;
   const [sessionId, setSessionId] = useState(`pro-${Date.now()}`);
   const [isListening, setIsListening] = useState(false);
+  const [attachedImage, setAttachedImage] = useState(null);
+  const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
 
   // Auto-scroll chat to bottom
@@ -228,23 +230,28 @@ export default function LiyaProDashboard({
   const sendChatPro = async (directText) => {
     if (onInteraction) onInteraction();
     const text = directText !== undefined ? directText.trim() : chatInput.trim();
-    if (!text || chatLoading) return;
+    if ((!text && !attachedImage) || chatLoading) return;
 
     if (directText === undefined) {
       setChatInput("");
     }
-    const userMsg = { id: Date.now(), role: "user", content: text, agent_label: "You", agent_emoji: "👤" };
+    const userMsg = { id: Date.now(), role: "user", content: text + (attachedImage ? " [Image Attached]" : ""), agent_label: "You", agent_emoji: "👤" };
     setChatMessages((prev) => [...prev, userMsg]);
     setChatLoading(true);
 
     try {
+      const payload = { message: text || "Please check this image.", session_id: sessionId, lang: language, is_admin: isAdmin };
+      if (attachedImage) {
+        payload.image_base64 = attachedImage.split(',')[1];
+      }
+
       const response = await fetch(`${API_URL}/api/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "Bypass-Tunnel-Reminder": "true"
         },
-        body: JSON.stringify({ message: text, session_id: sessionId, lang: language }),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) throw new Error(`API error: ${response.status}`);
@@ -275,6 +282,7 @@ export default function LiyaProDashboard({
       setChatMessages((prev) => [...prev, errorMsg]);
     } finally {
       setChatLoading(false);
+      setAttachedImage(null);
     }
   };
 
@@ -298,6 +306,15 @@ export default function LiyaProDashboard({
       sendChatPro(transcript);
     };
     recognition.start();
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => setAttachedImage(reader.result);
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleManualChange = (key, value) => {
@@ -360,8 +377,9 @@ export default function LiyaProDashboard({
           />
         </div>
         
-        {/* Background Video (Identical to Main MAYA page) */}
+        {/* Background Video */}
         <video 
+          ref={(el) => { if (el) { el.play().catch(()=>{}) } }}
           autoPlay 
           muted 
           loop 
@@ -699,26 +717,43 @@ export default function LiyaProDashboard({
             <button className="labChatMicBtn" title="Capture Photo">
               <Camera size={18} />
             </button>
-            <button className="labChatMicBtn" title="Upload Image">
+            <button className="labChatMicBtn" title="Upload Image" onClick={() => fileInputRef.current?.click()}>
               <Upload size={18} />
             </button>
-
-            <input
-              type="text"
-              value={chatInput}
-              onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") sendChatPro();
-              }}
-              placeholder={isListening ? "Listening... Speak now!" : `Type your message to ${agentName}...`}
-              className="labChatInput"
-              style={{ border: 'none', background: 'transparent', boxShadow: 'none' }}
-              disabled={chatLoading}
+            <input 
+              type="file" 
+              ref={fileInputRef} 
+              style={{ display: "none" }} 
+              accept="image/*" 
+              onChange={handleFileUpload} 
             />
+
+            <div style={{ display: 'flex', flex: 1, alignItems: 'center', position: 'relative' }}>
+              {attachedImage && (
+                <div style={{ position: 'absolute', bottom: '40px', left: 0, padding: '4px', background: '#222', borderRadius: '8px', zIndex: 10, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <img src={attachedImage} alt="Attached" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '4px' }} />
+                  <button onClick={() => setAttachedImage(null)} style={{ background: 'transparent', border: 'none', color: '#ff3b30', cursor: 'pointer', marginTop: '4px' }}>
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") sendChatPro();
+                }}
+                placeholder={isListening ? "Listening... Speak now!" : `Type your message to ${agentName}...`}
+                className="labChatInput"
+                style={{ border: 'none', background: 'transparent', boxShadow: 'none', width: '100%' }}
+                disabled={chatLoading}
+              />
+            </div>
             <button 
               onClick={() => sendChatPro()} 
               className="labChatSendBtn"
-              disabled={chatLoading || !chatInput.trim()}
+              disabled={chatLoading || (!chatInput.trim() && !attachedImage)}
               style={{ padding: '10px 24px', fontSize: '12px' }}
             >
               <Zap size={14} />

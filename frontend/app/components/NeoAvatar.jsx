@@ -68,7 +68,6 @@ export default function NeoAvatar({
             }
           }
         }
-        
         // Drop the arms to natural hanging position (like a real person standing)
         if (child.isBone) {
           const name = child.name;
@@ -285,4 +284,4 @@ export default function NeoAvatar({
   );
 }
 
-useGLTF.preload("/assets/neo.glb");
+

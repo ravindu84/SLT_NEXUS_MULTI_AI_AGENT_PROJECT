@@ -15,6 +15,11 @@ export default function AvatarScenePro({
   overrideValues = {},
   isAdmin = false
 }) {
+  console.log("Canvas:", Canvas);
+  console.log("Environment:", Environment);
+  console.log("OrbitControls:", OrbitControls);
+  console.log("LiyaAvatarPro:", LiyaAvatarPro);
+  
   return (
     <Canvas
       key="liya-avatar-pro-canvas"
@@ -46,7 +51,7 @@ export default function AvatarScenePro({
         enableZoom={true}
         enablePan={false}
         enableRotate={true}
-        minPolarAngle={Math.PI / 2 - 0.08} // Allow slightly more angle for interactive fun
+        minPolarAngle={Math.PI / 2 - 0.08}
         maxPolarAngle={Math.PI / 2 + 0.08}
       />
     </Canvas>

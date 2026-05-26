@@ -242,6 +242,14 @@ def get_rag_context(query: str, agent_name: str) -> str:
 
 # --- Node Functions ---
 
+def _extract_text(content):
+    if isinstance(content, list):
+        for item in content:
+            if isinstance(item, dict) and item.get("type") == "text":
+                return str(item.get("text", ""))
+        return ""
+    return str(content)
+
 async def classify_intent(state: AgentState):
     """Manager Agent: Routes to the appropriate specialist."""
     # Find the very last human message to only classify the latest query
@@ -254,7 +262,8 @@ async def classify_intent(state: AgentState):
     if last_human_msg is None:
         last_human_msg = state["messages"][-1]
         
-    text = last_human_msg.content.strip().lower()
+    msg_text = _extract_text(last_human_msg.content)
+    text = msg_text.strip().lower()
     
     # --- Phone Number Auto-Extraction (runs on every message!) ---
     existing_phone = state.get("phone_number")
@@ -262,7 +271,7 @@ async def classify_intent(state: AgentState):
         # Scan ALL messages for a phone number (not just the latest)
         for msg in state["messages"]:
             if isinstance(msg, HumanMessage):
-                found = extract_phone_number(msg.content)
+                found = extract_phone_number(_extract_text(msg.content))
                 if found:
                     existing_phone = found
                     print(f"[INFO] Phone number auto-extracted from history: {found}")
@@ -270,7 +279,7 @@ async def classify_intent(state: AgentState):
     
     # Also check the latest message
     if not existing_phone:
-        found = extract_phone_number(last_human_msg.content)
+        found = extract_phone_number(msg_text)
         if found:
             existing_phone = found
             print(f"[INFO] Phone number auto-extracted from latest message: {found}")
@@ -287,7 +296,7 @@ async def classify_intent(state: AgentState):
         }
     
     # --- RAG Context Retrieval ---
-    rag_context = get_rag_context(last_human_msg.content, "liya_agent")
+    rag_context = get_rag_context(msg_text, "liya_agent")
         
     # High-speed one-pass classification by only sending latest human message instead of complete sessional history
     llm = get_llm(temperature=0)
@@ -375,6 +384,22 @@ Naturally weave this information into your response — do not copy-paste it raw
 The customer's interface is set to **{lang_name}**.
 {lang_instructions}
 This is a STRICT requirement for the voice synthesis to work correctly.
+"""
+
+    # --- Inject Admin/Staff Overrides ---
+    if state.get("is_admin"):
+        base_prompt += """
+## ADMIN SYSTEM OVERRIDE (CRITICAL):
+You are currently speaking directly to an INTERNAL SLT ADMIN/STAFF MEMBER via the Admin Dashboard.
+1. DO NOT greet them like a customer (No "Ayubowan", no "How can I help you?"). Use a professional internal system greeting like "System Ready." or "Awaiting Command."
+2. **CONCISENESS RULE**: If the admin asks for SPECIFIC technical information (e.g. "What is the DP Loop?"), ONLY provide the DP Loop. DO NOT summarize their entire bill, data usage, or package details unless explicitly requested. BE EXTREMELY DIRECT AND CONCISE.
+3. You have full security clearance. Do not hide any technical parameters.
+"""
+    else:
+        base_prompt += """
+## CUSTOMER SECURITY RULE:
+You are speaking to a CUSTOMER. You are STRICTLY FORBIDDEN from providing raw technical details (DP Box, DP Loop, Loop IDs, SNR). Keep responses simple and non-technical. You are forbidden from giving details for any phone number other than the one authenticated in this session.
+You are STRICTLY FORBIDDEN from sending or displaying internal WFM reports or office data to the customer. If they ask for any report or office data, politely and professionally refuse the request, stating it is internal office data.
 """
     
     llm = get_llm().bind_tools(tools)

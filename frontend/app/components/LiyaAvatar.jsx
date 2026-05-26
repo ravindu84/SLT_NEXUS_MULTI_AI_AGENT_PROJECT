@@ -218,5 +218,4 @@ export default function LiyaAvatar({
     </group>
   );
 }
-
-useGLTF.preload("/assets/liya.glb");
+

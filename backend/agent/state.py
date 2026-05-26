@@ -23,6 +23,7 @@ class AgentState(TypedDict):
     phone_number: Optional[str]  # Shared across all agents — extracted once, never re-asked
     rag_context: Optional[str]   # RAG-retrieved context injected into agent prompts
     user_language: Optional[str]  # User's selected language (en/si/ta) from frontend
+    is_admin: Optional[bool]     # Whether the request came from the Admin Dashboard
 
 
 # Valid agent names for routing
