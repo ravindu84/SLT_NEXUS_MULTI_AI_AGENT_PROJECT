@@ -49,15 +49,6 @@ const revenueData = [
 ];
 
 export default function AdminDashboard() {
-  const [data, setData] = useState({
-    tickets: [],
-    technicians: [],
-    dps: [],
-    loops: [],
-    ledger: [],
-    customers: []
-  });
-
   const [lastUpdated, setLastUpdated] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [aiChatTab, setAiChatTab] = useState('liya');
