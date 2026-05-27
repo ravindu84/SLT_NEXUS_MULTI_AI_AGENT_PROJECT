@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import AvatarScenePro from "./AvatarScenePro";
 import TechBackground from "./TechBackground";
 import { Zap, Play, RotateCcw, Volume2, ShieldAlert, Cpu, Layers, Sliders, MessageSquare, Mic, MicOff, Camera, Upload, X } from "lucide-react";
+import SignCamera from "./SignCamera";
 import styles from "../page.module.css";
 import "./LiyaProLab.css";
 
@@ -39,6 +40,7 @@ export default function LiyaProDashboard({
   const [attachedImage, setAttachedImage] = useState(null);
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const [showCamera, setShowCamera] = useState(false);
 
   // Auto-scroll chat to bottom
   useEffect(() => {
@@ -672,6 +674,17 @@ export default function LiyaProDashboard({
         )}
       </div>
 
+      {/* Sign Language Camera Modal overlay */}
+      {showCamera && (
+        <SignCamera 
+           API_URL={API_URL}
+           onClose={() => setShowCamera(false)}
+           onGestureDetected={(gesture) => {
+               sendChatPro(gesture);
+           }}
+        />
+      )}
+
       {/* Floating transcript panel (EXACTLY like Customer App Liya) */}
       {controlMode === "chat" && chatMessages.length > 0 && (
         <div className={styles.transcriptPanel}>
@@ -714,7 +727,7 @@ export default function LiyaProDashboard({
             >
               {isListening ? <MicOff size={18} /> : <Mic size={18} />}
             </button>
-            <button className="labChatMicBtn" title="Capture Photo">
+            <button className="labChatMicBtn" title="Accessibility Camera" onClick={() => setShowCamera(true)}>
               <Camera size={18} />
             </button>
             <button className="labChatMicBtn" title="Upload Image" onClick={() => fileInputRef.current?.click()}>

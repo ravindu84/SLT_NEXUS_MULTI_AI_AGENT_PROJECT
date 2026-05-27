@@ -489,7 +489,7 @@ async def email_report(request: ReportEmailRequest):
         summary = "Comprehensive breakdown of all system statistics, outages, and financial logs."
     else: # evening, day_end
         subject = "SLT NEXUS - WFM Closed Tickets & Evening Shifts Report"
-        summary = "WFM evening allocations completed. Outstanding payments updated in billing table."
+        summary = "WFM evening allocations completed. All daytime fault tickets reviewed and closed."
 
     # Simulating email dispatch
     print(f"=== EMAIL DISPATCH SYSTEM ===")
@@ -755,7 +755,7 @@ TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN", "YOUR_TWILIO_TOKEN")
 TWILIO_PHONE_NUMBER = os.getenv("TWILIO_PHONE_NUMBER", "+16402321133")
 
 @router.post("/admin/send-sms")
-async def send_sms(request: SMSRequest):
+def send_sms(request: SMSRequest):
     from twilio.rest import Client
     try:
         client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
@@ -773,7 +773,7 @@ async def send_sms(request: SMSRequest):
         return {"status": "error", "message": str(e)}
 
 @router.post("/admin/send-whatsapp")
-async def send_whatsapp(request: WhatsAppRequest):
+def send_whatsapp(request: WhatsAppRequest):
     from twilio.rest import Client
     try:
         client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
@@ -785,6 +785,9 @@ async def send_whatsapp(request: WhatsAppRequest):
             
         # Sandbox number is typically +14155238886, but it's best to let user set it if different
         from_num = f"whatsapp:{TWILIO_PHONE_NUMBER}"
+        # If using the default test SMS number, override it with the default Twilio WhatsApp sandbox number
+        if TWILIO_PHONE_NUMBER == "+16402321133":
+            from_num = "whatsapp:+14155238886"
         
         kwargs = {
             "body": request.message,

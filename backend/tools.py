@@ -145,7 +145,7 @@ async def send_sms_notification(phone_number: str, message: str) -> str:
     try:
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                "http://localhost:8000/api/admin/send-sms",
+                "http://localhost:8000/mocks/admin/send-sms",
                 json={"to_number": phone_number, "message": message}
             )
         if response.status_code == 200 and response.json().get("status") == "success":
@@ -165,7 +165,7 @@ async def send_whatsapp_notification(phone_number: str, message: str, media_url:
             payload["media_url"] = media_url
         async with httpx.AsyncClient() as client:
             response = await client.post(
-                "http://localhost:8000/api/admin/send-whatsapp",
+                "http://localhost:8000/mocks/admin/send-whatsapp",
                 json=payload
             )
         if response.status_code == 200 and response.json().get("status") == "success":

@@ -19,6 +19,7 @@ export default function SignCamera({ API_URL, onGestureDetected, onClose }) {
           currentStream = stream;
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
+            videoRef.current.play().catch(e => console.error("Video play error:", e));
           }
           setIsActive(true);
         })
@@ -129,7 +130,7 @@ export default function SignCamera({ API_URL, onGestureDetected, onClose }) {
         autoPlay 
         playsInline 
         muted 
-        style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)' }}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', transform: 'scaleX(-1)', filter: 'brightness(1.3) contrast(1.1)' }}
       />
       <canvas ref={canvasRef} style={{ display: 'none' }} />
       

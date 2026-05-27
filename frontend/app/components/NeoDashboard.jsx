@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import NeoAvatarScene from "./NeoAvatarScene";
 import TechBackground from "./TechBackground";
 import { Zap, Play, RotateCcw, Volume2, ShieldAlert, Cpu, Layers, Sliders, MessageSquare, Mic, MicOff, Camera, Upload, X } from "lucide-react";
+import SignCamera from "./SignCamera";
 import styles from "../page.module.css";
 import "./NeoDashboard.css";
 
@@ -33,6 +34,7 @@ export default function NeoDashboard({
   const [attachedImage, setAttachedImage] = useState(null);
   const fileInputRef = useRef(null);
   const messagesEndRef = useRef(null);
+  const [showCamera, setShowCamera] = useState(false);
 
   // Auto-scroll chat to bottom
   useEffect(() => {
@@ -661,6 +663,17 @@ export default function NeoDashboard({
         )}
       </div>
 
+      {/* Sign Language Camera Modal overlay */}
+      {showCamera && (
+        <SignCamera 
+           API_URL={API_URL}
+           onClose={() => setShowCamera(false)}
+           onGestureDetected={(gesture) => {
+               sendChatNeo(gesture);
+           }}
+        />
+      )}
+
       {/* Floating transcript panel (EXACTLY like Customer App Liya) */}
       {controlMode === "chat" && chatMessages.length > 0 && (
         <div className={styles.transcriptPanel}>
@@ -703,7 +716,7 @@ export default function NeoDashboard({
             >
               {isListening ? <MicOff size={18} /> : <Mic size={18} />}
             </button>
-            <button className="neoChatMicBtn" title="Capture Photo">
+            <button className="neoChatMicBtn" title="Accessibility Camera" onClick={() => setShowCamera(true)}>
               <Camera size={18} />
             </button>
             <button className="neoChatMicBtn" title="Upload Image" onClick={() => fileInputRef.current?.click()}>

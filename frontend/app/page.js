@@ -54,6 +54,14 @@ export default function Home() {
       e.preventDefault();
       setInstallPrompt(e);
     });
+
+    const handleMessage = (event) => {
+      if (event.data === 'open_teleshop') {
+        setView('vr');
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
   }, []);
 
   // Chat state (inline)
@@ -408,11 +416,17 @@ export default function Home() {
               NEO
             </button>
             <button 
-              onClick={() => setView('vr')}
-              className={`${styles.viewBtn} ${view === 'vr' ? styles.viewBtnActive : ""}`}
+              onClick={() => setView('new_vr')}
+              className={`${styles.viewBtn} ${view === 'new_vr' ? styles.viewBtnActive : ""}`}
             >
               VR Shop
             </button>
+            <img 
+              src="/vr_icon.png" 
+              alt="VR Headset" 
+              style={{ height: '36px', marginLeft: '12px', cursor: 'pointer', filter: 'drop-shadow(0 0 5px rgba(0,255,255,0.5))' }}
+              onClick={() => setView('new_vr')}
+            />
           </div>
         </div>
 
@@ -664,6 +678,30 @@ export default function Home() {
             onProductSelect={(label) => console.log('Selected:', label)} 
             onBack={() => setView('avatar')}
           />
+        </div>
+
+        {/* NEW VR WORLD Section */}
+        <div 
+          className={styles.vrSection}
+          style={{ 
+            opacity: view === "new_vr" ? 1 : 0,
+            pointerEvents: view === "new_vr" ? "auto" : "none",
+            position: "absolute",
+            width: "100%",
+            height: "100%",
+            transition: "opacity 0.5s ease-in-out",
+            zIndex: view === "new_vr" ? 2 : 1,
+            backgroundColor: "#000000"
+          }}
+        >
+          {view === "new_vr" && (
+            <iframe 
+               src="/vr-shop/index.html" 
+               style={{ width: '100%', height: '100%', border: 'none' }} 
+               allow="camera; microphone; display-capture; autoplay"
+               title="VR Metaverse"
+            />
+          )}
         </div>
 
         {/* LIYA 2.0 (Pro Lab) Section - Always Mounted for stability */}
