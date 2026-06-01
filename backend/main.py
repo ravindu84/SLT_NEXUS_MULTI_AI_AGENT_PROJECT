@@ -213,7 +213,8 @@ from backend.agent.graph import get_graph
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage
 from backend.mocks import router as mocks_router
 
-load_dotenv(override=True)
+env_path = os.path.join(os.path.dirname(__file__), '.env')
+load_dotenv(env_path, override=True)
 
 # Google Gemini API Config
 HAS_GEMINI_API = True if (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")) else False
@@ -351,12 +352,28 @@ async def health_check():
 # --- /api/admin/* proxy routes (frontend calls /api/admin/* but mocks router is at /mocks/admin/*) ---
 from backend.mocks import (
     get_admin_tickets, get_admin_technicians, get_admin_dps,
-    get_admin_ledger, get_all_customers, get_admin_customer, get_admin_usage
+    get_admin_ledger, get_all_customers, get_admin_customer, get_admin_usage, get_admin_billing, resolve_admin_ticket, get_predictive_degradation
 )
 
 @app.get("/api/admin/tickets")
 async def proxy_admin_tickets():
     return await get_admin_tickets()
+
+@app.post("/api/admin/resolve_ticket/{ticket_id}")
+async def proxy_resolve_ticket(ticket_id: str):
+    return await resolve_admin_ticket(ticket_id)
+
+@app.post("/api/admin/approve_connection/{conn_id}")
+async def proxy_approve_connection(conn_id: str):
+    import httpx
+    async with httpx.AsyncClient() as client:
+        # Internal call to the mock router
+        res = await client.post(f"http://localhost:8000/mocks/wfm/approve-connection/{conn_id}")
+        return res.json()
+
+@app.get("/api/admin/predictions")
+async def proxy_predictions():
+    return await get_predictive_degradation()
 
 @app.get("/api/admin/technicians")
 async def proxy_admin_technicians():
@@ -381,6 +398,10 @@ async def proxy_admin_customer(phone: str):
 @app.get("/api/admin/usage/{phone}")
 async def proxy_admin_usage(phone: str):
     return await get_admin_usage(phone)
+
+@app.get("/api/admin/billing/{phone}")
+async def proxy_admin_billing(phone: str):
+    return await get_admin_billing(phone)
 
 AGENT_INFO = {
     "liya_agent": {"label": "LIYA", "emoji": "🧠"},
@@ -446,11 +467,7 @@ async def chat_endpoint(request: ChatRequest):
         pass
 
     messages.append(SystemMessage(content=context_msg))    
-    for m in history:
-        if isinstance(m, HumanMessage):
-            messages.append(HumanMessage(content=m.content))
-        else:
-            messages.append(AIMessage(content=m.content))
+    messages.extend(history)
             
     # Current message with optional Vision Support
     if request.image_base64:
@@ -518,6 +535,14 @@ def enhance_sinhala_pronunciation(text: str) -> str:
         return f"{prefix} {rupees} යි සත {cents}"
     text = re.sub(r'(රුපියල්)\s*([\d,]+)\.(\d{1,2})', replace_cents, text)
     
+    # 1.6 Fix Dates YYYY-MM-DD
+    text = re.sub(r'\b(\d{4})-(\d{2})-(\d{2})\b', r'\1 වසරේ \2 වෙනි මාසෙ \3 වෙනිදා', text)
+    
+    # 1.7 Fix Decimals
+    def replace_decimals(match):
+        return f"{match.group(1)} දශම {match.group(2)}"
+    text = re.sub(r'(\d+)\.(\d+)', replace_decimals, text)
+    
     # 2. Fix "Mbps" — spell out for clear pronunciation
     text = re.sub(r'(\d+)\s*Mbps', r'\1 Megabits per second', text, flags=re.IGNORECASE)
     text = re.sub(r'(\d+)\s*Kbps', r'\1 Kilobits per second', text, flags=re.IGNORECASE)
@@ -528,6 +553,16 @@ def enhance_sinhala_pronunciation(text: str) -> str:
     # 4. Fix URL-like patterns — skip them entirely
     text = re.sub(r'https?://\S+', '', text)
     text = re.sub(r'www\.\S+', '', text)
+    
+    # 4.5 Acronym and Brand Pronunciation fixes
+    text = re.sub(r'\bSLT\b', 'එස් එල් ටී', text, flags=re.IGNORECASE)
+    text = re.sub(r'\bMOBITEL\b', 'මොබිටෙල්', text, flags=re.IGNORECASE)
+    text = re.sub(r'\bGB\b', 'ගිගා බයිට්', text, flags=re.IGNORECASE)
+    text = re.sub(r'\bMB\b', 'මෙගා බයිට්', text, flags=re.IGNORECASE)
+    text = re.sub(r'\bNXC\b', 'එන් එක්ස් සී', text, flags=re.IGNORECASE)
+    text = re.sub(r'\bWFM\b', 'ඩබ්ලිව් එෆ් එම්', text, flags=re.IGNORECASE)
+    text = re.sub(r'\bDP\b', 'ඩීපී', text, flags=re.IGNORECASE)
+    text = re.sub(r'\bSNR\b', 'එස් එන් ආර්', text, flags=re.IGNORECASE)
     
     # 5. Fix numbered lists (1. 2. 3.) — add slight pauses
     text = re.sub(r'(\d+)\.\s+', r'\1, ', text)

@@ -1,4 +1,5 @@
 import httpx
+import json
 import os
 from typing import List
 from langchain_core.tools import tool
@@ -27,15 +28,83 @@ async def create_fault_ticket(phone_number: str, issue_type: str, description: s
         return response.json()
 
 @tool
-async def get_data_usage(phone_number: str):
-    """Fetches real-time data usage, outstanding bill balance, NXC coin balance, and 3-month billing history (arrears)."""
-    async with httpx.AsyncClient() as client:
-        response = await client.get(f"{MOCK_BASE_URL}/billing/usage/{phone_number}")
-        return response.json()
+async def register_customer_agreement(name: str, address: str, contact_number: str, id_number: str, package_name: str) -> str:
+    """Registers a new customer agreement in the CRM and commits it to the Vault Blockchain."""
+    from backend.agent.tools.vault import commit_sla_to_ledger
+    # Mocking CRM update
+    crm_msg = f"Customer {name} ({id_number}) added to CRM for {package_name}."
+    # Calling the Vault Agent tool directly inside this tool to chain the blockchain hook
+    vault_res = commit_sla_to_ledger.func(name, package_name, 1500.0, "Fiber", 100)
+    return f"{crm_msg} [VAULT AGREEMENT: {vault_res}]"
+
+@tool
+def get_data_usage(phone_number: str) -> str:
+    """Fetches real-time data usage and remaining quota for the customer."""
+    import sqlite3
+    import os
+    import json
+    db_path = os.path.join(os.path.dirname(__file__), "..", "..", "slt_dummy.db")
+    if not os.path.exists(db_path):
+        return json.dumps({"error": "Database not found."})
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        cursor.execute("SELECT total_data_gb, used_data_gb, remaining_data_gb, usage_status FROM data_usage WHERE phone_number = ?", (phone_number,))
+        data_row = cursor.fetchone()
+        conn.close()
+        
+        if not data_row:
+            return json.dumps({"error": f"No data usage found for phone number {phone_number}"})
+            
+        return json.dumps({
+            "phone_number": phone_number,
+            "total_data": f"{data_row[0]} GB",
+            "used_data": f"{data_row[1]} GB",
+            "remaining_data": f"{data_row[2]} GB",
+            "status": data_row[3]
+        })
+    except Exception as e:
+        return json.dumps({"error": str(e)})
+
+@tool
+def get_billing_info(phone_number: str) -> str:
+    """Fetches the outstanding bill balance, NXC coin balance, and 3-month billing history."""
+    import sqlite3
+    import os
+    import json
+    db_path = os.path.join(os.path.dirname(__file__), "..", "..", "slt_dummy.db")
+    if not os.path.exists(db_path):
+        return json.dumps({"error": "Database not found."})
+    try:
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT total_due, payment_status, nxc_balance FROM billing WHERE phone_number = ?", (phone_number,))
+        bill_row = cursor.fetchone()
+        
+        cursor.execute("SELECT month, year, amount_billed, amount_paid, arrears FROM billing_history WHERE phone_number = ? ORDER BY id ASC", (phone_number,))
+        history_rows = cursor.fetchall()
+        
+        conn.close()
+        
+        if not bill_row:
+            return json.dumps({"error": f"No billing data found for phone number {phone_number}"})
+            
+        return json.dumps({
+            "phone_number": phone_number,
+            "total_due": f"LKR {bill_row[0]:.2f}",
+            "payment_status": bill_row[1],
+            "nxc_balance": bill_row[2],
+            "billing_history": [
+                {"month": h[0], "year": h[1], "amount_billed": h[2], "amount_paid": h[3], "arrears": h[4]} for h in history_rows
+            ]
+        })
+    except Exception as e:
+        return json.dumps({"error": str(e)})
 
 @tool
 async def get_daily_usage_logs(phone_number: str):
-    """Fetches 30-day daily data consumption breakdown and website logs (Facebook, YouTube, Google, etc.) to analyze where data was spent."""
+    """Fetches the day with the HIGHEST data consumption in the last 30 days, including GB and percentage breakdown per site (Facebook, YouTube, Google, etc.). Use this to tell the user their maximum usage day and what sites consumed the most data."""
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{MOCK_BASE_URL}/billing/daily-usage/{phone_number}")
         return response.json()
@@ -67,7 +136,19 @@ async def pay_slt_bill(phone_number: str, amount: float, use_nxc_coins: bool):
                 "use_nxc_coins": use_nxc_coins
             }
         )
-        return response.json()
+        data = response.json()
+        
+        # Automatically log successful payments to the blockchain Vault
+        if data.get("status") == "success":
+            from backend.agent.tools.vault import commit_payment_to_ledger
+            import uuid
+            from datetime import datetime
+            tx_id = f"TX-{str(uuid.uuid4())[:8]}"
+            date_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            vault_res = commit_payment_to_ledger.func(tx_id, phone_number, amount, date_str)
+            data["vault_receipt"] = json.loads(vault_res)
+            
+        return data
 
 @tool
 async def record_new_connection(customer_name: str, phone_number: str, address: str, connection_type: str):

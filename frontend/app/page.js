@@ -35,7 +35,7 @@ const NeoDashboard = dynamic(() => import("./components/NeoDashboard"), {
   ssr: false,
 });
 
-const API_URL = "https://16.171.166.199.nip.io";
+const API_URL = "http://localhost:8000";
 
 export default function Home() {
   const [view, setView] = useState("avatar");
@@ -725,6 +725,7 @@ export default function Home() {
               isMuted={isMuted}
               API_URL={API_URL}
               onInteraction={stopBgMusic}
+              sessionId={sessionId}
             />
           )}
         </div>
@@ -749,6 +750,7 @@ export default function Home() {
               isMuted={isMuted}
               API_URL={API_URL}
               onInteraction={stopBgMusic}
+              sessionId={sessionId}
             />
           )}
         </div>

@@ -36,6 +36,7 @@ from backend.agent.tools.mcp_tools import (
     check_router_health,
     create_fault_ticket,
     get_data_usage,
+    get_billing_info,
     get_daily_usage_logs,
     process_package_payment,
     pay_slt_bill,
@@ -50,7 +51,8 @@ from backend.agent.tools.mcp_tools import (
     finalize_new_connection,
     send_sms_notification,
     send_whatsapp_notification,
-    check_area_outages
+    check_area_outages,
+    register_customer_agreement
 )
 
 from backend.agent.tools.package_advisor import package_advisor
@@ -59,7 +61,6 @@ from backend.agent.tools.scam_shield import scam_shield
 
 # --- Vault/Blockchain Tools ---
 from backend.agent.tools.vault import (
-    write_solidity_contract,
     commit_sla_to_ledger,
     commit_visit_handshake_to_ledger,
     verify_ledger_security,
@@ -110,6 +111,7 @@ tools = [
     check_router_health,
     create_fault_ticket,
     get_data_usage,
+    get_billing_info,
     get_daily_usage_logs,
     process_package_payment,
     record_new_connection,
@@ -125,8 +127,8 @@ tools = [
     scam_shield,
     send_sms_notification,
     send_whatsapp_notification,
+    register_customer_agreement,
     # Vault/Blockchain Tools
-    write_solidity_contract,
     commit_sla_to_ledger,
     commit_visit_handshake_to_ledger,
     verify_ledger_security,
@@ -300,9 +302,18 @@ async def classify_intent(state: AgentState):
     # --- RAG Context Retrieval ---
     rag_context = get_rag_context(msg_text, "liya_agent")
         
-    # High-speed one-pass classification by only sending latest human message instead of complete sessional history
+    # Pass the recent text-only messages to give the Manager context (avoid ToolMessages which break OpenAI API if sliced)
+    safe_history = []
+    for msg in state["messages"][-5:]:
+        if isinstance(msg, HumanMessage):
+            safe_history.append(msg)
+        elif hasattr(msg, "content") and getattr(msg, "content") and not getattr(msg, "tool_calls", None):
+            # Only append text-based AIMessages, skipping ToolMessages and ToolCall AIMessages
+            if getattr(msg, "type", "") == "ai":
+                safe_history.append(msg)
+                
     llm = get_llm(temperature=0)
-    messages = [SystemMessage(content=MANAGER_SYSTEM_PROMPT), last_human_msg]
+    messages = [SystemMessage(content=MANAGER_SYSTEM_PROMPT)] + safe_history
     
     # We want the manager to output JSON
     response = await llm.ainvoke(messages)
@@ -402,6 +413,10 @@ You are currently speaking directly to an INTERNAL SLT ADMIN/STAFF MEMBER via th
 ## CUSTOMER SECURITY RULE:
 You are speaking to a CUSTOMER. You are STRICTLY FORBIDDEN from providing raw technical details (DP Box, DP Loop, Loop IDs, SNR). Keep responses simple and non-technical. You are forbidden from giving details for any phone number other than the one authenticated in this session.
 You are STRICTLY FORBIDDEN from sending or displaying internal WFM reports or office data to the customer. If they ask for any report or office data, politely and professionally refuse the request, stating it is internal office data.
+
+## STRICT TOOL DIRECTIVE:
+When the user asks for their data usage, YOU MUST CALL the `get_data_usage` tool.
+When the user asks for their bill, package details, or account balance, YOU MUST CALL the `get_billing_info` tool to fetch their real data! Do NOT just tell them to use the MySLT app. Do NOT rely on RAG text to answer this. ACTUALLY CALL THE TOOL!
 """
     
     llm = get_llm().bind_tools(tools)

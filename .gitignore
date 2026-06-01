@@ -38,3 +38,8 @@ deploy_aws.py
 docker_*.txt
 ps_output.txt
 docker_deploy_out.txt
+
+# Cleanup Folders
+/old_logs/
+/dev_scripts/
+*.pem

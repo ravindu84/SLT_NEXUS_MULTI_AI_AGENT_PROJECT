@@ -175,5 +175,119 @@ async def send_whatsapp_notification(phone_number: str, message: str, media_url:
     except Exception as e:
         return f"Error sending WhatsApp: {str(e)}"
 
+# ==========================================
+# VAULT & ORCHESTRATION TOOLS
+# ==========================================
+
+from backend.agent.tools.vault import send_web3_transaction
+
+@tool
+def register_customer_agreement(name: str, address: str, contact_number: str, id_number: str, package_name: str) -> str:
+    """Spark Agent: Register a new customer, save their details to the CRM, and log the digital agreement to the Vault."""
+    # 1. Update CRM
+    crm_msg = f"Customer {name} ({id_number}) added to CRM for {package_name}."
+    # 2. Vault Blockchain Log
+    vault_res = send_web3_transaction({"type": "AGREEMENT_SIGNED", "name": name, "id": id_number, "package": package_name})
+    tx_hash = vault_res.get('transaction_hash', 'N/A')
+    return f"{crm_msg} [VAULT SECURED DIGITAL AGREEMENT: {tx_hash}...]"
+
+@tool
+def process_customer_payment(phone_number: str, amount: float) -> str:
+    """Process a customer bill payment via Spark Agent and automatically log it to the Blockchain Vault."""
+    transaction_id = f"PAY-{random.randint(100000, 999999)}"
+    vault_res = send_web3_transaction({"type": "PAYMENT_RECEIVED", "phone": phone_number, "amount": amount, "tx_id": transaction_id})
+    tx_hash = vault_res.get('transaction_hash', 'N/A')
+    return f"Payment of Rs.{amount} processed successfully. TxID: {transaction_id}. [VAULT LOGGED PAYMENT: {tx_hash}...]"
+
+@tool
+def provision_new_connection(name: str, address: str, contact_number: str, id_number: str, package_name: str) -> str:
+    """Provisioner Agent: Allocate DP Loop, TID and schedule installation for a new customer."""
+    dp_loop = f"DP-LOOP-{random.randint(10, 99)}-FDC-{random.randint(1, 5)}"
+    tid = f"TID-FIBER-{random.randint(1000, 9999)}"
+    
+    vault_res = send_web3_transaction({"type": "RESOURCES_ALLOCATED", "name": name, "id": id_number, "dp_loop": dp_loop, "tid": tid})
+    tx_hash = vault_res.get('transaction_hash', 'N/A')
+    return f"Provisioner: Allocated {dp_loop} and {tid} for {name}. CRM updated. [VAULT SECURED RESOURCES: {tx_hash}...]"
+
+@tool
+def resolve_technical_fault(phone_number: str, resolution_notes: str, technician_id: str) -> str:
+    """Pathfinder/Admin: Mark a fault or new connection as Resolved/OK from the Admin side and log to blockchain."""
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT ticket_id, technician FROM fault_tickets WHERE phone_number = ? AND status != 'Resolved' LIMIT 1", (phone_number,))
+        row = cursor.fetchone()
+        
+        if row:
+            ticket_id = row[0]
+            tech = row[1]
+            cursor.execute("UPDATE fault_tickets SET status = 'Resolved' WHERE ticket_id = ?", (ticket_id,))
+            if tech:
+                cursor.execute("UPDATE technicians SET active_tickets = max(0, active_tickets - 1), status = CASE WHEN active_tickets <= 1 THEN 'Available' ELSE 'Busy' END WHERE name = ?", (tech,))
+            conn.commit()
+        else:
+            ticket_id = f"TICK-{phone_number[-4:]}"
+            
+        conn.close()
+    except Exception as e:
+        ticket_id = "TICK-UNKNOWN"
+        print(f"Error resolving in DB: {e}")
+
+    try:
+        from backend.agent.tools.vault import send_web3_transaction
+        vault_res = send_web3_transaction({
+            "type": "FAULT_RESOLUTION_RECEIPT",
+            "ticket_id": ticket_id,
+            "technician": technician_id,
+            "notes": resolution_notes,
+            "phone_number": phone_number,
+            "status": "Resolved"
+        })
+        tx_hash = vault_res.get('transaction_hash', 'N/A')
+    except Exception as e:
+        tx_hash = f"ERROR-{str(e)}"
+        
+    return f"Admin/Pathfinder: Ticket for {phone_number} resolved by {technician_id}. [VAULT VERIFIED & LOCKED: {tx_hash}...]"
+
+@tool
+def get_data_usage(phone_number: str) -> str:
+    """Check a customer's data usage, billing information (arrears, total due), and NXC coin balance."""
+    if not os.path.exists(DB_PATH):
+        return "Error: Database not found."
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Get billing
+        cursor.execute("SELECT total_due, unpaid_bills, payment_status, nxc_balance FROM billing WHERE phone_number = ?", (phone_number,))
+        bill_row = cursor.fetchone()
+        
+        # Get data usage
+        cursor.execute("SELECT total_data_gb, used_data_gb, remaining_data_gb, package_name FROM data_usage WHERE phone_number = ?", (phone_number,))
+        data_row = cursor.fetchone()
+        
+        conn.close()
+
+        if not bill_row and not data_row:
+            return f"No billing or data usage info found for {phone_number}."
+            
+        res = f"--- Billing & Data Info for {phone_number} ---\n"
+        if data_row:
+            tot, used, rem, pkg = data_row
+            res += f"Package: {pkg}\nData Used: {used}GB / {tot}GB\nRemaining Data: {rem}GB\n"
+        if bill_row:
+            due, unpaid, status, nxc = bill_row
+            res += f"Total Due: Rs.{due}\nUnpaid Months: {unpaid}\nStatus: {status}\nNXC Balance: {nxc} Coins\n"
+            
+        return res
+    except Exception as e:
+        return f"Error getting usage: {str(e)}"
+
 # List of tools to be used by the agent
-slt_tools = [check_nms_status, query_customer_profile, create_support_ticket, query_knowledge_base, send_sms_notification, send_whatsapp_notification]
+slt_tools = [
+    check_nms_status, query_customer_profile, create_support_ticket, 
+    query_knowledge_base, send_sms_notification, send_whatsapp_notification,
+    register_customer_agreement, process_customer_payment, provision_new_connection, resolve_technical_fault,
+    get_data_usage
+]

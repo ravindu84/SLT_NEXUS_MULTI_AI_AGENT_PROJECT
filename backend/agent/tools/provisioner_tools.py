@@ -2,6 +2,7 @@ import sqlite3
 import json
 from langchain_core.tools import tool
 import random
+from backend.blockchain.web3_client import log_to_vault
 
 DB_PATH = "c:/SLT_NEXUS/backend/slt_dummy.db"
 
@@ -63,11 +64,15 @@ def allocate_fiber_dp_loop(gps_location: str) -> str:
         conn.commit()
         conn.close()
         
+        # Vault Integration 3: Resources Allocated
+        vault_res = log_to_vault("RESOURCES_ALLOCATED", {"dp_loop": allocated_port, "dp_name": dp_name})
+        
         result = {
             "status": "SUCCESS",
-            "message": "Fiber Distribution Point (DP) and Loop successfully allocated.",
+            "message": f"Fiber Distribution Point (DP) and Loop successfully allocated. [VAULT SECURED RESOURCES: {vault_res['tx_hash'][:15]}...]",
             "allocated_port": allocated_port,
-            "dp_capacity_remaining": max_loops - next_loop
+            "dp_capacity_remaining": max_loops - next_loop,
+            "vault_receipt": vault_res["tx_hash"]
         }
         return json.dumps(result, indent=2)
         
@@ -87,17 +92,21 @@ def dispatch_installation_job(customer_name: str, phone_number: str, package_nam
     contractors = ["VisionCom Contractors", "SLT Regional Team Alpha", "TechConnect Lanka"]
     assigned_contractor = random.choice(contractors)
     
+    # Vault Integration 4: Final Handshake/Dispatch
+    vault_res = log_to_vault("CONNECTION_ACTIVATED_OK", {"customer": customer_name, "contractor": assigned_contractor, "port": allocated_port})
+    
     result = {
         "status": "SUCCESS",
         "job_id": f"JOB-NEWCON-{random.randint(10000, 99999)}",
-        "action": "Dispatched to Field Team",
+        "action": f"Dispatched to Field Team. [VAULT VERIFIED & LOCKED: {vault_res['tx_hash'][:15]}...]",
         "assigned_contractor": assigned_contractor,
         "equipment_issued": ["ZTE F660 ONT", "ZTE ZXV10 B866V2 STB", "Patch Cord"],
         "customer": customer_name,
         "contact": phone_number,
         "package": package_name,
         "port_assignment": allocated_port,
-        "location": gps_location
+        "location": gps_location,
+        "vault_receipt": vault_res["tx_hash"]
     }
     
     return json.dumps(result, indent=2)

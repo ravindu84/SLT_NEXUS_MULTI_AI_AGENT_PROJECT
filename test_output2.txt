@@ -1,0 +1,21 @@
+Role: system
+Content: IMPORTANT SECURITY CONTEXT: You are communicating with a CUSTOMER (B2C). 1. You MUST NEVER provide raw technical details like DP Box, Loop IDs, SNR, or Attenuation. Keep answers simple. 2. SECURITY RULE: The customer's authenticated phone number is exactly 0112895900. 3. You are STRICTLY FORBIDDEN from providing details, usage, bills, or tickets for ANY other phone number. If they ask about another number, politely refuse. 4. Do not ask for their phone number again, use 0112895900 automatically for all tool calls.
+----------------------------------------
+Role: human
+Content: මගේ ගිය මාසේ බිල කීයද බන්
+----------------------------------------
+Role: ai
+Content: 
+Tool Calls: [{'name': 'get_data_usage', 'args': {'phone_number': '0112895900'}, 'id': 'call_9u8cGHZQOHV5lpWkcNFchlrk', 'type': 'tool_call'}]
+----------------------------------------
+Role: tool
+Content: {"phone_number": "0112895900", "total_data": "100.0 GB", "used_data": "53.29 GB", "remaining_data": "46.71 GB", "status": "Quota: Active | Bills: Active (Due: LKR 10390.18)", "nxc_balance": 1294, "billing_history": [{"month": "February", "year": 2026, "amount_billed": 3746.05, "amount_paid": 3746.05, "arrears": 0.0}, {"month": "March", "year": 2026, "amount_billed": 3258.7799999999997, "amount_paid": 3258.7799999999997, "arrears": 0.0}, {"month": "April", "year": 2026, "amount_billed": 3496.32, "amount_paid": 3496.32, "arrears": 0.0}]}
+----------------------------------------
+Role: ai
+Content: ඔබගේ ගිය මාසයේ බිල එකතුව LKR 10,390.18 වේ. ඔබේ බිලේ තත්ත්වය "Active" වේ. 
+
+ඔබට NXC කාසි 1,294 ක් ඇත, ඒවා ඔබේ බිලට වට්ටම් කිරීම සඳහා භාවිතා කළ හැක. 
+
+ඔබට තවත් විශේෂිත විස්තරයක් අවශ්‍යද? 😊
+Tool Calls: []
+----------------------------------------

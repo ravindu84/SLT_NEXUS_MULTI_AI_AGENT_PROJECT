@@ -18,3 +18,4 @@ gTTS
 google-cloud-texttospeech
 azure-cognitiveservices-speech
 chromadb
+web3>=6.0.0

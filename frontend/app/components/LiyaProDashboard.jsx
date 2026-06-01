@@ -12,9 +12,10 @@ export default function LiyaProDashboard({
   agent = "liya", // "liya" or "maya"
   language = "si",
   isMuted = false,
-  API_URL = "https://16.171.166.199.nip.io",
+  API_URL = "http://localhost:8000",
   onInteraction,
-  isAdmin = false
+  isAdmin = false,
+  sessionId: propSessionId
 }) {
   const isMaya = agent === "maya";
   const agentName = isMaya ? "MAYA" : "LIYA";
@@ -35,7 +36,7 @@ export default function LiyaProDashboard({
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const isThinking = chatLoading;
-  const [sessionId, setSessionId] = useState(`pro-${Date.now()}`);
+  const [sessionId, setSessionId] = useState(propSessionId || `pro-${Date.now()}`);
   const [isListening, setIsListening] = useState(false);
   const [attachedImage, setAttachedImage] = useState(null);
   const fileInputRef = useRef(null);

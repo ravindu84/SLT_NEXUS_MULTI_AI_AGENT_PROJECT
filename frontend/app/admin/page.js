@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Activity, Server, Users, Shield, Terminal, Settings, 
   MapPin, CheckCircle, AlertTriangle, Clock, ChevronRight, ChevronLeft,
-  Search, Bell, Menu, Zap, Globe, Cpu, Database, User, MessageSquare
+  Search, Bell, Menu, Zap, Globe, Cpu, Database, User, MessageSquare, CreditCard
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -20,6 +20,7 @@ const NeoDashboard = dynamic(() => import('../components/NeoDashboard'), {
   ssr: false,
 });
 import UsageMeter from '../components/UsageMeter';
+import BillingSystem from '../components/BillingSystem';
 
 // --- MOCK DATA FOR CHARTS ---
 const loadData = [
@@ -63,8 +64,7 @@ export default function AdminDashboard() {
   const [vaultAction, setVaultAction] = useState("");
   const [vaultLoading, setVaultLoading] = useState(false);
 
-  const API_URL = "https://16.171.166.199.nip.io";
-
+  const API_URL = "http://localhost:8000";
   // Data states
   const [data, setData] = useState({
     tickets: [],
@@ -72,7 +72,8 @@ export default function AdminDashboard() {
     dps: [],
     loops: [],
     ledger: [],
-    customers: []
+    customers: [],
+    predictions: []
   });
   
   const [isSearching, setIsSearching] = useState(false);
@@ -80,12 +81,13 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     try {
-      const [resTickets, resTechs, resDps, resLedger, resCustomers] = await Promise.all([
+      const [resTickets, resTechs, resDps, resLedger, resCustomers, resPredictions] = await Promise.all([
         fetch(`${API_URL}/api/admin/tickets`).then(r => r.json()).catch(e => ({ tickets: [] })),
         fetch(`${API_URL}/api/admin/technicians`).then(r => r.json()).catch(e => ({ technicians: [] })),
         fetch(`${API_URL}/api/admin/dps`).then(r => r.json()).catch(e => ({ dps: [], loops: [] })),
         fetch(`${API_URL}/api/admin/ledger`).then(r => r.json()).catch(e => ({ ledger: [] })),
-        fetch(`${API_URL}/api/admin/customers`).then(r => r.json()).catch(e => ({ customers: [] }))
+        fetch(`${API_URL}/api/admin/customers`).then(r => r.json()).catch(e => ({ customers: [] })),
+        fetch(`${API_URL}/api/admin/predictions`).then(r => r.json()).catch(e => ([]))
       ]);
 
       setData({
@@ -94,7 +96,8 @@ export default function AdminDashboard() {
         dps: resDps.dps || [],
         loops: resDps.loops || [],
         ledger: resLedger.ledger || [],
-        customers: resCustomers.customers || []
+        customers: resCustomers.customers || [],
+        predictions: Array.isArray(resPredictions) ? resPredictions : []
       });
       setLastUpdated(new Date());
     } catch (error) {
@@ -354,7 +357,6 @@ export default function AdminDashboard() {
               <th className="p-4 font-semibold">Line Type</th>
               <th className="p-4 font-semibold">DP/LOOP</th>
               <th className="p-4 font-semibold">Network Status</th>
-              <th className="p-4 font-semibold text-right">Bill Due</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800/50">
@@ -379,9 +381,6 @@ export default function AdminDashboard() {
                     <span className={`w-2 h-2 rounded-full ${c.status === 'UP' ? 'bg-emerald-500' : 'bg-rose-500'}`}></span>
                     {c.status}
                   </span>
-                </td>
-                <td className="p-4 text-right text-sm font-mono text-slate-300">
-                  Rs. {c.total_due ? c.total_due.toFixed(2) : '0.00'}
                 </td>
               </tr>
             ))}
@@ -419,7 +418,6 @@ export default function AdminDashboard() {
               <th className="p-4 font-bold">SNR/Attn (Copper)</th>
               <th className="p-4 font-bold">Power (Fiber)</th>
               <th className="p-4 font-bold">ONT</th>
-              <th className="p-4 font-bold">Bill Status</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800/50">
@@ -447,14 +445,6 @@ export default function AdminDashboard() {
                    ) : 'N/A'}
                 </td>
                 <td className="p-4 text-xs text-slate-400">{c.ont_type || 'N/A'}</td>
-                <td className="p-4 text-xs">
-                  <span className={`inline-flex items-center gap-1.5 px-2 py-1 rounded font-medium ${
-                    c.payment_status === 'Active' || c.payment_status === 'Paid' ? 'bg-emerald-500/10 text-emerald-500' : 
-                    'bg-rose-500/10 text-rose-500'
-                  }`}>
-                    {c.payment_status || c.status}
-                  </span>
-                </td>
               </tr>
             ))}
           </tbody>
@@ -491,13 +481,30 @@ export default function AdminDashboard() {
                   {t.assigned_technician ? t.assigned_technician : <span className="italic">Unassigned</span>}
                 </td>
                 <td className="p-4 text-right">
-                  <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
-                    t.status === 'Resolved' ? 'bg-emerald-500/10 text-emerald-500' : 
-                    t.status === 'Dispatched' ? 'bg-cyan-500/10 text-cyan-500' : 
-                    'bg-rose-500/10 text-rose-500'
-                  }`}>
-                    {t.status}
-                  </span>
+                  <div className="flex items-center justify-end gap-2">
+                    <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                      t.status === 'Resolved' ? 'bg-emerald-500/10 text-emerald-500' : 
+                      t.status === 'Dispatched' ? 'bg-cyan-500/10 text-cyan-500' : 
+                      'bg-rose-500/10 text-rose-500'
+                    }`}>
+                      {t.status}
+                    </span>
+                    {t.status !== 'Resolved' && (
+                      <button 
+                        onClick={async () => {
+                          try {
+                            await fetch(`${API_URL}/api/admin/resolve_ticket/${t.ticket_id}`, { method: 'POST' });
+                            fetchData();
+                          } catch(e) {
+                            console.error(e);
+                          }
+                        }}
+                        className="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-2 py-1 rounded transition-colors"
+                      >
+                        Resolve
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -574,6 +581,145 @@ export default function AdminDashboard() {
     </div>
   );
 
+  const renderConnections = () => (
+    <div className="bg-[#1c1d25] border border-slate-800/50 rounded-xl overflow-hidden flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500 shadow-lg">
+      <div className="p-5 flex justify-between items-center shrink-0 border-b border-slate-800/50">
+        <h3 className="text-base font-bold text-white flex items-center gap-2">
+           <MapPin className="w-5 h-5 text-emerald-500"/> Provisioner Agent: DP Loop Allocations
+        </h3>
+        <span className="px-3 py-1 bg-emerald-500/10 text-emerald-500 rounded-lg text-xs font-bold border border-emerald-500/20">
+           Live Feed
+        </span>
+      </div>
+      <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-[#060913]">
+        {/* Mock Data for Provisioned DP Loops */}
+        {[
+          { name: "Kamal Perera", id: "982342345V", contact: "0712345678", pkg: "Web Starter", loop: "DP-LOOP-42-FDC-2", status: "Allocated", tech: "Pending" },
+          { name: "Nimali Silva", id: "199512345678", contact: "0778899000", pkg: "Fibre Unlimited", loop: "DP-LOOP-12-FDC-1", status: "Installed", tech: "Janith (OK)" },
+          { name: "Saman Kumara", id: "853456789V", contact: "0785566777", pkg: "Gaming Pro", loop: "DP-LOOP-88-FDC-5", status: "Dispatched", tech: "Kosala" }
+        ].map((conn, i) => (
+          <div key={i} className="bg-[#1c1d25] rounded-xl p-5 border border-emerald-500/30 hover:border-emerald-500 transition-colors shadow-lg relative overflow-hidden">
+             <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-bl-full -mr-2 -mt-2"></div>
+             
+             <div className="flex justify-between items-start mb-4 relative z-10">
+               <div>
+                 <h4 className="text-white font-bold text-lg">{conn.name}</h4>
+                 <p className="text-xs text-slate-400 font-mono">ID: {conn.id}</p>
+                 <p className="text-xs text-slate-400 font-mono">Contact: {conn.contact}</p>
+               </div>
+               <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
+                  conn.status === 'Installed' ? 'bg-emerald-500/20 text-emerald-400' :
+                  conn.status === 'Dispatched' ? 'bg-cyan-500/20 text-cyan-400' :
+                  'bg-amber-500/20 text-amber-400'
+               }`}>
+                 {conn.status}
+               </span>
+             </div>
+
+             <div className="space-y-3 mt-5 relative z-10">
+               <div className="flex justify-between items-center pb-2 border-b border-slate-800/50">
+                 <span className="text-xs text-slate-500 uppercase font-bold">Package</span>
+                 <span className="text-sm font-medium text-rose-400">{conn.pkg}</span>
+               </div>
+               <div className="flex justify-between items-center pb-2 border-b border-slate-800/50">
+                 <span className="text-xs text-slate-500 uppercase font-bold flex items-center gap-1"><Server className="w-3 h-3"/> Allocated DP</span>
+                 <span className="text-sm font-mono text-emerald-400 font-bold bg-[#13141a] px-2 py-1 rounded border border-slate-800">{conn.loop}</span>
+               </div>
+               <div className="flex justify-between items-center">
+                 <span className="text-xs text-slate-500 uppercase font-bold flex items-center gap-1"><Users className="w-3 h-3"/> Pathfinder Tech</span>
+                 <span className="text-sm font-medium text-slate-300">{conn.tech}</span>
+               </div>
+             </div>
+             
+             <div className="mt-5 pt-4 border-t border-slate-800/50 flex justify-end gap-2">
+                <button className="px-3 py-1.5 text-xs font-bold bg-[#13141a] border border-slate-700 text-slate-300 hover:text-white hover:border-slate-500 rounded transition-colors">Details</button>
+                {conn.status !== 'Installed' && (
+                  <button 
+                    onClick={async () => {
+                      try {
+                        await fetch(`${API_URL}/api/admin/approve_connection/${conn.id}`, { method: 'POST' });
+                        alert(`Connection for ${conn.id} approved and logged to Blockchain!`);
+                        // In a real app we'd update state here, but for this mock we just show an alert
+                      } catch(e) {
+                        console.error(e);
+                      }
+                    }}
+                    className="px-3 py-1.5 text-xs font-bold bg-emerald-600/20 border border-emerald-500/50 text-emerald-400 hover:bg-emerald-600 hover:text-white rounded transition-colors flex items-center gap-1"
+                  >
+                    <CheckCircle className="w-3 h-3" /> Approve (OK)
+                  </button>
+                )}
+             </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderOraclePredictor = () => (
+    <div className="bg-[#1c1d25] border border-slate-800/50 rounded-xl overflow-hidden flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500 shadow-lg">
+      <div className="p-5 flex justify-between items-center shrink-0 border-b border-slate-800/50">
+        <div>
+          <h3 className="text-xl font-bold text-white flex items-center gap-2">
+            <Zap className="w-5 h-5 text-amber-500" /> Oracle AI Predictor
+          </h3>
+          <p className="text-xs text-slate-400 mt-1">
+            Real-time proactive degradation scanning. Showing {data.predictions?.length || 0} vulnerable lines.
+          </p>
+        </div>
+        <button 
+          onClick={fetchData}
+          className="bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500/20 px-3 py-1.5 rounded text-xs font-bold transition-colors"
+        >
+          Rescan Network
+        </button>
+      </div>
+      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {data.predictions && data.predictions.length > 0 ? (
+          data.predictions.map((p, i) => (
+            <div key={i} className="bg-[#13141a] border border-slate-800 rounded-lg p-4 flex items-center justify-between hover:border-amber-500/30 transition-colors">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center border border-rose-500/20">
+                  <AlertTriangle className="w-5 h-5 text-rose-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white">{p.phone_number} <span className="text-xs font-normal text-slate-400 ml-2">({p.customer_name})</span></p>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    {p.line_type} • {p.address}
+                  </p>
+                  <div className="flex items-center gap-3 mt-2 text-xs">
+                    {p.line_type === 'Fiber' ? (
+                      <span className="text-rose-400 font-mono">RX Power: {p.power_level} dBm (Low)</span>
+                    ) : (
+                      <>
+                        <span className="text-amber-400 font-mono">SNR: {p.snr} dB</span>
+                        <span className="text-rose-400 font-mono">Attn: {p.attenuation} dB</span>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <button 
+                onClick={async () => {
+                  alert(`Proactive dispatch ticket created for ${p.phone_number}!`);
+                  // In a real scenario, this would call an API to create a ticket.
+                }}
+                className="bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 border border-rose-500/30 px-3 py-1.5 rounded text-xs font-bold transition-colors"
+              >
+                Dispatch Proactively
+              </button>
+            </div>
+          ))
+        ) : (
+          <div className="flex flex-col items-center justify-center h-40 text-slate-500">
+            <CheckCircle className="w-10 h-10 mb-2 text-emerald-500/50" />
+            <p>No degrading lines detected. Network is optimal.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex h-screen bg-[#060913] text-slate-300 font-sans overflow-hidden">
       
@@ -598,13 +744,16 @@ export default function AdminDashboard() {
            </div>
         </div>
         
-        <div className="px-4 flex-1 space-y-1">
+        <div className="px-4 flex-1 space-y-1 overflow-y-auto custom-scrollbar pb-6">
           {[
             { id: 'overview', icon: Activity, label: 'Dashboard' },
             { id: 'customers', icon: Database, label: 'CRM Database' },
+            { id: 'oracle-predict', icon: Zap, label: 'Oracle Predictor' },
+            { id: 'connections', icon: MapPin, label: 'NW DP/LOOP' },
             { id: 'tickets', icon: AlertTriangle, label: 'Fault Matrix' },
             { id: 'dispatch', icon: Users, label: 'Dispatch Center' },
             { id: 'usage-meter', icon: Globe, label: 'Usage Meter' },
+            { id: 'billing-system', icon: CreditCard, label: 'Billing System' },
             { id: 'vault', icon: Terminal, label: 'Ledger Terminal' },
             { id: 'full-db', icon: Server, label: 'Full Dummy DB' },
             { id: 'ai-chat', icon: MessageSquare, label: 'Swarm AI Chat' },
@@ -679,10 +828,13 @@ export default function AdminDashboard() {
             <div className="h-full flex flex-col">
               {activeTab === 'overview' && renderOverview()}
               {activeTab === 'customers' && renderCustomers()}
+              {activeTab === 'connections' && renderConnections()}
               {activeTab === 'full-db' && renderFullDB()}
               {activeTab === 'tickets' && renderFaultMatrix()}
+              {activeTab === 'oracle-predict' && renderOraclePredictor()}
               {activeTab === 'dispatch' && renderDispatch()}
               {activeTab === 'usage-meter' && <UsageMeter API_URL={API_URL} />}
+              {activeTab === 'billing-system' && <BillingSystem API_URL={API_URL} />}
               {activeTab === 'vault' && renderVault()}
               {activeTab === 'ai-chat' && (
                 <div className="h-full w-full flex flex-col bg-[#1c1d25] overflow-hidden shadow-lg">

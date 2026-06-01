@@ -266,7 +266,8 @@ async def get_predictive_degradation():
                 OR
                 (c.telephone_type = 'Fiber' AND CAST(n.power_level AS REAL) < -25.0)
             )
-            LIMIT 20
+            ORDER BY RANDOM()
+            LIMIT 10
         """
         cursor.execute(query)
         rows = cursor.fetchall()
@@ -290,6 +291,81 @@ async def get_predictive_degradation():
     except Exception as e:
         print(f"Predictive degradation DB error: {e}")
         return {"error": "Could not fetch predictive report"}
+
+@router.post("/wfm/approve-connection/{conn_id}")
+async def approve_connection(conn_id: str):
+    import sys
+    import os
+    parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if parent_dir not in sys.path:
+        sys.path.append(parent_dir)
+    try:
+        from backend.agent.tools.vault import send_web3_transaction
+        vault_res = send_web3_transaction({
+            "type": "CONNECTION_ACTIVATED_OK",
+            "connection_id": conn_id,
+            "status": "Installed",
+            "message": "Physical line active and provisioned."
+        })
+        return {"status": "success", "tx": vault_res}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def calculate_bill_breakdown(amount_billed: float) -> dict:
+    tax = round(amount_billed * 0.04, 2)
+    base = amount_billed - tax
+    internet = round(base * 0.5, 2)
+    peo_tv = round(base * 0.3, 2)
+    voice = round(base - internet - peo_tv, 2)
+    return {
+        "voice_charge": voice,
+        "internet_charge": internet,
+        "peo_tv_charge": peo_tv,
+        "tax_4_percent": tax,
+        "total_bill": amount_billed
+    }
+
+@router.get("/admin/billing/{phone_number}")
+async def get_admin_billing(phone_number: str):
+    import sqlite3
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT c.registered_name, c.address, b.total_due, b.payment_status, b.nxc_balance
+            FROM customers c
+            LEFT JOIN billing b ON c.phone_number = b.phone_number
+            WHERE c.phone_number = ?
+        ''', (phone_number,))
+        user_info = cursor.fetchone()
+        if not user_info:
+            return {"error": "Customer not found"}
+
+        cursor.execute('''
+            SELECT month, year, amount_billed, amount_paid, arrears 
+            FROM billing_history 
+            WHERE phone_number = ? 
+            ORDER BY id ASC
+        ''', (phone_number,))
+        history = cursor.fetchall()
+        conn.close()
+        
+        billing_history = []
+        for row in history:
+            h_dict = dict(row)
+            h_dict["breakdown"] = calculate_bill_breakdown(h_dict["amount_billed"])
+            billing_history.append(h_dict)
+            
+        return {
+            "customer": dict(user_info),
+            "billing_history": billing_history
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 @router.get("/billing/usage/{phone_number}", response_model=UsageResponse)
 async def get_usage(phone_number: str):
@@ -315,12 +391,15 @@ async def get_usage(phone_number: str):
         
         billing_history = []
         for h in history_rows:
+            amount_billed = h[2]
+            breakdown = calculate_bill_breakdown(amount_billed)
             billing_history.append({
                 "month": h[0],
                 "year": h[1],
-                "amount_billed": h[2],
+                "amount_billed": amount_billed,
                 "amount_paid": h[3],
-                "arrears": h[4]
+                "arrears": h[4],
+                "breakdown": breakdown
             })
             
         if row:
@@ -380,7 +459,37 @@ async def get_daily_usage(phone_number: str):
                     "tiktok_gb": r[5],
                     "total_gb": r[6]
                 })
-            return {"phone_number": phone_number, "daily_logs": logs}
+            
+            if not logs:
+                return {"phone_number": phone_number, "daily_logs": [], "highest_usage_day": None}
+                
+            # Find the day with the maximum total_gb
+            highest_log = max(logs, key=lambda x: x["total_gb"])
+            
+            # Calculate percentages
+            total = highest_log["total_gb"]
+            percentages = {}
+            if total > 0:
+                percentages = {
+                    "facebook_pct": round((highest_log["facebook_gb"] / total) * 100, 1),
+                    "google_pct": round((highest_log["google_gb"] / total) * 100, 1),
+                    "youtube_pct": round((highest_log["youtube_gb"] / total) * 100, 1),
+                    "amazon_pct": round((highest_log["amazon_gb"] / total) * 100, 1),
+                    "tiktok_pct": round((highest_log["tiktok_gb"] / total) * 100, 1),
+                }
+                
+            highest_usage_day = {
+                "date": highest_log["date"],
+                "total_gb": highest_log["total_gb"],
+                "breakdown": highest_log,
+                "percentages": percentages
+            }
+            
+            return {
+                "phone_number": phone_number,
+                "highest_usage_day": highest_usage_day,
+                "daily_logs_summary": "30 days of logs are available but omitted to save space. Refer to highest_usage_day for max usage."
+            }
     except Exception as e:
         print(f"Mock daily usage DB error: {e}")
         
@@ -461,7 +570,11 @@ async def mock_provision(request: ProvisionRequest):
 
 @router.post("/report/email")
 async def email_report(request: ReportEmailRequest):
-    """Simulates sending a WFM integrated report via email."""
+    """Sends a WFM integrated report via real email using SMTP."""
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    
     timestamp = datetime.now().isoformat()
     
     report_mapping = {
@@ -491,16 +604,55 @@ async def email_report(request: ReportEmailRequest):
         subject = "SLT NEXUS - WFM Closed Tickets & Evening Shifts Report"
         summary = "WFM evening allocations completed. All daytime fault tickets reviewed and closed."
 
-    # Simulating email dispatch
-    print(f"=== EMAIL DISPATCH SYSTEM ===")
-    print(f"Subject: {subject}")
-    print(f"To: {', '.join(request.emails)}")
-    print(f"Attachments: {filename} (Integrated with WFM/Clarity MCP)")
-    print(f"Summary: {summary}")
-    print(f"=============================")
+    # Send real email
+    sender_email = os.getenv("GMAIL_USER")
+    sender_password = os.getenv("GMAIL_APP_PASSWORD")
+    
+    email_status = "sent"
+    error_msg = ""
+    
+    if sender_email and sender_password:
+        try:
+            msg = MIMEMultipart()
+            msg['From'] = sender_email
+            msg['To'] = ", ".join(request.emails)
+            msg['Subject'] = subject
+            
+            # HTML body with the image embedded
+            html_body = f"""
+            <html>
+                <body>
+                    <h2>SLT NEXUS - WFM Report</h2>
+                    <p><strong>{summary}</strong></p>
+                    <p>Please find the generated report below:</p>
+                    <img src="{image_url}" alt="{filename}" style="max-width: 100%; border: 1px solid #ddd;"/>
+                    <br>
+                    <p><small>Automated dispatch by SLT NEXUS System</small></p>
+                </body>
+            </html>
+            """
+            msg.attach(MIMEText(html_body, 'html'))
+            
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.starttls()
+            server.login(sender_email, sender_password)
+            text = msg.as_string()
+            server.sendmail(sender_email, request.emails, text)
+            server.quit()
+            
+            print(f"✅ Real Email sent successfully to {', '.join(request.emails)}!")
+        except Exception as e:
+            email_status = "failed"
+            error_msg = str(e)
+            print(f"❌ Failed to send email: {error_msg}")
+    else:
+        email_status = "failed"
+        error_msg = "GMAIL_USER or GMAIL_APP_PASSWORD not configured in .env"
+        print(f"❌ Email simulated (Credentials missing in .env). Subject: {subject}")
 
     return {
-        "status": "sent",
+        "status": email_status,
+        "error": error_msg,
         "timestamp": timestamp,
         "subject": subject,
         "report_type": request.report_type,
@@ -597,6 +749,50 @@ async def assign_admin_ticket(req: AssignTicketRequest):
         conn.commit()
         conn.close()
         return {"status": "success", "message": f"Ticket assigned to {req.technician}"}
+    except Exception as e:
+        return {"error": str(e)}
+
+@router.post("/admin/resolve_ticket/{ticket_id}")
+async def resolve_admin_ticket(ticket_id: str):
+    import sqlite3
+    import sys
+    import os
+    # Add parent to path to import backend tools
+    parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    if parent_dir not in sys.path:
+        sys.path.append(parent_dir)
+    try:
+        from backend.agent.tools.vault import send_web3_transaction
+    except ImportError:
+        send_web3_transaction = None
+
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Get technician to decrement active tickets
+        cursor.execute("SELECT technician FROM fault_tickets WHERE ticket_id = ?", (ticket_id,))
+        row = cursor.fetchone()
+        tech = row[0] if row else None
+        
+        cursor.execute("UPDATE fault_tickets SET status = 'Resolved' WHERE ticket_id = ?", (ticket_id,))
+        if tech:
+            cursor.execute("UPDATE technicians SET active_tickets = max(0, active_tickets - 1), status = CASE WHEN active_tickets <= 1 THEN 'Available' ELSE 'Busy' END WHERE name = ?", (tech,))
+        
+        conn.commit()
+        conn.close()
+        
+        # Blockchain commit
+        if send_web3_transaction:
+            send_web3_transaction({
+                "type": "FAULT_RESOLUTION_RECEIPT",
+                "ticket_id": ticket_id,
+                "technician": tech or "Admin",
+                "status": "Resolved"
+            })
+            
+        return {"status": "success", "message": f"Ticket {ticket_id} resolved and logged to blockchain"}
     except Exception as e:
         return {"error": str(e)}
 
@@ -701,6 +897,7 @@ async def get_all_customers():
     except Exception as e:
         return {"error": str(e), "customers": []}
 
+@router.get("/admin/usage/{phone_number}")
 async def get_admin_usage(phone_number: str):
     import sqlite3
     DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
@@ -711,9 +908,11 @@ async def get_admin_usage(phone_number: str):
         
         cursor.execute('''
             SELECT c.registered_name, c.address, d.package_name, d.total_data_gb, 
-                   d.used_data_gb, d.remaining_data_gb, d.usage_status
+                   d.used_data_gb, d.remaining_data_gb, d.usage_status,
+                   b.total_due, b.payment_status, b.nxc_balance
             FROM customers c
             LEFT JOIN data_usage d ON c.phone_number = d.phone_number
+            LEFT JOIN billing b ON c.phone_number = b.phone_number
             WHERE c.phone_number = ?
         ''', (phone_number,))
         user_info = cursor.fetchone()
@@ -729,11 +928,20 @@ async def get_admin_usage(phone_number: str):
             ORDER BY log_date DESC
         ''', (phone_number,))
         logs = cursor.fetchall()
+        
+        cursor.execute('''
+            SELECT month, year, amount_billed, amount_paid, arrears 
+            FROM billing_history 
+            WHERE phone_number = ? 
+            ORDER BY id ASC
+        ''', (phone_number,))
+        history = cursor.fetchall()
         conn.close()
         
         return {
             "customer": dict(user_info),
-            "logs": [dict(r) for r in logs]
+            "logs": [dict(r) for r in logs],
+            "billing_history": [dict(r) for r in history]
         }
     except Exception as e:
         return {"error": str(e)}

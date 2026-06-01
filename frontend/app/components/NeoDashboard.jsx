@@ -11,9 +11,10 @@ import "./NeoDashboard.css";
 export default function NeoDashboard({
   language = "si",
   isMuted = false,
-  API_URL = "https://16.171.166.199.nip.io",
+  API_URL = "http://localhost:8000",
   onInteraction,
-  isAdmin = false
+  isAdmin = false,
+  sessionId: propSessionId
 }) {
   // Mode selection
   const [controlMode, setControlMode] = useState("chat"); // "chat", "ai" or "manual"
@@ -29,7 +30,7 @@ export default function NeoDashboard({
   const [chatInput, setChatInput] = useState("");
   const [chatLoading, setChatLoading] = useState(false);
   const isThinking = chatLoading;
-  const [sessionId, setSessionId] = useState(`neo-${Date.now()}`);
+  const [sessionId, setSessionId] = useState(propSessionId || `neo-${Date.now()}`);
   const [isListening, setIsListening] = useState(false);
   const [attachedImage, setAttachedImage] = useState(null);
   const fileInputRef = useRef(null);
