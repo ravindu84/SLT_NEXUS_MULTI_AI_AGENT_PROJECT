@@ -399,7 +399,7 @@ export default function LiyaProDashboard({
             opacity: 1
           }}
         >
-          <source src="/assets/office-bg-video.mp4" type="video/mp4" />
+          <source src={isMaya ? "/assets/landing-bg.mp4" : "/assets/office-bg-video.mp4"} type="video/mp4" />
         </video>
 
         {/* High-end Sci-fi Ambient Gradient Overlay */}
