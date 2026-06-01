@@ -380,29 +380,27 @@ export default function LiyaProDashboard({
           />
         </div>
         
-        {/* Background Video (Only for Liya, Maya gets the starry TechBackground) */}
-        {!isMaya && (
-          <video 
-            ref={useRef()}
-            autoPlay 
-            muted 
-            loop 
-            playsInline 
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              zIndex: 0,
-              pointerEvents: "none",
-              opacity: 1
-            }}
-          >
-            <source src="/assets/office-bg-video.mp4" type="video/mp4" />
-          </video>
-        )}
+        {/* Background Video */}
+        <video 
+          ref={useRef()}
+          autoPlay 
+          muted 
+          loop 
+          playsInline 
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            zIndex: 0,
+            pointerEvents: "none",
+            opacity: 1
+          }}
+        >
+          <source src="/assets/office-bg-video.mp4" type="video/mp4" />
+        </video>
 
         {/* High-end Sci-fi Ambient Gradient Overlay */}
         <div 
