@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback } from "react";
 import styles from "../page.module.css";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://16.171.166.199:8000";
+const API_URL = "";
 
 /**
  * ChatPanel — The chat interface panel alongside the 3D avatar.

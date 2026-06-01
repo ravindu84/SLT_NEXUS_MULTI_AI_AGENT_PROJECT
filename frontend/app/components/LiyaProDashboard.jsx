@@ -12,7 +12,7 @@ export default function LiyaProDashboard({
   agent = "liya", // "liya" or "maya"
   language = "si",
   isMuted = false,
-  API_URL = process.env.NEXT_PUBLIC_API_URL || "http://16.171.166.199:8000",
+  API_URL = "",
   onInteraction,
   isAdmin = false,
   sessionId: propSessionId
