@@ -38,7 +38,7 @@ export default function TechnicianPortal() {
 
   const fetchTickets = async (techName) => {
     try {
-      const API_URL = "http://localhost:8000";
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://16.171.166.199:8000";
       const res = await fetch(`${API_URL}/wfm/active-faults`);
       const data = await res.json();
       const myTickets = data.fault_tickets.filter(t => t.technician === techName);

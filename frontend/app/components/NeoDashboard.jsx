@@ -11,7 +11,7 @@ import "./NeoDashboard.css";
 export default function NeoDashboard({
   language = "si",
   isMuted = false,
-  API_URL = "http://localhost:8000",
+  API_URL = process.env.NEXT_PUBLIC_API_URL || "http://16.171.166.199:8000",
   onInteraction,
   isAdmin = false,
   sessionId: propSessionId

@@ -12,7 +12,7 @@ export default function LiyaProDashboard({
   agent = "liya", // "liya" or "maya"
   language = "si",
   isMuted = false,
-  API_URL = "http://localhost:8000",
+  API_URL = process.env.NEXT_PUBLIC_API_URL || "http://16.171.166.199:8000",
   onInteraction,
   isAdmin = false,
   sessionId: propSessionId
@@ -380,27 +380,29 @@ export default function LiyaProDashboard({
           />
         </div>
         
-        {/* Background Video */}
-        <video 
-          ref={useRef()}
-          autoPlay 
-          muted 
-          loop 
-          playsInline 
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%",
-            objectFit: "cover",
-            zIndex: 0,
-            pointerEvents: "none",
-            opacity: 1
-          }}
-        >
-          <source src={isMaya ? "/assets/landing-bg.mp4" : "/assets/office-bg-video.mp4"} type="video/mp4" />
-        </video>
+        {/* Background Video (Only for Liya, Maya gets the starry TechBackground) */}
+        {!isMaya && (
+          <video 
+            ref={useRef()}
+            autoPlay 
+            muted 
+            loop 
+            playsInline 
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              zIndex: 0,
+              pointerEvents: "none",
+              opacity: 1
+            }}
+          >
+            <source src="/assets/office-bg-video.mp4" type="video/mp4" />
+          </video>
+        )}
 
         {/* High-end Sci-fi Ambient Gradient Overlay */}
         <div 

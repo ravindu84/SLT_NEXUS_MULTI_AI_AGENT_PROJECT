@@ -35,7 +35,7 @@ const NeoDashboard = dynamic(() => import("./components/NeoDashboard"), {
   ssr: false,
 });
 
-const API_URL = "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://16.171.166.199:8000";
 
 export default function Home() {
   const [view, setView] = useState("avatar");
