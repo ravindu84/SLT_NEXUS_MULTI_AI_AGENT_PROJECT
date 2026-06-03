@@ -12,8 +12,8 @@ from web3 import Web3
 from web3.middleware import ExtraDataToPOAMiddleware
 
 # Initialize Web3
-rpc_url = os.environ.get("ALCHEMY_RPC_URL", "")
-private_key = os.environ.get("WALLET_PRIVATE_KEY", "")
+rpc_url = os.environ.get("ALCHEMY_RPC_URL", "https://rpc-amoy.polygon.technology/")
+private_key = os.environ.get("WALLET_PRIVATE_KEY", os.environ.get("BLOCKCHAIN_PRIVATE_KEY", ""))
 
 w3 = None
 account = None
