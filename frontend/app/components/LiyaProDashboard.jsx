@@ -267,8 +267,8 @@ export default function LiyaProDashboard({
         role: "assistant",
         content: data.response,
         agent_used: data.agent_used,
-        agent_emoji: data.agent_emoji || "🧠",
-        agent_label: data.agent_label || agentName,
+        agent_emoji: data.agent_used === "liya_agent" ? (isMaya ? "✨" : "🧠") : (data.agent_emoji || "🧠"),
+        agent_label: data.agent_used === "liya_agent" ? agentName : (data.agent_label || agentName),
       };
 
       setChatMessages((prev) => [...prev, aiMsg]);

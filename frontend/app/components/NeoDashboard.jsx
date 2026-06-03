@@ -260,8 +260,8 @@ export default function NeoDashboard({
         role: "assistant",
         content: data.response,
         agent_used: data.agent_used,
-        agent_emoji: data.agent_emoji || "🤖",
-        agent_label: data.agent_label || "NEO",
+        agent_emoji: data.agent_used === "liya_agent" ? "🤖" : (data.agent_emoji || "🤖"),
+        agent_label: data.agent_used === "liya_agent" ? "NEO" : (data.agent_label || "NEO"),
       };
 
       setChatMessages((prev) => [...prev, aiMsg]);
