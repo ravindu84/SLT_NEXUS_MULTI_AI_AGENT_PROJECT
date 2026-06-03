@@ -45,7 +45,8 @@ def log_to_vault(action_type: str, details: dict) -> dict:
                 }
                 
                 signed_tx = w3.eth.account.sign_transaction(tx, private_key=PRIVATE_KEY)
-                tx_hash_bytes = w3.eth.send_raw_transaction(signed_tx.rawTransaction)
+                raw_tx = signed_tx.raw_transaction if hasattr(signed_tx, 'raw_transaction') else signed_tx.rawTransaction
+                tx_hash_bytes = w3.eth.send_raw_transaction(raw_tx)
                 tx_hash = w3.to_hex(tx_hash_bytes)
                 network_used = "Polygon Amoy Testnet (Real Web3)"
                 print(f"[Vault] Real Web3 Transaction Sent: {tx_hash}")
