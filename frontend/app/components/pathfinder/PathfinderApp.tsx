@@ -2333,7 +2333,7 @@ export default function App({ onBack }: { onBack?: () => void }) {
               </div>
 
               {/* Directory Nodes List Scrollbox */}
-              <div className="flex-1 overflow-y-auto max-h-[220px] space-y-1.5 font-mono text-[11px]" id="directory-scroller-box">
+              <div className="flex-1 overflow-y-auto space-y-1.5 font-mono text-[11px] pr-1" id="directory-scroller-box">
                 {filteredNodes.length === 0 ? (
                   <div className="text-center py-6 text-slate-500 text-xs italic">
                     No matching assets found.
@@ -2574,7 +2574,7 @@ export default function App({ onBack }: { onBack?: () => void }) {
                       </div>
                     </div>
 
-                    <div className="space-y-2 overflow-y-auto max-h-[250px] pr-1 pt-0.5" id="anomaly-resolver-scroller">
+                    <div className="flex-1 overflow-y-auto pr-1 pt-0.5 space-y-2" id="anomaly-resolver-scroller">
                       {activeNodes.filter(n => n.status === 'fault').length === 0 ? (
                         <div className="p-4 bg-slate-950/40 border border-slate-900 rounded-lg text-center text-slate-400 text-[10px] flex flex-col items-center justify-center gap-1.5">
                           <div className="w-5 h-5 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center text-emerald-400 text-[10px] font-bold">✓</div>
