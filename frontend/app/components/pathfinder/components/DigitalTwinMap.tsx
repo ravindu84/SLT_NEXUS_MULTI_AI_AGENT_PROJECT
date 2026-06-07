@@ -1715,13 +1715,15 @@ export default function DigitalTwinMap({
     const target = e.target as SVGElement;
     if (target.closest('.interactive-node')) return;
     setIsPanningSvg(true);
-    setPanStart({ x: e.clientX - svgPanX, y: e.clientY - svgPanY });
+    const scaleRatio = e.currentTarget.clientHeight / 100;
+    setPanStart({ x: e.clientX - svgPanX * scaleRatio, y: e.clientY - svgPanY * scaleRatio });
   };
 
   const handleSvgMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!isPanningSvg) return;
-    setSvgPanX(e.clientX - panStart.x);
-    setSvgPanY(e.clientY - panStart.y);
+    const scaleRatio = e.currentTarget.clientHeight / 100;
+    setSvgPanX((e.clientX - panStart.x) / scaleRatio);
+    setSvgPanY((e.clientY - panStart.y) / scaleRatio);
   };
 
   const handleSvgMouseUp = () => {
@@ -1733,15 +1735,17 @@ export default function DigitalTwinMap({
     if (target.closest('.interactive-node')) return;
     if (e.touches.length === 1) {
       setIsPanningSvg(true);
-      setPanStart({ x: e.touches[0].clientX - svgPanX, y: e.touches[0].clientY - svgPanY });
+      const scaleRatio = e.currentTarget.clientHeight / 100;
+      setPanStart({ x: e.touches[0].clientX - svgPanX * scaleRatio, y: e.touches[0].clientY - svgPanY * scaleRatio });
     }
   };
 
   const handleSvgTouchMove = (e: React.TouchEvent<SVGSVGElement>) => {
     if (!isPanningSvg) return;
     if (e.touches.length === 1) {
-      setSvgPanX(e.touches[0].clientX - panStart.x);
-      setSvgPanY(e.touches[0].clientY - panStart.y);
+      const scaleRatio = e.currentTarget.clientHeight / 100;
+      setSvgPanX((e.touches[0].clientX - panStart.x) / scaleRatio);
+      setSvgPanY((e.touches[0].clientY - panStart.y) / scaleRatio);
     }
   };
 
@@ -2089,6 +2093,8 @@ export default function DigitalTwinMap({
 
         {/* Scaled Interactive Vector SVG Stage */}
         <svg
+          viewBox="0 0 100 100"
+          preserveAspectRatio="xMidYMid meet"
           className="w-full h-full relative z-10 cursor-gather active:cursor-grabbing"
           onMouseDown={handleSvgMouseDown}
           onMouseMove={handleSvgMouseMove}
