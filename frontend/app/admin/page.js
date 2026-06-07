@@ -135,7 +135,7 @@ export default function AdminDashboard() {
           { name: 'Available', value: 100 - alloc }
         ];
       });
-    }, 2500);
+    }, 1000);
 
     return () => clearInterval(liveInterval);
   }, []);
@@ -232,8 +232,8 @@ export default function AdminDashboard() {
                   itemStyle={{ color: '#e2e8f0' }}
                   cursor={{fill: 'rgba(30, 41, 59, 0.5)'}}
                 />
-                <Bar dataKey="traffic" fill="url(#barGradient)" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="faults" fill="url(#barGradient2)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="traffic" fill="url(#barGradient)" radius={[4, 4, 0, 0]} animationDuration={1000} />
+                <Bar dataKey="faults" fill="url(#barGradient2)" radius={[4, 4, 0, 0]} animationDuration={1000} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -266,8 +266,8 @@ export default function AdminDashboard() {
                   contentStyle={{ backgroundColor: 'rgba(19, 20, 26, 0.9)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '8px', backdropFilter: 'blur(8px)' }}
                   itemStyle={{ color: '#e2e8f0' }}
                 />
-                <Area type="monotone" dataKey="traffic" stroke="#06b6d4" strokeWidth={3} fillOpacity={1} fill="url(#colorTraffic)" />
-                <Area type="monotone" dataKey="faults" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorFaults)" />
+                <Area type="monotone" dataKey="traffic" stroke="#06b6d4" strokeWidth={3} fillOpacity={1} fill="url(#colorTraffic)" animationDuration={1000} />
+                <Area type="monotone" dataKey="faults" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorFaults)" animationDuration={1000} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -293,6 +293,7 @@ export default function AdminDashboard() {
                   paddingAngle={5}
                   dataKey="value"
                   stroke="none"
+                  animationDuration={1000}
                 >
                     {liveCapacity.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
