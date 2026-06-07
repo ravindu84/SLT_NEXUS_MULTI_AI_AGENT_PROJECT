@@ -1704,7 +1704,7 @@ export default function DigitalTwinMap({
   const [isWebGLSupported, setIsWebGLSupported] = useState<boolean>(true);
   const [svgPanX, setSvgPanX] = useState<number>(0);
   const [svgPanY, setSvgPanY] = useState<number>(0);
-  const [svgZoom, setSvgZoom] = useState<number>(4.0);
+  const [svgZoom, setSvgZoom] = useState<number>(1.0);
   const [isPanningSvg, setIsPanningSvg] = useState<boolean>(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
@@ -1989,42 +1989,13 @@ export default function DigitalTwinMap({
     return sum / nodes.length;
   }, [nodes]);
 
-  // Dynamically calculate and set best zoom level when switching to 2D view or nodes change
+  // Reset SVG zoom and panning when nodes change (e.g. switching pages) or when switching back to 2D view
   useEffect(() => {
-    if (viewMode === '2d' && nodes && nodes.length > 0) {
-      let minLat = 90, maxLat = -90, minLon = 180, maxLon = -180;
-      nodes.forEach(n => {
-        if (n.lat < minLat) minLat = n.lat;
-        if (n.lat > maxLat) maxLat = n.lat;
-        if (n.lon < minLon) minLon = n.lon;
-        if (n.lon > maxLon) maxLon = n.lon;
-      });
-      
-      const latDiff = maxLat - minLat;
-      const lonDiff = maxLon - minLon;
-      
-      if (latDiff > 0 && lonDiff > 0) {
-        // Approximate distance based on Equirectangular projection
-        const latPx = latDiff * 111320;
-        const lonPx = lonDiff * 111320 * Math.cos(centerLat * (Math.PI / 180));
-        
-        // Target an area of 800x600 with 30% padding
-        const zoomX = 800 / lonPx;
-        const zoomY = 600 / latPx;
-        const targetZoom = Math.min(zoomX, zoomY) * 0.7;
-        
-        // Cap it between reasonable values
-        setSvgZoom(Math.max(1.0, Math.min(100.0, targetZoom)));
-        setSvgPanX(0);
-        setSvgPanY(0);
-      } else if (latDiff === 0 && lonDiff === 0) {
-        setSvgZoom(100.0);
-      }
-    }
-  }, [viewMode, nodes, centerLat]);
+    setSvgZoom(1.0);
+    setSvgPanX(0);
+    setSvgPanY(0);
+  }, [nodes, viewMode]);
 
-
-  // Dynamically calculate coordinate bounding boxes to keep mini-map perfectly centered & responsive
   const bounds = useMemo(() => {
     if (nodes.length === 0) {
       return { minLat: 6.825, maxLat: 6.855, minLon: 79.985, maxLon: 80.025 };
@@ -2044,8 +2015,9 @@ export default function DigitalTwinMap({
 
     const latDelta = allMaxLat - allMinLat;
     const lonDelta = allMaxLon - allMinLon;
-    const baseLatSpan = Math.max(0.012, latDelta * 1.3);
-    const baseLonSpan = Math.max(0.016, lonDelta * 1.3);
+    // Lowered the minimum bounds so closely packed nodes can scale properly to fill the 2D view
+    const baseLatSpan = Math.max(0.0005, latDelta * 1.3);
+    const baseLonSpan = Math.max(0.0005, lonDelta * 1.3);
 
     // Dynamic centering coordinate selection
     const selectedNodeObj = selectedNodeId ? nodes.find(n => n.id === selectedNodeId) : null;
