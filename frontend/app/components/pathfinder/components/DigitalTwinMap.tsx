@@ -2903,7 +2903,7 @@ export default function DigitalTwinMap({
       {isGlobalHudVisible && (
         !isGisHudOpen ? (
           <div 
-            className="absolute top-4 left-4 z-10"
+            className="absolute top-16 left-4 z-10"
             style={{ transform: `translate3d(${gisPos.x}px, ${gisPos.y}px, 0px)` }}
           >
             <button
@@ -2916,7 +2916,7 @@ export default function DigitalTwinMap({
           </div>
         ) : (
           <div 
-            className="absolute top-4 left-4 p-3 bg-slate-900/90 backdrop-blur border border-teal-500/30 rounded-lg text-[11px] font-mono text-teal-400 select-none shadow-lg shadow-black/80 pointer-events-auto space-y-1.5 z-10 w-[210px]"
+            className="absolute top-16 left-4 p-3 bg-slate-900/90 backdrop-blur border border-teal-500/30 rounded-lg text-[11px] font-mono text-teal-400 select-none shadow-lg shadow-black/80 pointer-events-auto space-y-1.5 z-10 w-[210px]"
             style={{ transform: `translate3d(${gisPos.x}px, ${gisPos.y}px, 0px)` }}
           >
             <div 
