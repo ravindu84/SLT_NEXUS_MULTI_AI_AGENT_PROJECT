@@ -21,6 +21,8 @@ const NeoDashboard = dynamic(() => import('../components/NeoDashboard'), {
 });
 import UsageMeter from '../components/UsageMeter';
 import BillingSystem from '../components/BillingSystem';
+import AdminCRM from '../components/AdminCRM';
+import DigitalTwinMap from '../components/DigitalTwinMap';
 
 // --- MOCK DATA FOR CHARTS ---
 const loadData = [
@@ -748,8 +750,10 @@ export default function AdminDashboard() {
           {[
             { id: 'overview', icon: Activity, label: 'Dashboard' },
             { id: 'customers', icon: Database, label: 'CRM Database' },
+            { id: 'new-connections', icon: User, label: 'New Connections' },
             { id: 'oracle-predict', icon: Zap, label: 'Oracle Predictor' },
             { id: 'connections', icon: MapPin, label: 'NW DP/LOOP' },
+            { id: 'pathfinder-map', icon: Globe, label: 'Pathfinder 3D Map' },
             { id: 'tickets', icon: AlertTriangle, label: 'Fault Matrix' },
             { id: 'dispatch', icon: Users, label: 'Dispatch Center' },
             { id: 'usage-meter', icon: Globe, label: 'Usage Meter' },
@@ -828,7 +832,9 @@ export default function AdminDashboard() {
             <div className="h-full flex flex-col">
               {activeTab === 'overview' && renderOverview()}
               {activeTab === 'customers' && renderCustomers()}
+              {activeTab === 'new-connections' && <AdminCRM />}
               {activeTab === 'connections' && renderConnections()}
+              {activeTab === 'pathfinder-map' && <DigitalTwinMap />}
               {activeTab === 'full-db' && renderFullDB()}
               {activeTab === 'tickets' && renderFaultMatrix()}
               {activeTab === 'oracle-predict' && renderOraclePredictor()}

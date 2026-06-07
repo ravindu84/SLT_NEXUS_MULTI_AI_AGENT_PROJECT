@@ -730,6 +730,61 @@ def uuid_gen():
     import uuid
     return str(uuid.uuid4())[:8].upper()
 
+class AllocateDPRequest(BaseModel):
+    slt_number: str
+
+@router.post("/provisioning/allocate-dp")
+async def allocate_dp_loop(request: AllocateDPRequest):
+    """Allocates a DP/Loop for a new connection and logs it to the Blockchain Vault."""
+    import sqlite3
+    import random
+    from datetime import datetime
+    import hashlib
+    
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
+    
+    dp_names = ["HD-FTTH-01", "HD-FTTH-02", "HD-FTTH-03", "PT-FTTH-01", "PT-FTTH-02"]
+    assigned_dp = random.choice(dp_names)
+    assigned_loop = random.randint(1, 16)
+    dp_loop_str = f"{assigned_dp}-L{assigned_loop}"
+    
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Update new_connections table with the assigned DP/Loop
+        cursor.execute('''
+            UPDATE new_connections
+            SET status = "Provisioned", dp_loop = ?
+            WHERE slt_number = ?
+        ''', (dp_loop_str, request.slt_number))
+        
+        # Insert into blockchain_ledger
+        block_data = f"NEW_CONNECTION_PROVISIONED|{request.slt_number}|{dp_loop_str}|{datetime.now().isoformat()}"
+        block_hash = hashlib.sha256(block_data.encode()).hexdigest()
+        
+        cursor.execute('''
+            INSERT INTO blockchain_ledger (transaction_id, block_hash, action, details, timestamp)
+            VALUES (?, ?, ?, ?, ?)
+        ''', (
+            f"TX-PROV-{uuid_gen()}",
+            block_hash,
+            "NEW_CONNECTION_PROVISIONED",
+            f"Allocated DP/Loop {dp_loop_str} for {request.slt_number}",
+            datetime.now().isoformat()
+        ))
+        
+        conn.commit()
+        conn.close()
+        
+        return {
+            "status": "success",
+            "message": f"Successfully allocated DP/Loop {dp_loop_str} and logged to the Blockchain Vault.",
+            "dp_loop": dp_loop_str
+        }
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 # --- ADMIN NOC DASHBOARD ENDPOINTS ---
 
 @router.get("/admin/new-connections")

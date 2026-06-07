@@ -260,6 +260,16 @@ async def check_kyc_status(mobile_number: str):
         return response.json()
 
 @tool
+async def provision_new_connection(slt_number: str):
+    """Assigns an available Fiber Distribution Point (DP) and Loop for the customer. This triggers Vault Agent to log the connection on the Blockchain."""
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            f"{MOCK_BASE_URL}/provisioning/allocate-dp",
+            json={"slt_number": slt_number}
+        )
+        return response.json()
+
+@tool
 async def finalize_new_connection(mobile_number: str, package_name: str):
     """Finalizes the sale, automatically generates a new SLT number (e.g. 0112800100), and records the new connection for the Provisioner."""
     async with httpx.AsyncClient() as client:

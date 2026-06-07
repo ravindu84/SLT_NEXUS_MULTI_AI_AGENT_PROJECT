@@ -115,14 +115,23 @@ export default function AdminCRM() {
                     )}
                   </td>
                   <td style={{ padding: "16px" }}>
-                    <span style={{ 
-                      background: "rgba(255, 171, 0, 0.15)", 
-                      color: "#ffab00", 
-                      padding: "4px 8px", 
-                      borderRadius: "4px",
-                      fontSize: "12px",
-                      border: "1px solid rgba(255, 171, 0, 0.3)"
-                    }}>{conn.status}</span>
+                    <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                      <span style={{ 
+                        background: conn.status === "Provisioned" ? "rgba(0, 230, 118, 0.15)" : "rgba(255, 171, 0, 0.15)", 
+                        color: conn.status === "Provisioned" ? "#00e676" : "#ffab00", 
+                        padding: "4px 8px", 
+                        borderRadius: "4px",
+                        fontSize: "12px",
+                        border: `1px solid ${conn.status === "Provisioned" ? "rgba(0, 230, 118, 0.3)" : "rgba(255, 171, 0, 0.3)"}`,
+                        display: "inline-block",
+                        width: "max-content"
+                      }}>{conn.status}</span>
+                      {conn.dp_loop && (
+                        <span style={{ color: "#00bcd4", fontSize: "11px", fontWeight: "bold" }}>
+                          📍 {conn.dp_loop}
+                        </span>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))

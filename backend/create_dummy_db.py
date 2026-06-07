@@ -27,7 +27,7 @@ def create_db():
     # Table creation statements...
     cursor.execute('''CREATE TABLE user_memory (phone_number TEXT PRIMARY KEY, memory_summary TEXT, last_updated TEXT)''')
     cursor.execute('''CREATE TABLE prospects (mobile_number TEXT PRIMARY KEY, name TEXT, nic TEXT, email TEXT, location_verified INTEGER, human_verified INTEGER, kyc_verified INTEGER, created_at TEXT)''')
-    cursor.execute('''CREATE TABLE new_connections (connection_id TEXT PRIMARY KEY, mobile_number TEXT, slt_number TEXT, name TEXT, address TEXT, id_number TEXT, package TEXT, payment_status TEXT, kyc_status TEXT, status TEXT, created_at TEXT)''')
+    cursor.execute('''CREATE TABLE new_connections (connection_id TEXT PRIMARY KEY, mobile_number TEXT, slt_number TEXT, name TEXT, address TEXT, id_number TEXT, package TEXT, payment_status TEXT, kyc_status TEXT, status TEXT, dp_loop TEXT, created_at TEXT)''')
     cursor.execute('''CREATE TABLE customers (phone_number TEXT PRIMARY KEY, registered_name TEXT, address TEXT, contact_number TEXT, telephone_type TEXT, registered_date TEXT, has_voice INTEGER, has_internet INTEGER, has_iptv INTEGER, iptv_account_id TEXT, dp_loop TEXT)''')
     cursor.execute('''CREATE TABLE network_status (phone_number TEXT PRIMARY KEY, status TEXT, line_state TEXT, power_level TEXT, snr TEXT, attenuation TEXT, ont_type TEXT, tid TEXT, clarity_path TEXT, FOREIGN KEY(phone_number) REFERENCES customers(phone_number))''')
     cursor.execute('''CREATE TABLE billing (phone_number TEXT PRIMARY KEY, monthly_rental REAL, extra_gb_charges REAL, total_due REAL, unpaid_bills INTEGER, last_payment_date TEXT, payment_status TEXT, nxc_balance INTEGER, FOREIGN KEY(phone_number) REFERENCES customers(phone_number))''')
