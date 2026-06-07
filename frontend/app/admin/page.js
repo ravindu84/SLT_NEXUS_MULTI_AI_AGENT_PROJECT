@@ -863,13 +863,13 @@ export default function AdminDashboard() {
         </header>
 
         {/* SCROLLABLE MAIN CONTENT */}
-        <div className={`flex-1 overflow-y-auto custom-scrollbar ${activeTab === 'ai-chat' || activeTab === 'pathfinder-map' ? '' : 'p-6 sm:p-8'}`}>
+        <div className={`flex-1 flex flex-col overflow-y-auto custom-scrollbar ${activeTab === 'ai-chat' || activeTab === 'pathfinder-map' ? '' : 'p-6 sm:p-8'}`}>
           {isLoading ? (
             <div className="h-full flex items-center justify-center">
                <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : (
-            <div className="min-h-full flex flex-col">
+            <div className="flex-1 flex flex-col">
               {activeTab === 'overview' && renderOverview()}
               {activeTab === 'customers' && renderCustomers()}
               {activeTab === 'new-connections' && <AdminCRM />}
@@ -893,7 +893,7 @@ export default function AdminDashboard() {
               {activeTab === 'billing-system' && <BillingSystem API_URL={API_URL} />}
               {activeTab === 'vault' && renderVault()}
               {activeTab === 'ai-chat' && (
-                <div className="h-full w-full flex flex-col bg-[#1c1d25] overflow-hidden shadow-lg">
+                <div className="flex-1 min-h-full w-full flex flex-col bg-[#1c1d25] overflow-hidden shadow-lg">
                   {/* Internal Sub-tabs for AI Chat */}
                   <div className="flex border-b border-slate-800/50 bg-[#13141a]">
                     <button 
