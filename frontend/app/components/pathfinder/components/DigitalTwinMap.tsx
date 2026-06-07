@@ -1672,6 +1672,7 @@ interface DigitalTwinMapProps {
   isWeatherActive: boolean;
   setIsWeatherActive: (active: boolean) => void;
   viewMode?: '3d' | '2d';
+  sectorName?: string;
 }
 
 export default function DigitalTwinMap({
@@ -1688,7 +1689,8 @@ export default function DigitalTwinMap({
   setPlaybackSpeed,
   isWeatherActive,
   setIsWeatherActive,
-  viewMode = '3d'
+  viewMode = '3d',
+  sectorName
 }: DigitalTwinMapProps) {
   const [resetKey, setResetKey] = useState(0);
   const [heatmapActive, setHeatmapActive] = useState<boolean>(false);
@@ -2903,9 +2905,18 @@ export default function DigitalTwinMap({
       {isGlobalHudVisible && (
         !isGisHudOpen ? (
           <div 
-            className="absolute top-16 left-4 z-10"
+            className="absolute top-4 left-4 z-10 flex flex-col items-start pointer-events-auto"
             style={{ transform: `translate3d(${gisPos.x}px, ${gisPos.y}px, 0px)` }}
           >
+            {/* Sector Tab */}
+            {sectorName && (
+               <div className="bg-slate-950/95 border border-[rgba(56,189,248,0.4)] px-3 py-1.5 rounded-lg mb-2 flex items-center gap-2 shadow-2xl backdrop-blur-md">
+                  <span className={`w-2 h-2 rounded-full animate-ping bg-cyan-500`} />
+                  <span className="text-[10px] font-black tracking-widest text-[#38bdf8] uppercase">
+                    {sectorName}
+                  </span>
+               </div>
+            )}
             <button
               onClick={() => setIsGisHudOpen(true)}
               className="flex items-center gap-2 px-3 py-1.5 bg-slate-900/95 backdrop-blur border border-teal-500/35 hover:border-teal-500/60 rounded-xl text-[9px] font-mono text-teal-305 font-bold uppercase transition-all shadow-xl cursor-pointer select-none"
@@ -2916,9 +2927,22 @@ export default function DigitalTwinMap({
           </div>
         ) : (
           <div 
-            className="absolute top-16 left-4 p-3 bg-slate-900/90 backdrop-blur border border-teal-500/30 rounded-lg text-[11px] font-mono text-teal-400 select-none shadow-lg shadow-black/80 pointer-events-auto space-y-1.5 z-10 w-[210px]"
+            className="absolute top-4 left-4 z-10 flex flex-col pointer-events-none"
             style={{ transform: `translate3d(${gisPos.x}px, ${gisPos.y}px, 0px)` }}
           >
+            {/* Sector Tab - acts as a header/folder-tab connected to the GIS Viewport */}
+            {sectorName && (
+               <div className="self-start bg-slate-950/95 border border-[rgba(56,189,248,0.4)] border-b-0 px-3 py-1.5 rounded-t-lg flex items-center gap-2 relative top-[1px] z-20 backdrop-blur-md pointer-events-auto shadow-2xl">
+                  <span className={`w-2 h-2 rounded-full animate-ping bg-cyan-500`} />
+                  <span className="text-[10px] font-black tracking-widest text-[#38bdf8] uppercase">
+                    {sectorName}
+                  </span>
+               </div>
+            )}
+
+            <div 
+              className={`p-3 bg-slate-900/90 backdrop-blur border border-teal-500/30 rounded-b-lg text-[11px] font-mono text-teal-400 select-none shadow-lg shadow-black/80 pointer-events-auto space-y-1.5 w-[210px] relative z-10 ${sectorName ? 'rounded-tr-lg' : 'rounded-t-lg'}`}
+            >
             <div 
               onMouseDown={(e) => handleDragStart(e, 'gis')}
               onTouchStart={(e) => handleDragStart(e, 'gis')}

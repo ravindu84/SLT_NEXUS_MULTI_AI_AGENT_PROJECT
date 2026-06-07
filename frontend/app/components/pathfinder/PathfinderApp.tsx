@@ -2159,20 +2159,6 @@ export default function App({ onBack }: { onBack?: () => void }) {
         {/* Card C: The 3D Digital Twin map container viewport - Full-width horizontal expansion with increased 800px height */}
         <div className="relative overflow-hidden bg-slate-950 border border-[rgba(56,189,248,0.2)] rounded-xl shadow-lg h-[800px] min-h-[800px]" id="bento-map-viewport">
           
-          {/* Overlay Tag for actively selected Sector */}
-          <div className="absolute top-4 left-4 z-[40] pointer-events-none flex flex-col gap-1 font-mono select-none">
-            <div className="flex items-center gap-2 bg-slate-950/95 border border-[rgba(56,189,248,0.4)] px-3 py-1.5 rounded-lg max-w-sm backdrop-blur-md shadow-2xl">
-              <span className={`w-2 h-2 rounded-full animate-ping ${activeTab === 'main' ? 'bg-cyan-500' : activeTab === 'copper' ? 'bg-orange-500' : 'bg-emerald-550'}`} />
-              <span className="text-[10px] font-black tracking-widest text-[#38bdf8] uppercase">
-                {activeTab === 'main' 
-                  ? 'Sector: Homagama Core (GPON/Fiber)' 
-                  : activeTab === 'copper' 
-                    ? 'Sector: Kottawa Copper MSAN Feeder' 
-                    : 'Sector: Pitipana Smart FTTH Cabinets'}
-              </span>
-            </div>
-          </div>
-
           {/* Real 3D Canvas environment with cyberpunk coordinates projection */}
           <DigitalTwinMap
             key={activeTab}
@@ -2193,6 +2179,13 @@ export default function App({ onBack }: { onBack?: () => void }) {
             setViewMode={setViewMode}
             isTopologyOverviewActive={isTopologyOverviewActive}
             setIsTopologyOverviewActive={setIsTopologyOverviewActive}
+            sectorName={
+              activeTab === 'main' 
+                ? 'Sector: Homagama Core (GPON/Fiber)' 
+                : activeTab === 'copper' 
+                  ? 'Sector: Kottawa Copper MSAN Feeder' 
+                  : 'Sector: Pitipana Smart FTTH Cabinets'
+            }
             windSpeed={windSpeed}
             setWindSpeed={setWindSpeed}
             windDirection={windDirection}
