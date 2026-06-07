@@ -1724,23 +1724,8 @@ export default function DigitalTwinMap({
   const [isPanningSvg, setIsPanningSvg] = useState<boolean>(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
-  useEffect(() => {
-    try {
-      const canvas = document.createElement('canvas');
-      const supported = !!(
-        window.WebGLRenderingContext &&
-        (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
-      );
-      setIsWebGLSupported(supported);
-      if (!supported) {
-        setViewMode('2d');
-        console.warn('WebGL support not found. Falling back to High-Fidelity 2D SVG vector mode.');
-      }
-    } catch (e) {
-      setIsWebGLSupported(false);
-      setViewMode('2d');
-    }
-  }, []);
+  // WebGL Support check removed to prevent premature 2D fallback when contexts are exhausted.
+  // We rely on WebGLErrorBoundary to catch actual rendering failures.
 
   const handleSvgMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
     const target = e.target as SVGElement;
@@ -2407,6 +2392,30 @@ export default function DigitalTwinMap({
             </div>
           </div>
         )}
+            {/* Floating Zoom Controls for 2D Map */}
+            <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-50">
+              <button 
+                onClick={(e) => { e.stopPropagation(); setSvgZoom(z => Math.min(4.0, z * 1.2)); }}
+                className="w-10 h-10 bg-slate-900/80 border border-sky-500/30 hover:border-sky-400 hover:bg-slate-800 rounded flex items-center justify-center text-sky-400 shadow-lg backdrop-blur transition-all"
+                title="Zoom In"
+              >
+                <span className="text-xl font-bold leading-none">+</span>
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setSvgZoom(1.0); setSvgPanX(0); setSvgPanY(0); }}
+                className="w-10 h-10 bg-slate-900/80 border border-sky-500/30 hover:border-sky-400 hover:bg-slate-800 rounded flex items-center justify-center text-sky-400 shadow-lg backdrop-blur transition-all"
+                title="Reset View"
+              >
+                <span className="text-xs font-bold">RST</span>
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); setSvgZoom(z => Math.max(0.6, z / 1.2)); }}
+                className="w-10 h-10 bg-slate-900/80 border border-sky-500/30 hover:border-sky-400 hover:bg-slate-800 rounded flex items-center justify-center text-sky-400 shadow-lg backdrop-blur transition-all"
+                title="Zoom Out"
+              >
+                <span className="text-xl font-bold leading-none">-</span>
+              </button>
+            </div>
       </div>
     );
   };
