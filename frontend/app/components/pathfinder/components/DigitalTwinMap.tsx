@@ -1753,11 +1753,12 @@ export default function DigitalTwinMap({
     e.preventDefault();
     const zoomFactor = 1.1;
     if (e.deltaY < 0) {
-      setSvgZoom(z => Math.min(4.0, z * zoomFactor));
+      setSvgZoom(z => Math.min(200.0, z * zoomFactor));
     } else {
       setSvgZoom(z => Math.max(0.6, z / zoomFactor));
     }
   };
+
 
   // New customizable Digital Twin dashboard state layers
   const [cameraPreset, setCameraPreset] = useState<string>('iso');
@@ -1987,6 +1988,41 @@ export default function DigitalTwinMap({
     const sum = nodes.reduce((acc, n) => acc + n.lon, 0);
     return sum / nodes.length;
   }, [nodes]);
+
+  // Dynamically calculate and set best zoom level when switching to 2D view or nodes change
+  useEffect(() => {
+    if (viewMode === '2d' && nodes && nodes.length > 0) {
+      let minLat = 90, maxLat = -90, minLon = 180, maxLon = -180;
+      nodes.forEach(n => {
+        if (n.lat < minLat) minLat = n.lat;
+        if (n.lat > maxLat) maxLat = n.lat;
+        if (n.lon < minLon) minLon = n.lon;
+        if (n.lon > maxLon) maxLon = n.lon;
+      });
+      
+      const latDiff = maxLat - minLat;
+      const lonDiff = maxLon - minLon;
+      
+      if (latDiff > 0 && lonDiff > 0) {
+        // Approximate distance based on Equirectangular projection
+        const latPx = latDiff * 111320;
+        const lonPx = lonDiff * 111320 * Math.cos(centerLat * (Math.PI / 180));
+        
+        // Target an area of 800x600 with 30% padding
+        const zoomX = 800 / lonPx;
+        const zoomY = 600 / latPx;
+        const targetZoom = Math.min(zoomX, zoomY) * 0.7;
+        
+        // Cap it between reasonable values
+        setSvgZoom(Math.max(1.0, Math.min(100.0, targetZoom)));
+        setSvgPanX(0);
+        setSvgPanY(0);
+      } else if (latDiff === 0 && lonDiff === 0) {
+        setSvgZoom(100.0);
+      }
+    }
+  }, [viewMode, nodes, centerLat]);
+
 
   // Dynamically calculate coordinate bounding boxes to keep mini-map perfectly centered & responsive
   const bounds = useMemo(() => {
@@ -2290,7 +2326,7 @@ export default function DigitalTwinMap({
             {Math.round(svgZoom * 100)}%
           </span>
           <button
-            onClick={() => setSvgZoom(z => Math.min(4.0, z + 0.2))}
+            onClick={() => setSvgZoom(z => Math.min(200.0, z + 0.2))}
             className="w-5 h-5 bg-slate-950 border border-slate-800 hover:border-slate-700 active:bg-slate-900 rounded flex items-center justify-center font-bold text-[#38bdf8] cursor-pointer"
             title="Zoom in"
           >
@@ -2971,7 +3007,7 @@ export default function DigitalTwinMap({
               onClick={(e) => {
                 e.stopPropagation();
                 if (viewMode === '2d') {
-                  setSvgZoom(z => Math.min(4.0, z * 1.2));
+                  setSvgZoom(z => Math.min(200.0, z * 1.2));
                 } else {
                   const canvas = document.querySelector('canvas');
                   if (canvas) canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: -500, clientX: window.innerWidth/2, clientY: window.innerHeight/2, bubbles: true }));
@@ -3328,7 +3364,7 @@ export default function DigitalTwinMap({
           onClick={(e) => {
             e.stopPropagation();
             if (viewMode === '2d') {
-              setSvgZoom(z => Math.min(4.0, z * 1.2));
+              setSvgZoom(z => Math.min(200.0, z * 1.2));
             } else {
               const canvas = document.querySelector('canvas');
               if (canvas) canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: -500, clientX: window.innerWidth/2, clientY: window.innerHeight/2, bubbles: true }));
