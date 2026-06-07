@@ -1733,8 +1733,8 @@ export default function App() {
       {/* 1. Header Bento-Card */}
       <header className="relative overflow-hidden bg-[rgba(15,23,42,0.85)] border border-[rgba(56,189,248,0.2)] rounded-xl py-3 px-6 flex flex-col xl:flex-row justify-between items-center gap-4 before:absolute before:top-0 before:left-0 before:w-full before:h-[2px] before:bg-gradient-to-r before:from-transparent before:via-[#38bdf8] before:to-transparent before:opacity-50" id="bento-header">
         <div className="flex items-center gap-4 shrink-0">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#38bdf8] to-cyan-500 border border-cyan-400/50 rounded-lg flex items-center justify-center text-slate-950 font-black text-xl select-none shadow-lg shadow-cyan-500/20 animate-pulse">
-            N
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center select-none shadow-lg shadow-cyan-500/20 drop-shadow-[0_0_10px_rgba(56,189,248,0.5)] overflow-hidden">
+            <img src="/assets/icon.png" alt="Icon" className="w-full h-full object-contain animate-pulse" />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -1743,7 +1743,7 @@ export default function App() {
               <span className="text-[9px] font-mono text-emerald-400 font-semibold uppercase">NOC LINK ONLINE</span>
             </div>
             <h1 className="text-lg font-extrabold tracking-tight text-white flex items-center gap-2">
-              TELECOM <span className="font-light text-slate-400">| DIGITAL TWIN MATRIX</span>
+              <img src="/assets/logo.png" alt="SLT NEXUS" className="h-6 object-contain" /> <span className="font-light text-slate-400">| DIGITAL TWIN MATRIX</span>
             </h1>
           </div>
         </div>
@@ -1907,7 +1907,7 @@ export default function App() {
 
         {/* UNIFIED GLOBAL COMMAND BAR */}
         <div 
-          className="relative bg-slate-900/85 backdrop-blur-md border border-[rgba(56,189,248,0.25)] rounded-2xl p-3.5 shadow-2xl flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 select-none"
+          className="relative bg-slate-900/85 backdrop-blur-md border border-[rgba(56,189,248,0.25)] rounded-2xl p-3.5 shadow-2xl flex flex-col lg:flex-row flex-wrap items-stretch lg:items-center justify-between gap-4 select-none"
           id="unified-global-command-bar"
         >
           {/* Active scanning overlay pattern */}
@@ -2021,7 +2021,7 @@ export default function App() {
           </div>
 
           {/* Section 1.5: Map Controls (lifted from map) */}
-          <div className="hidden xl:flex items-center justify-center gap-4 bg-slate-950/40 border border-slate-850/80 rounded-xl px-4 py-1.5 shrink-0">
+          <div className="hidden xl:flex items-center justify-center gap-4 bg-slate-950/40 border border-slate-850/80 rounded-xl px-4 self-stretch shrink-0">
             {/* Weather Controller */}
             <div className="flex items-center gap-3 border-r border-slate-800/80 pr-4">
               <div className="flex items-center gap-2">
