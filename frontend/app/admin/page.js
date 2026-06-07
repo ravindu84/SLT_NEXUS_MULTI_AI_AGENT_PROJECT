@@ -60,6 +60,10 @@ export default function AdminDashboard() {
   // Language Context
   const { language, setLanguage } = useLanguage();
   
+  // Live Chart States for animations
+  const [liveNetworkData, setLiveNetworkData] = useState(networkData);
+  const [liveCapacity, setLiveCapacity] = useState(capacityData);
+
   // Search State
   const [searchQuery, setSearchQuery] = useState('');
   const [customerData, setCustomerData] = useState(null);
@@ -111,8 +115,29 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 3000);
+    const interval = setInterval(fetchData, 15000);
     return () => clearInterval(interval);
+  }, []);
+
+  // Live Chart Animation Effect
+  useEffect(() => {
+    const liveInterval = setInterval(() => {
+      setLiveNetworkData(prev => prev.map(item => ({
+        ...item,
+        traffic: Math.max(50, Math.min(250, item.traffic + (Math.random() * 40 - 20))),
+        faults: Math.max(10, Math.min(100, item.faults + (Math.random() * 20 - 10)))
+      })));
+
+      setLiveCapacity(prev => {
+        const alloc = Math.max(40, Math.min(95, prev[0].value + (Math.random() * 6 - 3)));
+        return [
+          { name: 'Allocated', value: alloc },
+          { name: 'Available', value: 100 - alloc }
+        ];
+      });
+    }, 2500);
+
+    return () => clearInterval(liveInterval);
   }, []);
 
   const handleSearch = async (e) => {
@@ -188,7 +213,7 @@ export default function AdminDashboard() {
           </div>
           <div className="flex-1 min-h-0 relative z-10">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={networkData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <BarChart data={liveNetworkData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="0%" stopColor="#06b6d4" stopOpacity={1}/>
@@ -223,7 +248,7 @@ export default function AdminDashboard() {
           </div>
           <div className="flex-1 min-h-0 relative z-10">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={networkData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <AreaChart data={liveNetworkData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorTraffic" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.6}/>
@@ -262,25 +287,22 @@ export default function AdminDashboard() {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={capacityData}
+                  data={liveCapacity}
                   innerRadius={70}
                   outerRadius={100}
                   paddingAngle={5}
                   dataKey="value"
                   stroke="none"
                 >
-                  {capacityData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <RechartsTooltip 
-                  contentStyle={{ backgroundColor: '#13141a', border: '1px solid #334155', borderRadius: '8px' }}
-                />
+                    {liveCapacity.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
               </PieChart>
             </ResponsiveContainer>
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-3xl font-bold text-white">62%</span>
-              <span className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Allocated</span>
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-20">
+              <span className="text-3xl font-black text-white">{Math.round(liveCapacity[0].value)}%</span>
+              <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Allocated</span>
             </div>
           </div>
         </div>
