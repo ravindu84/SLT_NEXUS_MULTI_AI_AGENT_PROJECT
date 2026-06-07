@@ -1671,6 +1671,7 @@ interface DigitalTwinMapProps {
   setPlaybackSpeed: (speed: number) => void;
   isWeatherActive: boolean;
   setIsWeatherActive: (active: boolean) => void;
+  viewMode?: '3d' | '2d';
 }
 
 export default function DigitalTwinMap({
@@ -1686,7 +1687,8 @@ export default function DigitalTwinMap({
   playbackSpeed,
   setPlaybackSpeed,
   isWeatherActive,
-  setIsWeatherActive
+  setIsWeatherActive,
+  viewMode = '3d'
 }: DigitalTwinMapProps) {
   const [resetKey, setResetKey] = useState(0);
   const [heatmapActive, setHeatmapActive] = useState<boolean>(false);
@@ -1700,7 +1702,6 @@ export default function DigitalTwinMap({
 
   // WebGL Fallback and 2D Interactive Controls
   const [isWebGLSupported, setIsWebGLSupported] = useState<boolean>(true);
-  const [viewMode, setViewMode] = useState<'3d' | '2d'>('3d');
   const [svgPanX, setSvgPanX] = useState<number>(0);
   const [svgPanY, setSvgPanY] = useState<number>(0);
   const [svgZoom, setSvgZoom] = useState<number>(4.0);
@@ -3321,8 +3322,8 @@ export default function DigitalTwinMap({
         </div>
       </div>
 
-      {/* GLOBAL FLOATING ZOOM CONTROLS (Bottom Right, shifted left to avoid overlapping minimap) */}
-      <div className="absolute bottom-10 right-[380px] flex flex-col gap-3 z-50 pointer-events-none">
+      {/* GLOBAL FLOATING ZOOM CONTROLS (Right Edge, below Minimap) */}
+      <div className="absolute top-[60%] right-6 flex flex-col gap-3 z-50 pointer-events-none">
         <button 
           onClick={(e) => {
             e.stopPropagation();
