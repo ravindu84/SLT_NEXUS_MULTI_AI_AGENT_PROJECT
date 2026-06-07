@@ -766,7 +766,7 @@ export default function AdminDashboard() {
     <div className="flex h-screen bg-[#060913] text-slate-300 font-sans overflow-hidden">
       
       {/* SIDEBAR */}
-      {activeTab !== 'ai-chat' && (
+      {activeTab !== 'ai-chat' && activeTab !== 'pathfinder-map' && (
         <div className="w-64 bg-[#13141a] border-r border-slate-800/50 flex flex-col shrink-0 transition-all duration-300">
           <div className="p-6 flex items-center justify-center">
             <img src="/assets/logo.png" alt="SLT NEXUS" className="h-14 object-contain" />
@@ -826,7 +826,7 @@ export default function AdminDashboard() {
       <div className="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         
         {/* TOP NAVBAR (DarkPan Style) */}
-        <header className={`h-20 px-8 justify-between items-center bg-[#1c1d25] border-b border-slate-800/50 shrink-0 ${activeTab === 'ai-chat' ? 'hidden' : 'flex'}`}>
+        <header className={`h-20 px-8 justify-between items-center bg-[#1c1d25] border-b border-slate-800/50 shrink-0 ${activeTab === 'ai-chat' || activeTab === 'pathfinder-map' ? 'hidden' : 'flex'}`}>
           <div className="flex items-center gap-4">
             <button className="md:hidden p-2 text-slate-400 hover:text-white">
               <Menu className="w-6 h-6" />
@@ -863,7 +863,7 @@ export default function AdminDashboard() {
         </header>
 
         {/* SCROLLABLE MAIN CONTENT */}
-        <div className={`flex-1 overflow-y-auto custom-scrollbar ${activeTab === 'ai-chat' ? '' : 'p-6 sm:p-8'}`}>
+        <div className={`flex-1 overflow-y-auto custom-scrollbar ${activeTab === 'ai-chat' || activeTab === 'pathfinder-map' ? '' : 'p-6 sm:p-8'}`}>
           {isLoading ? (
             <div className="h-full flex items-center justify-center">
                <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
@@ -874,7 +874,17 @@ export default function AdminDashboard() {
               {activeTab === 'customers' && renderCustomers()}
               {activeTab === 'new-connections' && <AdminCRM />}
               {activeTab === 'connections' && renderConnections()}
-              {activeTab === 'pathfinder-map' && <DigitalTwinMap />}
+              {activeTab === 'pathfinder-map' && (
+                <div className="w-full h-full relative">
+                  <button 
+                    onClick={() => setActiveTab('overview')}
+                    className="absolute top-4 left-4 z-[9999] px-4 py-2 bg-[#02040a]/80 hover:bg-[#02040a] text-cyan-400 border border-cyan-500/30 rounded-lg flex items-center gap-2 backdrop-blur-md transition-colors text-sm font-bold shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+                  >
+                    <ChevronLeft className="w-5 h-5" /> BACK TO SYSTEM
+                  </button>
+                  <DigitalTwinMap />
+                </div>
+              )}
               {activeTab === 'full-db' && renderFullDB()}
               {activeTab === 'tickets' && renderFaultMatrix()}
               {activeTab === 'oracle-predict' && renderOraclePredictor()}
