@@ -6,6 +6,7 @@ import TechBackground from "./TechBackground";
 import { Zap, Play, RotateCcw, Volume2, ShieldAlert, Cpu, Layers, Sliders, MessageSquare, Mic, MicOff, Camera, Upload, X } from "lucide-react";
 import SignCamera from "./SignCamera";
 import AdminCRM from "./AdminCRM";
+import DigitalTwinMap from "./DigitalTwinMap";
 import styles from "../page.module.css";
 import "./NeoDashboard.css";
 
@@ -468,6 +469,16 @@ export default function NeoDashboard({
                 onClick={() => {
                   if (audioRef.current) audioRef.current.pause();
                   setIsSpeaking(false);
+                  setControlMode("map");
+                }}
+                className={`neoModeBtn ${controlMode === "map" ? "neoModeActive" : ""}`}
+              >
+                🗺️ 3D Map
+              </button>
+              <button
+                onClick={() => {
+                  if (audioRef.current) audioRef.current.pause();
+                  setIsSpeaking(false);
                   setControlMode("manual");
                 }}
                 className={`neoModeBtn ${controlMode === "manual" ? "neoModeActive" : ""}`}
@@ -667,8 +678,14 @@ export default function NeoDashboard({
           </div>
         )}
 
+        {controlMode === "map" && (
+          <div style={{ flex: 1, overflowY: "auto", width: "100%", padding: "10px" }}>
+            <DigitalTwinMap />
+          </div>
+        )}
+
         {/* Information Alert Badge */}
-        {controlMode !== "chat" && controlMode !== "crm" && (
+        {controlMode !== "chat" && controlMode !== "crm" && controlMode !== "map" && (
           <div className="neoInfoAlert">
             <ShieldAlert size={16} className="neoAlertIcon" />
             <p>
