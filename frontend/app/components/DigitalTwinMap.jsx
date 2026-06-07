@@ -6,7 +6,7 @@ const PathfinderApp = dynamic(() => import('./pathfinder/PathfinderApp'), {
 
 export default function DigitalTwinMap() {
   return (
-    <div className="w-full h-full bg-[#02040a] relative overflow-hidden">
+    <div className="w-full min-h-full bg-[#02040a] relative">
       <PathfinderApp />
     </div>
   );

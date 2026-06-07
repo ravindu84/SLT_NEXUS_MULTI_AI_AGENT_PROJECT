@@ -869,13 +869,13 @@ export default function AdminDashboard() {
                <div className="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : (
-            <div className="h-full flex flex-col">
+            <div className="min-h-full flex flex-col">
               {activeTab === 'overview' && renderOverview()}
               {activeTab === 'customers' && renderCustomers()}
               {activeTab === 'new-connections' && <AdminCRM />}
               {activeTab === 'connections' && renderConnections()}
               {activeTab === 'pathfinder-map' && (
-                <div className="w-full h-full relative">
+                <div className="w-full min-h-full relative">
                   <button 
                     onClick={() => setActiveTab('overview')}
                     className="absolute top-4 left-4 z-[9999] px-4 py-2 bg-[#02040a]/80 hover:bg-[#02040a] text-cyan-400 border border-cyan-500/30 rounded-lg flex items-center gap-2 backdrop-blur-md transition-colors text-sm font-bold shadow-[0_0_15px_rgba(6,182,212,0.2)]"
