@@ -2392,30 +2392,6 @@ export default function DigitalTwinMap({
             </div>
           </div>
         )}
-            {/* Floating Zoom Controls for 2D Map */}
-            <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-50">
-              <button 
-                onClick={(e) => { e.stopPropagation(); setSvgZoom(z => Math.min(4.0, z * 1.2)); }}
-                className="w-10 h-10 bg-slate-900/80 border border-sky-500/30 hover:border-sky-400 hover:bg-slate-800 rounded flex items-center justify-center text-sky-400 shadow-lg backdrop-blur transition-all"
-                title="Zoom In"
-              >
-                <span className="text-xl font-bold leading-none">+</span>
-              </button>
-              <button 
-                onClick={(e) => { e.stopPropagation(); setSvgZoom(1.0); setSvgPanX(0); setSvgPanY(0); }}
-                className="w-10 h-10 bg-slate-900/80 border border-sky-500/30 hover:border-sky-400 hover:bg-slate-800 rounded flex items-center justify-center text-sky-400 shadow-lg backdrop-blur transition-all"
-                title="Reset View"
-              >
-                <span className="text-xs font-bold">RST</span>
-              </button>
-              <button 
-                onClick={(e) => { e.stopPropagation(); setSvgZoom(z => Math.max(0.6, z / 1.2)); }}
-                className="w-10 h-10 bg-slate-900/80 border border-sky-500/30 hover:border-sky-400 hover:bg-slate-800 rounded flex items-center justify-center text-sky-400 shadow-lg backdrop-blur transition-all"
-                title="Zoom Out"
-              >
-                <span className="text-xl font-bold leading-none">-</span>
-              </button>
-            </div>
       </div>
     );
   };
@@ -2425,7 +2401,6 @@ export default function DigitalTwinMap({
       {viewMode === '3d' ? (
         <WebGLErrorBoundary
           fallback={renderFullscreen2DMap()}
-          onError={() => setViewMode('2d')}
         >
           <Canvas
             shadows
@@ -3386,6 +3361,54 @@ export default function DigitalTwinMap({
         </div>
       </div>
 
+      {/* Global Zoom Controls (Works for both 3D and 2D modes) */}
+      <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-50">
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (viewMode === '2d') {
+              setSvgZoom(z => Math.min(4.0, z * 1.2));
+            } else {
+              const canvas = document.querySelector('canvas');
+              if (canvas) {
+                // Dispatch wheel event to OrbitControls
+                canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: -500, clientX: window.innerWidth/2, clientY: window.innerHeight/2, bubbles: true }));
+              }
+            }
+          }}
+          className="w-10 h-10 bg-slate-900/80 border border-sky-500/30 hover:border-sky-400 hover:bg-slate-800 rounded flex items-center justify-center text-sky-400 shadow-lg backdrop-blur transition-all"
+          title="Zoom In"
+        >
+          <span className="text-xl font-bold leading-none">+</span>
+        </button>
+        {viewMode === '2d' && (
+          <button 
+            onClick={(e) => { e.stopPropagation(); setSvgZoom(1.0); setSvgPanX(0); setSvgPanY(0); }}
+            className="w-10 h-10 bg-slate-900/80 border border-sky-500/30 hover:border-sky-400 hover:bg-slate-800 rounded flex items-center justify-center text-sky-400 shadow-lg backdrop-blur transition-all"
+            title="Reset View"
+          >
+            <span className="text-xs font-bold">RST</span>
+          </button>
+        )}
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (viewMode === '2d') {
+              setSvgZoom(z => Math.max(0.6, z / 1.2));
+            } else {
+              const canvas = document.querySelector('canvas');
+              if (canvas) {
+                // Dispatch wheel event to OrbitControls
+                canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: 500, clientX: window.innerWidth/2, clientY: window.innerHeight/2, bubbles: true }));
+              }
+            }
+          }}
+          className="w-10 h-10 bg-slate-900/80 border border-sky-500/30 hover:border-sky-400 hover:bg-slate-800 rounded flex items-center justify-center text-sky-400 shadow-lg backdrop-blur transition-all"
+          title="Zoom Out"
+        >
+          <span className="text-xl font-bold leading-none">-</span>
+        </button>
+      </div>
     </div>
   );
 }
