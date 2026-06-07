@@ -2146,6 +2146,7 @@ export default function DigitalTwinMap({
 
         {/* Scaled Interactive Vector SVG Stage */}
         <svg
+          viewBox="0 0 100 100"
           className="w-full h-full relative z-10 cursor-gather active:cursor-grabbing"
           onMouseDown={handleSvgMouseDown}
           onMouseMove={handleSvgMouseMove}
