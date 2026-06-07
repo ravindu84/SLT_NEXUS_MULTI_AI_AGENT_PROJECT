@@ -746,62 +746,62 @@ export default function App({ onBack }: { onBack?: () => void }) {
       <motion.div
         key={`resolver-${node.id}`}
         whileHover={{ 
-          scale: 1.03, 
+          scale: 1.02, 
           borderColor: meta.hoverBorder, 
           backgroundColor: meta.hoverBg,
           boxShadow: meta.shadow
         }}
         whileTap={{ scale: 0.98 }}
         transition={{ type: "spring", stiffness: 400, damping: 22 }}
-        className={`${meta.bgCard} border p-2.5 rounded-lg text-[10px] font-mono flex flex-col gap-1.5 relative cursor-pointer`}
+        className={`${meta.bgCard} border p-3.5 rounded-lg text-xs font-mono flex flex-col gap-2 relative cursor-pointer`}
         onClick={() => setSelectedNodeId(node.id)}
       >
-        <div className="flex justify-between items-center gap-1">
-          <span className={`font-extrabold ${meta.textLight} truncate max-w-[110px]`} title={node.label || node.id}>
+        <div className="flex justify-between items-center gap-2">
+          <span className={`font-extrabold ${meta.textLight} truncate text-sm`} title={node.label || node.id}>
             {node.label || node.id}
           </span>
-          <span className={`text-[7px] px-1 py-0.5 rounded border leading-none ${meta.bgPill}`}>
+          <span className={`text-[9px] px-1.5 py-0.5 rounded border leading-none font-bold shrink-0 ${meta.bgPill}`}>
             {meta.typeName}
           </span>
         </div>
         
-        <div className={`grid grid-cols-2 gap-1 text-[8px] text-slate-400 border-t border-b ${meta.borderTTC} py-0.5 leading-none`}>
+        <div className={`grid grid-cols-2 gap-2 text-[10px] text-slate-400 border-t border-b ${meta.borderTTC} py-1.5 leading-none`}>
           <div>
-            <span className="text-slate-550 block text-[7px] font-bold">LOSS:</span>
-            <span className={`${meta.textMuted} block font-black`}>{meta.loss}</span>
+            <span className="text-slate-550 block text-[9px] font-bold mb-1">LOSS:</span>
+            <span className={`${meta.textMuted} block font-black text-xs`}>{meta.loss}</span>
           </div>
           <div>
-            <span className="text-slate-550 block text-[7px] font-bold text-right">TYPE:</span>
-            <span className={`${meta.textLight} block font-bold text-right truncate`}>{meta.probType}</span>
+            <span className="text-slate-550 block text-[9px] font-bold text-right mb-1">TYPE:</span>
+            <span className={`${meta.textLight} block font-bold text-right truncate text-[11px]`}>{meta.probType}</span>
           </div>
         </div>
 
-        <div className={`flex items-center justify-between text-[7.5px] font-mono py-1 border-b ${meta.borderTTC} text-slate-400 leading-none`}>
-          <div className="flex items-center gap-1">
-            <Clock className="w-2.5 h-2.5 text-cyan-400" />
+        <div className={`flex items-center justify-between text-[10px] font-mono py-1.5 border-b ${meta.borderTTC} text-slate-400 leading-none`}>
+          <div className="flex items-center gap-1.5">
+            <Clock className="w-3 h-3 text-cyan-400" />
             <span>ETA: <span className="text-cyan-300 font-extrabold">{est.minutes}m</span></span>
           </div>
-          <span className="text-slate-550 font-bold uppercase truncate max-w-[90px]" title={`${est.hub} (${est.distanceKm} km away)`}>
+          <span className="text-slate-550 font-bold uppercase truncate" title={`${est.hub} (${est.distanceKm} km away)`}>
             {est.hub} ({est.distanceKm}k)
           </span>
         </div>
 
-        <div className={`flex items-center justify-between text-[7.5px] font-mono py-1 border-b leading-none ${
+        <div className={`flex items-center justify-between text-[10px] font-mono py-1.5 border-b leading-none ${
           ttc.isRed 
-            ? 'text-rose-400 bg-rose-950/20 border-rose-500/20 px-1 rounded animate-pulse font-extrabold' 
+            ? 'text-rose-400 bg-rose-950/20 border-rose-500/20 px-1.5 rounded animate-pulse font-extrabold' 
             : 'text-amber-400 ' + meta.borderTTC
         }`} id={`ttc-timer-${node.id}`} data-elapsed={ttc.elapsedMins}>
-          <div className="flex items-center gap-1">
-            <AlertTriangle className={`w-2.5 h-2.5 ${ttc.isRed ? 'text-rose-500' : 'text-amber-500'}`} />
+          <div className="flex items-center gap-1.5">
+            <AlertTriangle className={`w-3 h-3 ${ttc.isRed ? 'text-rose-500' : 'text-amber-500'}`} />
             <span>TTC COUNTDOWN:</span>
           </div>
-          <span className={`${ttc.isRed ? 'text-rose-400 font-extrabold font-mono text-[8.5px]' : 'text-amber-300 font-bold'}`}>
+          <span className={`${ttc.isRed ? 'text-rose-400 font-extrabold font-mono text-xs' : 'text-amber-300 font-bold text-[11px]'}`}>
             <AnimatedTimer timerStr={ttc.displayTimer} />
           </span>
         </div>
 
-        <div className="flex justify-between items-center gap-1 pt-0.5">
-          <span className="text-[7.5px] text-slate-500 truncate max-w-[70px]">
+        <div className="flex justify-between items-center gap-1 pt-1">
+          <span className="text-[9px] text-slate-500 truncate">
             {node.lat.toFixed(4)}°, {node.lon.toFixed(4)}°
           </span>
           <button
@@ -809,9 +809,9 @@ export default function App({ onBack }: { onBack?: () => void }) {
               e.stopPropagation();
               handleOneClickRepair(node.id, node.label || node.id);
             }}
-            className={`flex items-center gap-1 px-1.5 py-0.5 ${meta.btnBg} text-[8.5px] font-extrabold uppercase rounded cursor-pointer transition-all shadow-md shrink-0`}
+            className={`flex items-center gap-1 px-2 py-1 ${meta.btnBg} text-[10px] font-extrabold uppercase rounded cursor-pointer transition-all shadow-md shrink-0 hover:scale-105`}
           >
-            <Wrench className="w-2.5 h-2.5 text-slate-950" />
+            <Wrench className="w-3 h-3 text-slate-950" />
             <span>REPAIR</span>
           </button>
         </div>
