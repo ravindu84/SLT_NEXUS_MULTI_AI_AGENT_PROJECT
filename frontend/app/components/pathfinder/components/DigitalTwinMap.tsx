@@ -1746,13 +1746,19 @@ export default function DigitalTwinMap({
     const target = e.target as SVGElement;
     if (target.closest('.interactive-node')) return;
     setIsPanningSvg(true);
-    setPanStart({ x: e.clientX - svgPanX, y: e.clientY - svgPanY });
+    const svgRect = e.currentTarget.getBoundingClientRect();
+    const panFactorX = 100 / svgRect.width;
+    const panFactorY = 100 / svgRect.height;
+    setPanStart({ x: (e.clientX * panFactorX) - svgPanX, y: (e.clientY * panFactorY) - svgPanY });
   };
 
   const handleSvgMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!isPanningSvg) return;
-    setSvgPanX(e.clientX - panStart.x);
-    setSvgPanY(e.clientY - panStart.y);
+    const svgRect = e.currentTarget.getBoundingClientRect();
+    const panFactorX = 100 / svgRect.width;
+    const panFactorY = 100 / svgRect.height;
+    setSvgPanX((e.clientX * panFactorX) - panStart.x);
+    setSvgPanY((e.clientY * panFactorY) - panStart.y);
   };
 
   const handleSvgMouseUp = () => {
@@ -1764,15 +1770,21 @@ export default function DigitalTwinMap({
     if (target.closest('.interactive-node')) return;
     if (e.touches.length === 1) {
       setIsPanningSvg(true);
-      setPanStart({ x: e.touches[0].clientX - svgPanX, y: e.touches[0].clientY - svgPanY });
+      const svgRect = e.currentTarget.getBoundingClientRect();
+      const panFactorX = 100 / svgRect.width;
+      const panFactorY = 100 / svgRect.height;
+      setPanStart({ x: (e.touches[0].clientX * panFactorX) - svgPanX, y: (e.touches[0].clientY * panFactorY) - svgPanY });
     }
   };
 
   const handleSvgTouchMove = (e: React.TouchEvent<SVGSVGElement>) => {
     if (!isPanningSvg) return;
     if (e.touches.length === 1) {
-      setSvgPanX(e.touches[0].clientX - panStart.x);
-      setSvgPanY(e.touches[0].clientY - panStart.y);
+      const svgRect = e.currentTarget.getBoundingClientRect();
+      const panFactorX = 100 / svgRect.width;
+      const panFactorY = 100 / svgRect.height;
+      setSvgPanX((e.touches[0].clientX * panFactorX) - panStart.x);
+      setSvgPanY((e.touches[0].clientY * panFactorY) - panStart.y);
     }
   };
 
@@ -2073,6 +2085,42 @@ export default function DigitalTwinMap({
     return { x, y };
   };
 
+  const fsBounds = useMemo(() => {
+    if (nodes.length === 0) return bounds;
+    let allMinLat = Infinity;
+    let allMaxLat = -Infinity;
+    let allMinLon = Infinity;
+    let allMaxLon = -Infinity;
+    nodes.forEach(n => {
+      if (n.lat < allMinLat) allMinLat = n.lat;
+      if (n.lat > allMaxLat) allMaxLat = n.lat;
+      if (n.lon < allMinLon) allMinLon = n.lon;
+      if (n.lon > allMaxLon) allMaxLon = n.lon;
+    });
+
+    const latDelta = allMaxLat - allMinLat;
+    const lonDelta = allMaxLon - allMinLon;
+    const paddingLat = Math.max(0.001, latDelta * 0.15);
+    const paddingLon = Math.max(0.001, lonDelta * 0.15);
+
+    return {
+      minLat: allMinLat - paddingLat,
+      maxLat: allMaxLat + paddingLat,
+      minLon: allMinLon - paddingLon,
+      maxLon: allMaxLon + paddingLon
+    };
+  }, [nodes, bounds]);
+
+  const getFsSvgCoords = (lat: number, lon: number) => {
+    const lonSpan = fsBounds.maxLon - fsBounds.minLon;
+    const latSpan = fsBounds.maxLat - fsBounds.minLat;
+
+    const x = lonSpan === 0 ? 50 : ((lon - fsBounds.minLon) / lonSpan) * 100;
+    const y = latSpan === 0 ? 50 : (1 - ((lat - fsBounds.minLat) / latSpan)) * 100;
+
+    return { x, y };
+  };
+
   // Translate local 3D horizontal plane (x, z) space back to SVG percentages (x, y)
   const localToSvgCoords = (lx: number, lz: number) => {
     const cosFactor = Math.cos(centerLat * Math.PI / 180);
@@ -2117,8 +2165,8 @@ export default function DigitalTwinMap({
               const fromNode = nodes.find(n => n.id === conn.from);
               const toNode = nodes.find(n => n.id === conn.to);
               if (!fromNode || !toNode) return null;
-              const start = getSvgCoords(fromNode.lat, fromNode.lon);
-              const end = getSvgCoords(toNode.lat, toNode.lon);
+              const start = getFsSvgCoords(fromNode.lat, fromNode.lon);
+              const end = getFsSvgCoords(toNode.lat, toNode.lon);
               const isAlarmed = fromNode.status === 'fault' || toNode.status === 'fault';
               const isSelected = selectedNodeId === fromNode.id || selectedNodeId === toNode.id;
               const isHighlighted = highlightedConnectionKeys.has(`${conn.from}-${conn.to}`);
@@ -2162,9 +2210,9 @@ export default function DigitalTwinMap({
             {selectedNodeId && (() => {
               const selectedNode = nodes.find(n => n.id === selectedNodeId);
               if (!selectedNode) return null;
-              const { x: cx, y: cy } = getSvgCoords(selectedNode.lat, selectedNode.lon);
+              const { x: cx, y: cy } = getFsSvgCoords(selectedNode.lat, selectedNode.lon);
               const latDiff = 500 / 111320;
-              const { y: yShift } = getSvgCoords(selectedNode.lat + latDiff, selectedNode.lon);
+              const { y: yShift } = getFsSvgCoords(selectedNode.lat + latDiff, selectedNode.lon);
               const rSvg = Math.abs(cy - yShift);
 
               return (
@@ -2184,7 +2232,7 @@ export default function DigitalTwinMap({
 
             {/* Render Nodes layout */}
             {nodes.map(node => {
-              const { x, y } = getSvgCoords(node.lat, node.lon);
+              const { x, y } = getFsSvgCoords(node.lat, node.lon);
               const isSelected = selectedNodeId === node.id;
               const isFault = node.status === 'fault';
 
