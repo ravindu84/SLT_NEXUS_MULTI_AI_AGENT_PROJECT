@@ -3483,6 +3483,40 @@ export default function DigitalTwinMap({
         </div>
       </div>
 
+      {/* GLOBAL FLOATING ZOOM CONTROLS (Bottom Right) */}
+      <div className="absolute bottom-8 right-8 flex flex-col gap-2 z-50 pointer-events-none">
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (viewMode === '2d') {
+              setSvgZoom(z => Math.min(4.0, z * 1.2));
+            } else {
+              const canvas = document.querySelector('canvas');
+              if (canvas) canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: -500, clientX: window.innerWidth/2, clientY: window.innerHeight/2, bubbles: true }));
+            }
+          }}
+          className="w-12 h-12 bg-slate-900/95 hover:bg-slate-800 text-[#38bdf8] text-2xl font-bold rounded-xl flex items-center justify-center pointer-events-auto shadow-[0_0_15px_rgba(56,189,248,0.3)] cursor-pointer border border-sky-500/40 hover:border-sky-400 transition-all backdrop-blur-md"
+          title="Zoom In"
+        >
+          +
+        </button>
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            if (viewMode === '2d') {
+              setSvgZoom(z => Math.max(0.6, z / 1.2));
+            } else {
+              const canvas = document.querySelector('canvas');
+              if (canvas) canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: 500, clientX: window.innerWidth/2, clientY: window.innerHeight/2, bubbles: true }));
+            }
+          }}
+          className="w-12 h-12 bg-slate-900/95 hover:bg-slate-800 text-[#38bdf8] text-2xl font-bold rounded-xl flex items-center justify-center pointer-events-auto shadow-[0_0_15px_rgba(56,189,248,0.3)] cursor-pointer border border-sky-500/40 hover:border-sky-400 transition-all backdrop-blur-md"
+          title="Zoom Out"
+        >
+          −
+        </button>
+      </div>
+
     </div>
   );
 }

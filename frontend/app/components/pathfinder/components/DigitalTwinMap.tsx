@@ -1,4 +1,3 @@
-// @ts-nocheck
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Html } from '@react-three/drei';
@@ -1670,16 +1669,6 @@ interface DigitalTwinMapProps {
   setPlaybackSpeed: (speed: number) => void;
   isWeatherActive: boolean;
   setIsWeatherActive: (active: boolean) => void;
-  viewMode?: '3d' | '2d';
-  setViewMode?: (mode: '3d' | '2d') => void;
-  isTopologyOverviewActive?: boolean;
-  setIsTopologyOverviewActive?: (active: boolean) => void;
-  windSpeed?: number;
-  setWindSpeed?: (speed: number) => void;
-  windDirection?: string;
-  setWindDirection?: (dir: string) => void;
-  isGlobalHudVisible?: boolean;
-  setIsGlobalHudVisible?: (visible: boolean) => void;
 }
 
 export default function DigitalTwinMap({
@@ -1695,17 +1684,7 @@ export default function DigitalTwinMap({
   playbackSpeed,
   setPlaybackSpeed,
   isWeatherActive,
-  setIsWeatherActive,
-  viewMode = '3d',
-  setViewMode = () => {},
-  isTopologyOverviewActive = true,
-  setIsTopologyOverviewActive = () => {},
-  windSpeed = 45,
-  setWindSpeed = () => {},
-  windDirection = 'NE',
-  setWindDirection = () => {},
-  isGlobalHudVisible = true,
-  setIsGlobalHudVisible = () => {}
+  setIsWeatherActive
 }: DigitalTwinMapProps) {
   const [resetKey, setResetKey] = useState(0);
   const [heatmapActive, setHeatmapActive] = useState<boolean>(false);
@@ -1713,11 +1692,13 @@ export default function DigitalTwinMap({
   const [geoZoomEnabled, setGeoZoomEnabled] = useState<boolean>(true);
   const [radarSpeed, setRadarSpeed] = useState<number>(1.0);
   const [isLegendOpen, setIsLegendOpen] = useState<boolean>(false);
+  const [isTopologyOverviewActive, setIsTopologyOverviewActive] = useState<boolean>(true);
   const [minimapZoom, setMinimapZoom] = useState<number>(1.2);
   const [minimapCenterLock, setMinimapCenterLock] = useState<boolean>(true);
 
   // WebGL Fallback and 2D Interactive Controls
   const [isWebGLSupported, setIsWebGLSupported] = useState<boolean>(true);
+  const [viewMode, setViewMode] = useState<'3d' | '2d'>('3d');
   const [svgPanX, setSvgPanX] = useState<number>(0);
   const [svgPanY, setSvgPanY] = useState<number>(0);
   const [svgZoom, setSvgZoom] = useState<number>(1.0);
@@ -1731,19 +1712,13 @@ export default function DigitalTwinMap({
     const target = e.target as SVGElement;
     if (target.closest('.interactive-node')) return;
     setIsPanningSvg(true);
-    const svgRect = e.currentTarget.getBoundingClientRect();
-    const panFactorX = 100 / svgRect.width;
-    const panFactorY = 100 / svgRect.height;
-    setPanStart({ x: (e.clientX * panFactorX) - svgPanX, y: (e.clientY * panFactorY) - svgPanY });
+    setPanStart({ x: e.clientX - svgPanX, y: e.clientY - svgPanY });
   };
 
   const handleSvgMouseMove = (e: React.MouseEvent<SVGSVGElement>) => {
     if (!isPanningSvg) return;
-    const svgRect = e.currentTarget.getBoundingClientRect();
-    const panFactorX = 100 / svgRect.width;
-    const panFactorY = 100 / svgRect.height;
-    setSvgPanX((e.clientX * panFactorX) - panStart.x);
-    setSvgPanY((e.clientY * panFactorY) - panStart.y);
+    setSvgPanX(e.clientX - panStart.x);
+    setSvgPanY(e.clientY - panStart.y);
   };
 
   const handleSvgMouseUp = () => {
@@ -1755,21 +1730,15 @@ export default function DigitalTwinMap({
     if (target.closest('.interactive-node')) return;
     if (e.touches.length === 1) {
       setIsPanningSvg(true);
-      const svgRect = e.currentTarget.getBoundingClientRect();
-      const panFactorX = 100 / svgRect.width;
-      const panFactorY = 100 / svgRect.height;
-      setPanStart({ x: (e.touches[0].clientX * panFactorX) - svgPanX, y: (e.touches[0].clientY * panFactorY) - svgPanY });
+      setPanStart({ x: e.touches[0].clientX - svgPanX, y: e.touches[0].clientY - svgPanY });
     }
   };
 
   const handleSvgTouchMove = (e: React.TouchEvent<SVGSVGElement>) => {
     if (!isPanningSvg) return;
     if (e.touches.length === 1) {
-      const svgRect = e.currentTarget.getBoundingClientRect();
-      const panFactorX = 100 / svgRect.width;
-      const panFactorY = 100 / svgRect.height;
-      setSvgPanX((e.touches[0].clientX * panFactorX) - panStart.x);
-      setSvgPanY((e.touches[0].clientY * panFactorY) - panStart.y);
+      setSvgPanX(e.touches[0].clientX - panStart.x);
+      setSvgPanY(e.touches[0].clientY - panStart.y);
     }
   };
 
@@ -1789,6 +1758,8 @@ export default function DigitalTwinMap({
 
   // New customizable Digital Twin dashboard state layers
   const [cameraPreset, setCameraPreset] = useState<string>('iso');
+  const [windSpeed, setWindSpeed] = useState<number>(45);
+  const [windDirection, setWindDirection] = useState<string>('NE');
   const [signalLayerActive, setSignalLayerActive] = useState<boolean>(true);
   const [segmentHeatmapActive, setSegmentHeatmapActive] = useState<boolean>(false);
 
@@ -1796,6 +1767,7 @@ export default function DigitalTwinMap({
   const [isGisHudOpen, setIsGisHudOpen] = useState<boolean>(true);
   const [isMinimapOpen, setIsMinimapOpen] = useState<boolean>(true);
   const [isTopHeaderOpen, setIsTopHeaderOpen] = useState<boolean>(true);
+  const [isGlobalHudVisible, setIsGlobalHudVisible] = useState<boolean>(true);
 
   // Drag states for personal HUD configurations to clear viewport
   const [gisPos, setGisPos] = useState({ x: 0, y: 0 });
@@ -2070,49 +2042,6 @@ export default function DigitalTwinMap({
     return { x, y };
   };
 
-  const fsBounds = useMemo(() => {
-    if (nodes.length === 0) return bounds;
-    let allMinLat = Infinity;
-    let allMaxLat = -Infinity;
-    let allMinLon = Infinity;
-    let allMaxLon = -Infinity;
-    nodes.forEach(n => {
-      if (n.lat < allMinLat) allMinLat = n.lat;
-      if (n.lat > allMaxLat) allMaxLat = n.lat;
-      if (n.lon < allMinLon) allMinLon = n.lon;
-      if (n.lon > allMaxLon) allMaxLon = n.lon;
-    });
-
-    const latDelta = allMaxLat - allMinLat;
-    const lonDelta = allMaxLon - allMinLon;
-    
-    // Create a square aspect ratio so map is not distorted
-    const maxDelta = Math.max(latDelta, lonDelta);
-    // Add 20% padding, or a tiny default if delta is 0
-    const padding = maxDelta === 0 ? 0.0001 : maxDelta * 0.2;
-    
-    const centerLat = (allMinLat + allMaxLat) / 2;
-    const centerLon = (allMinLon + allMaxLon) / 2;
-    const finalDelta = (maxDelta / 2) + padding;
-
-    return {
-      minLat: centerLat - finalDelta,
-      maxLat: centerLat + finalDelta,
-      minLon: centerLon - finalDelta,
-      maxLon: centerLon + finalDelta
-    };
-  }, [nodes, bounds]);
-
-  const getFsSvgCoords = (lat: number, lon: number) => {
-    const lonSpan = fsBounds.maxLon - fsBounds.minLon;
-    const latSpan = fsBounds.maxLat - fsBounds.minLat;
-
-    const x = lonSpan === 0 ? 50 : ((lon - fsBounds.minLon) / lonSpan) * 100;
-    const y = latSpan === 0 ? 50 : (1 - ((lat - fsBounds.minLat) / latSpan)) * 100;
-
-    return { x, y };
-  };
-
   // Translate local 3D horizontal plane (x, z) space back to SVG percentages (x, y)
   const localToSvgCoords = (lx: number, lz: number) => {
     const cosFactor = Math.cos(centerLat * Math.PI / 180);
@@ -2131,7 +2060,6 @@ export default function DigitalTwinMap({
 
         {/* Scaled Interactive Vector SVG Stage */}
         <svg
-          viewBox="0 0 100 100"
           className="w-full h-full relative z-10 cursor-gather active:cursor-grabbing"
           onMouseDown={handleSvgMouseDown}
           onMouseMove={handleSvgMouseMove}
@@ -2158,8 +2086,8 @@ export default function DigitalTwinMap({
               const fromNode = nodes.find(n => n.id === conn.from);
               const toNode = nodes.find(n => n.id === conn.to);
               if (!fromNode || !toNode) return null;
-              const start = getFsSvgCoords(fromNode.lat, fromNode.lon);
-              const end = getFsSvgCoords(toNode.lat, toNode.lon);
+              const start = getSvgCoords(fromNode.lat, fromNode.lon);
+              const end = getSvgCoords(toNode.lat, toNode.lon);
               const isAlarmed = fromNode.status === 'fault' || toNode.status === 'fault';
               const isSelected = selectedNodeId === fromNode.id || selectedNodeId === toNode.id;
               const isHighlighted = highlightedConnectionKeys.has(`${conn.from}-${conn.to}`);
@@ -2203,9 +2131,9 @@ export default function DigitalTwinMap({
             {selectedNodeId && (() => {
               const selectedNode = nodes.find(n => n.id === selectedNodeId);
               if (!selectedNode) return null;
-              const { x: cx, y: cy } = getFsSvgCoords(selectedNode.lat, selectedNode.lon);
+              const { x: cx, y: cy } = getSvgCoords(selectedNode.lat, selectedNode.lon);
               const latDiff = 500 / 111320;
-              const { y: yShift } = getFsSvgCoords(selectedNode.lat + latDiff, selectedNode.lon);
+              const { y: yShift } = getSvgCoords(selectedNode.lat + latDiff, selectedNode.lon);
               const rSvg = Math.abs(cy - yShift);
 
               return (
@@ -2225,7 +2153,7 @@ export default function DigitalTwinMap({
 
             {/* Render Nodes layout */}
             {nodes.map(node => {
-              const { x, y } = getFsSvgCoords(node.lat, node.lon);
+              const { x, y } = getSvgCoords(node.lat, node.lon);
               const isSelected = selectedNodeId === node.id;
               const isFault = node.status === 'fault';
 
@@ -2436,7 +2364,170 @@ export default function DigitalTwinMap({
       )}
 
       {/* Floating collapsible Map weather and topology header control panel */}
+      {isGlobalHudVisible && (
+        !isTopHeaderOpen ? (
+          <div 
+            className="absolute top-4 left-1/2 -translate-x-1/2 z-10"
+            style={{ transform: `translate3d(calc(-50% + ${topHeaderPos.x}px), ${topHeaderPos.y}px, 0px)` }}
+          >
+            <button
+              onClick={() => setIsTopHeaderOpen(true)}
+              className="flex items-center gap-2 px-3.5 py-1.5 bg-slate-900/95 backdrop-blur border border-slate-800 hover:border-slate-700 hover:bg-slate-850 rounded-full text-[9px] font-mono text-[#38bdf8] font-bold tracking-wider uppercase transition-all shadow-xl cursor-pointer select-none focus:outline-none"
+              title="Expand weather and environment controls panel"
+            >
+              <CloudLightning className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+              <span>ENV & TOPOLOGY TOOLS [Expand ▼]</span>
+            </button>
+          </div>
+        ) : (
+          <div 
+            className="absolute top-4 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur border border-slate-800 rounded-2xl px-4 py-2 z-10 flex flex-col xs:flex-row items-center justify-between gap-3 xs:gap-5 shadow-2xl pointer-events-auto select-none w-[90%] xs:w-[480px] sm:w-[580px] md:w-[660px] pt-3.5" 
+            id="map-top-header"
+            style={{ transform: `translate3d(calc(-50% + ${topHeaderPos.x}px), ${topHeaderPos.y}px, 0px)` }}
+          >
+            {/* Elegant high-tech Grab-Handle at the top */}
+            <div
+              onMouseDown={(e) => handleDragStart(e, 'topHeader')}
+              onTouchStart={(e) => handleDragStart(e, 'topHeader')}
+              className="absolute top-0 left-0 right-0 h-2 bg-slate-800/80 hover:bg-cyan-500/50 active:bg-cyan-500 cursor-grab active:cursor-grabbing rounded-t-2xl transition-all flex items-center justify-center"
+              title="Drag here to move the weather and topology panel"
+            >
+              <div className="flex gap-1 pointer-events-none">
+                <span className="w-1 h-1 rounded-full bg-slate-600" />
+                <span className="w-1 h-1 rounded-full bg-slate-600" />
+                <span className="w-1 h-1 rounded-full bg-slate-600" />
+              </div>
+            </div>
+        {/* Left Segment: Weather Controller */}
+        <div className="flex flex-col gap-1.5 border-b xs:border-b-0 xs:border-r border-slate-800/80 pb-2 xs:pb-0 xs:pr-4 shrink-0 justify-center">
+          <div className="flex items-center justify-between w-full xs:w-[260px] gap-3">
+            <div className="flex items-center gap-2">
+              <CloudLightning className={`w-4 h-4 shrink-0 ${isWeatherActive ? 'text-amber-400 animate-bounce' : 'text-slate-500'}`} />
+              <div className="flex flex-col">
+                <span className="text-[9px] font-bold text-slate-400 font-mono uppercase tracking-wider leading-none">WEATHER SIM</span>
+                <span className="text-[8px] font-mono leading-none text-slate-500 mt-0.5 max-w-[100px] truncate">
+                  {isWeatherActive ? "STORM ACTIVE" : "STABLE SKY"}
+                </span>
+              </div>
+            </div>
 
+            <button
+              onClick={() => setIsWeatherActive(!isWeatherActive)}
+              className={`px-2 py-1 rounded border font-mono text-[8.5px] font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
+                isWeatherActive
+                  ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/50 animate-pulse shadow-md"
+                  : "bg-slate-800 hover:bg-slate-750 text-slate-350 border-slate-700 hover:text-white"
+              }`}
+              id="btn-simulate-weather"
+              title="Simulate tropical storm front over Homagama (toggles weather-induced attenuation overlays)"
+            >
+              {isWeatherActive ? "SHUTDOWN" : "🌩️ TRIGGER STORM"}
+            </button>
+          </div>
+
+          {/* Expanded Storm Intensity / Wind Vectors control */}
+          {isWeatherActive && (
+            <div className="flex items-center gap-2 pt-1.5 border-t border-slate-800/40 w-full xs:w-[260px]">
+              {/* Wind Speed Selector */}
+              <div className="flex flex-col gap-0.5 flex-1">
+                <div className="flex justify-between items-center text-[7.5px] text-slate-400 font-mono">
+                  <span>WIND SPEED</span>
+                  <span className="text-amber-400 font-bold">{windSpeed} km/h</span>
+                </div>
+                <input
+                  type="range"
+                  min="15"
+                  max="120"
+                  step="5"
+                  value={windSpeed}
+                  onChange={(e) => setWindSpeed(parseInt(e.target.value))}
+                  className="w-full h-1 bg-slate-950 rounded appearance-none cursor-pointer accent-amber-400 border border-slate-800"
+                />
+              </div>
+
+              {/* Wind Direction Selector */}
+              <div className="flex flex-col gap-0.5 w-[75px]">
+                <span className="text-[7.5px] text-slate-400 font-mono">WIND DIR</span>
+                <select
+                  value={windDirection}
+                  onChange={(e) => setWindDirection(e.target.value)}
+                  className="bg-slate-950 border border-slate-800 text-[8px] font-mono text-amber-400 rounded py-0.5 px-0.5 outline-none w-full scrollbar-none"
+                >
+                  <option value="N">North ↑</option>
+                  <option value="NE">N-East ↗</option>
+                  <option value="E">East →</option>
+                  <option value="SE">S-East ↘</option>
+                  <option value="S">South ↓</option>
+                  <option value="SW">S-West ↙</option>
+                  <option value="W">West ←</option>
+                  <option value="NW">N-West ↖</option>
+                </select>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Middle Segment: View Presentation Mode Selection (Visible only if WebGL available) */}
+        {isWebGLSupported && (
+          <div className="flex items-center gap-2 border-b xs:border-b-0 xs:border-r border-slate-800/80 pb-2 xs:pb-0 xs:pr-4 shrink-0 justify-center">
+            <div className="flex items-center gap-2">
+              <Layers className="w-4 h-4 text-cyan-400" />
+              <div className="flex flex-col">
+                <span className="text-[9px] font-bold text-slate-400 font-mono uppercase tracking-wider leading-none">MAP PRESENTATION</span>
+                <span className="text-[8px] font-mono leading-none text-slate-500 mt-0.5">
+                  {viewMode === '3d' ? "3D CYBER" : "2D VECTOR"}
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={() => setViewMode(prev => prev === '3d' ? '2d' : '3d')}
+              className={`px-2 py-1 rounded border font-mono text-[8.5px] font-bold uppercase transition-all cursor-pointer select-none ${
+                viewMode === '3d'
+                  ? 'bg-slate-800 hover:bg-slate-750 text-slate-200 border-slate-700'
+                  : 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300 shadow-md shadow-cyan-500/10'
+              }`}
+            >
+              {viewMode === '3d' ? "⚙️ GO 2D SVG" : "📡 GO 3D MAP"}
+            </button>
+          </div>
+        )}
+
+        {/* Right Segment: Topology Overview */}
+        <div className="flex items-center justify-between w-full xs:w-auto gap-3 shrink-0">
+          <div className="flex items-center gap-2">
+            <Network className={`w-4 h-4 shrink-0 transition-all ${isTopologyOverviewActive ? 'text-cyan-400 animate-pulse' : 'text-slate-500'}`} />
+            <div className="flex flex-col">
+              <span className="text-[9px] font-bold text-slate-400 font-mono uppercase tracking-wider leading-none">TOPOLOGY CTL</span>
+              <span className="text-[8px] font-mono leading-none text-slate-500 mt-0.5 max-w-[100px] truncate">
+                {isTopologyOverviewActive ? "FLOW PARTICLES EN" : "STATIC GRID ONLY"}
+              </span>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsTopologyOverviewActive(!isTopologyOverviewActive)}
+            className={`px-2 py-1 rounded border font-mono text-[8.5px] font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
+              isTopologyOverviewActive
+                ? "bg-cyan-500/20 hover:bg-cyan-505/30 text-cyan-300 border-cyan-505/50 shadow-md shadow-cyan-505/10"
+                : "bg-slate-800 hover:bg-slate-750 text-slate-355 border-slate-700 hover:text-white"
+            }`}
+            id="btn-topology-overview"
+            title="Toggle animated data transmission particles based on fiber vs copper transmission directions"
+          >
+            {isTopologyOverviewActive ? "DEACTIVATE" : "📡 ENGAGE FLOW"}
+          </button>
+        </div>
+
+        {/* Rightmost: Close/Collapse header button */}
+        <button
+          onClick={() => setIsTopHeaderOpen(false)}
+          className="p-1 px-1.5 text-slate-505 hover:text-[#38bdf8] bg-slate-950/60 hover:bg-slate-850 rounded-lg border border-slate-805 transition-colors cursor-pointer text-[8.5px] font-mono leading-none flex items-center justify-center shadow focus:outline-none"
+          title="Collapse weather and topology controls"
+        >
+          ▲
+        </button>
+      </div>
+        )
+      )}
 
       {/* Animated Weather rain canvas and atmospheric lighting overlays */}
       {isWeatherActive && (
@@ -2471,7 +2562,7 @@ export default function DigitalTwinMap({
           </div>
         ) : (
           <div 
-            className="absolute top-4 right-4 p-3 bg-slate-900/95 backdrop-blur border border-slate-800 rounded-xl text-[10px] font-mono text-slate-300 shadow-2xl z-10 w-64 sm:w-[350px] pointer-events-auto select-none space-y-2.5 transition-all hover:border-[#38bdf8]/40 flex flex-col"
+            className="absolute top-4 right-4 p-3 bg-slate-900/95 backdrop-blur border border-slate-800 rounded-xl text-[10px] font-mono text-slate-300 shadow-2xl z-10 w-44 sm:w-52 pointer-events-auto select-none space-y-2.5 transition-all hover:border-[#38bdf8]/40 flex flex-col"
             id="persistent-2d-minimap"
             style={{ transform: `translate3d(${minimapPos.x}px, ${minimapPos.y}px, 0px)` }}
           >
@@ -3019,18 +3110,49 @@ export default function DigitalTwinMap({
           </div>
         </div>
 
-        <div>ZOOM: <span className="text-neutral-400">MOUSE SCROLL</span></div>
-        <div>ORBIT: <span className="text-neutral-400">LEFT DRAG</span></div>
-        <div>PAN: <span className="text-neutral-400">RIGHT DRAG</span></div>
+        <div className="flex items-center justify-between mt-1">
+          <div>ZOOM: <span className="text-neutral-400">MOUSE SCROLL</span></div>
+          <div className="flex gap-1">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                if (viewMode === '2d') {
+                  setSvgZoom(z => Math.max(0.6, z / 1.2));
+                } else {
+                  const canvas = document.querySelector('canvas');
+                  if (canvas) canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: 500, clientX: window.innerWidth/2, clientY: window.innerHeight/2, bubbles: true }));
+                }
+              }}
+              className="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-[#38bdf8] font-bold rounded flex items-center justify-center pointer-events-auto shadow cursor-pointer border border-slate-700 hover:border-sky-500/50 transition-all"
+              title="Zoom Out"
+            >
+              -
+            </button>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                if (viewMode === '2d') {
+                  setSvgZoom(z => Math.min(4.0, z * 1.2));
+                } else {
+                  const canvas = document.querySelector('canvas');
+                  if (canvas) canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: -500, clientX: window.innerWidth/2, clientY: window.innerHeight/2, bubbles: true }));
+                }
+              }}
+              className="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-[#38bdf8] font-bold rounded flex items-center justify-center pointer-events-auto shadow cursor-pointer border border-slate-700 hover:border-sky-500/50 transition-all"
+              title="Zoom In"
+            >
+              +
+            </button>
+          </div>
+        </div>
+        <div className="mt-1">ORBIT: <span className="text-neutral-400">LEFT DRAG</span></div>
+        <div className="mt-1">PAN: <span className="text-neutral-400">RIGHT DRAG</span></div>
         
         <div className="grid grid-cols-2 gap-1.5 mt-2">
           <button
             onClick={() => {
               onSelectNode(null);
               setResetKey(prev => prev + 1);
-              setSvgPanX(0);
-              setSvgPanY(0);
-              setSvgZoom(1.0);
             }}
             className="col-span-2 py-1.5 px-1 bg-teal-500/10 hover:bg-teal-500/20 active:bg-teal-500/35 border border-teal-500/30 hover:border-teal-500/50 rounded text-[9px] font-mono text-teal-300 hover:text-teal-200 transition-all uppercase flex items-center justify-center gap-1 cursor-pointer shadow-sm shadow-teal-500/5"
             id="btn-reset-view"
@@ -3361,8 +3483,8 @@ export default function DigitalTwinMap({
         </div>
       </div>
 
-      {/* Global Zoom Controls (Works for both 3D and 2D modes) */}
-      <div className="absolute bottom-6 right-6 flex flex-col gap-2 z-50">
+      {/* GLOBAL FLOATING ZOOM CONTROLS (Bottom Right) */}
+      <div className="absolute bottom-8 right-8 flex flex-col gap-2 z-50 pointer-events-none">
         <button 
           onClick={(e) => {
             e.stopPropagation();
@@ -3370,26 +3492,14 @@ export default function DigitalTwinMap({
               setSvgZoom(z => Math.min(4.0, z * 1.2));
             } else {
               const canvas = document.querySelector('canvas');
-              if (canvas) {
-                // Dispatch wheel event to OrbitControls
-                canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: -500, clientX: window.innerWidth/2, clientY: window.innerHeight/2, bubbles: true }));
-              }
+              if (canvas) canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: -500, clientX: window.innerWidth/2, clientY: window.innerHeight/2, bubbles: true }));
             }
           }}
-          className="w-10 h-10 bg-slate-900/80 border border-sky-500/30 hover:border-sky-400 hover:bg-slate-800 rounded flex items-center justify-center text-sky-400 shadow-lg backdrop-blur transition-all"
+          className="w-12 h-12 bg-slate-900/95 hover:bg-slate-800 text-[#38bdf8] text-2xl font-bold rounded-xl flex items-center justify-center pointer-events-auto shadow-[0_0_15px_rgba(56,189,248,0.3)] cursor-pointer border border-sky-500/40 hover:border-sky-400 transition-all backdrop-blur-md"
           title="Zoom In"
         >
-          <span className="text-xl font-bold leading-none">+</span>
+          +
         </button>
-        {viewMode === '2d' && (
-          <button 
-            onClick={(e) => { e.stopPropagation(); setSvgZoom(1.0); setSvgPanX(0); setSvgPanY(0); }}
-            className="w-10 h-10 bg-slate-900/80 border border-sky-500/30 hover:border-sky-400 hover:bg-slate-800 rounded flex items-center justify-center text-sky-400 shadow-lg backdrop-blur transition-all"
-            title="Reset View"
-          >
-            <span className="text-xs font-bold">RST</span>
-          </button>
-        )}
         <button 
           onClick={(e) => {
             e.stopPropagation();
@@ -3397,18 +3507,16 @@ export default function DigitalTwinMap({
               setSvgZoom(z => Math.max(0.6, z / 1.2));
             } else {
               const canvas = document.querySelector('canvas');
-              if (canvas) {
-                // Dispatch wheel event to OrbitControls
-                canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: 500, clientX: window.innerWidth/2, clientY: window.innerHeight/2, bubbles: true }));
-              }
+              if (canvas) canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: 500, clientX: window.innerWidth/2, clientY: window.innerHeight/2, bubbles: true }));
             }
           }}
-          className="w-10 h-10 bg-slate-900/80 border border-sky-500/30 hover:border-sky-400 hover:bg-slate-800 rounded flex items-center justify-center text-sky-400 shadow-lg backdrop-blur transition-all"
+          className="w-12 h-12 bg-slate-900/95 hover:bg-slate-800 text-[#38bdf8] text-2xl font-bold rounded-xl flex items-center justify-center pointer-events-auto shadow-[0_0_15px_rgba(56,189,248,0.3)] cursor-pointer border border-sky-500/40 hover:border-sky-400 transition-all backdrop-blur-md"
           title="Zoom Out"
         >
-          <span className="text-xl font-bold leading-none">-</span>
+          −
         </button>
       </div>
+
     </div>
   );
 }

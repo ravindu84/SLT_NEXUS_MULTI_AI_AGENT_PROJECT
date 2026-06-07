@@ -2179,6 +2179,7 @@ export default function App() {
 
           {/* Real 3D Canvas environment with cyberpunk coordinates projection */}
           <DigitalTwinMap
+            key={activeTab}
             nodes={activeNodes}
             connections={activeConnections}
             selectedNodeId={selectedNodeId}
