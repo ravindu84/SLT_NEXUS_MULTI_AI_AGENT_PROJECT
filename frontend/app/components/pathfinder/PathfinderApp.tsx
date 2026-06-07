@@ -27,7 +27,8 @@ import {
   Zap,
   Sparkles,
   Mic,
-  MicOff
+  MicOff,
+  CloudLightning
 } from 'lucide-react';
 import { NetworkNode, Connection, NodeStatus, NodeType } from './types';
 import { HISTORICAL_TIMELINE } from './historicalData';
@@ -566,6 +567,11 @@ export default function App() {
   const [resolvedAlarmsCount, setResolvedAlarmsCount] = useState<number>(0);
   const [totalFaultsEncounteredInSession, setTotalFaultsEncounteredInSession] = useState<number>(1);
   const [isWeatherActive, setIsWeatherActive] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<'3d' | '2d'>('3d');
+  const [isTopologyOverviewActive, setIsTopologyOverviewActive] = useState<boolean>(true);
+  const [windSpeed, setWindSpeed] = useState<number>(45);
+  const [windDirection, setWindDirection] = useState<string>('NE');
+  const [isGlobalHudVisible, setIsGlobalHudVisible] = useState<boolean>(true);
 
   // Voice Command integration states
   const [voiceIsListening, setVoiceIsListening] = useState<boolean>(false);
@@ -2014,6 +2020,78 @@ export default function App() {
             </AnimatePresence>
           </div>
 
+          {/* Section 1.5: Map Controls (lifted from map) */}
+          <div className="hidden xl:flex items-center justify-center gap-4 bg-slate-950/40 border border-slate-850/80 rounded-xl px-4 py-1.5 shrink-0">
+            {/* Weather Controller */}
+            <div className="flex items-center gap-3 border-r border-slate-800/80 pr-4">
+              <div className="flex items-center gap-2">
+                <CloudLightning className={`w-4 h-4 shrink-0 ${isWeatherActive ? 'text-amber-400 animate-bounce' : 'text-slate-500'}`} />
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-bold text-slate-400 font-mono uppercase tracking-wider leading-none">WEATHER SIM</span>
+                  <span className="text-[8px] font-mono leading-none text-slate-500 mt-0.5 max-w-[100px] truncate">
+                    {isWeatherActive ? "STORM ACTIVE" : "STABLE SKY"}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsWeatherActive(!isWeatherActive)}
+                className={`px-2 py-1 rounded border font-mono text-[8.5px] font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
+                  isWeatherActive
+                    ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/50 animate-pulse shadow-md"
+                    : "bg-slate-800 hover:bg-slate-750 text-slate-350 border-slate-700 hover:text-white"
+                }`}
+              >
+                {isWeatherActive ? "SHUTDOWN" : "🌩️ TRIGGER STORM"}
+              </button>
+            </div>
+
+            {/* Map Presentation */}
+            <div className="flex items-center gap-3 border-r border-slate-800/80 pr-4">
+              <div className="flex items-center gap-2">
+                <Layers className="w-4 h-4 text-cyan-400" />
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-bold text-slate-400 font-mono uppercase tracking-wider leading-none">MAP PRESENTATION</span>
+                  <span className="text-[8px] font-mono leading-none text-slate-500 mt-0.5">
+                    {viewMode === '3d' ? "3D CYBER" : "2D VECTOR"}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setViewMode(prev => prev === '3d' ? '2d' : '3d')}
+                className={`px-2 py-1 rounded border font-mono text-[8.5px] font-bold uppercase transition-all cursor-pointer select-none ${
+                  viewMode === '3d'
+                    ? 'bg-slate-800 hover:bg-slate-750 text-slate-200 border-slate-700'
+                    : 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300 shadow-md shadow-cyan-500/10'
+                }`}
+              >
+                {viewMode === '3d' ? "⚙️ GO 2D SVG" : "📡 GO 3D MAP"}
+              </button>
+            </div>
+
+            {/* Topology Overview */}
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Network className={`w-4 h-4 shrink-0 transition-all ${isTopologyOverviewActive ? 'text-cyan-400 animate-pulse' : 'text-slate-500'}`} />
+                <div className="flex flex-col">
+                  <span className="text-[9px] font-bold text-slate-400 font-mono uppercase tracking-wider leading-none">TOPOLOGY CTL</span>
+                  <span className="text-[8px] font-mono leading-none text-slate-500 mt-0.5 max-w-[100px] truncate">
+                    {isTopologyOverviewActive ? "FLOW PARTICLES EN" : "STATIC GRID ONLY"}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsTopologyOverviewActive(!isTopologyOverviewActive)}
+                className={`px-2 py-1 rounded border font-mono text-[8.5px] font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
+                  isTopologyOverviewActive
+                    ? "bg-cyan-500/20 hover:bg-cyan-505/30 text-cyan-300 border-cyan-505/50 shadow-md shadow-cyan-505/10"
+                    : "bg-slate-800 hover:bg-slate-750 text-slate-355 border-slate-700 hover:text-white"
+                }`}
+              >
+                {isTopologyOverviewActive ? "DEACTIVATE" : "📡 ENGAGE FLOW"}
+              </button>
+            </div>
+          </div>
+
           {/* Section 2: Global Diagnostic Controller */}
           <div className="flex items-center gap-3 bg-slate-950/40 border border-slate-850/80 rounded-xl px-4 py-2 font-mono flex-1 max-w-[460px]">
             {isCommandBarScanning ? (
@@ -2114,6 +2192,16 @@ export default function App() {
             setPlaybackSpeed={setPlaybackSpeed}
             isWeatherActive={isWeatherActive}
             setIsWeatherActive={setIsWeatherActive}
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            isTopologyOverviewActive={isTopologyOverviewActive}
+            setIsTopologyOverviewActive={setIsTopologyOverviewActive}
+            windSpeed={windSpeed}
+            setWindSpeed={setWindSpeed}
+            windDirection={windDirection}
+            setWindDirection={setWindDirection}
+            isGlobalHudVisible={isGlobalHudVisible}
+            setIsGlobalHudVisible={setIsGlobalHudVisible}
           />
         </div>
 
