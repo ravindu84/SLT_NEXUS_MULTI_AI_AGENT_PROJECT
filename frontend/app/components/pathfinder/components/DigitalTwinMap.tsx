@@ -2100,14 +2100,21 @@ export default function DigitalTwinMap({
 
     const latDelta = allMaxLat - allMinLat;
     const lonDelta = allMaxLon - allMinLon;
-    const paddingLat = Math.max(0.001, latDelta * 0.15);
-    const paddingLon = Math.max(0.001, lonDelta * 0.15);
+    
+    // Create a square aspect ratio so map is not distorted
+    const maxDelta = Math.max(latDelta, lonDelta);
+    // Add 20% padding, or a tiny default if delta is 0
+    const padding = maxDelta === 0 ? 0.0001 : maxDelta * 0.2;
+    
+    const centerLat = (allMinLat + allMaxLat) / 2;
+    const centerLon = (allMinLon + allMaxLon) / 2;
+    const finalDelta = (maxDelta / 2) + padding;
 
     return {
-      minLat: allMinLat - paddingLat,
-      maxLat: allMaxLat + paddingLat,
-      minLon: allMinLon - paddingLon,
-      maxLon: allMaxLon + paddingLon
+      minLat: centerLat - finalDelta,
+      maxLat: centerLat + finalDelta,
+      minLon: centerLon - finalDelta,
+      maxLon: centerLon + finalDelta
     };
   }, [nodes, bounds]);
 
@@ -3036,6 +3043,9 @@ export default function DigitalTwinMap({
             onClick={() => {
               onSelectNode(null);
               setResetKey(prev => prev + 1);
+              setSvgPanX(0);
+              setSvgPanY(0);
+              setSvgZoom(1.0);
             }}
             className="col-span-2 py-1.5 px-1 bg-teal-500/10 hover:bg-teal-500/20 active:bg-teal-500/35 border border-teal-500/30 hover:border-teal-500/50 rounded text-[9px] font-mono text-teal-300 hover:text-teal-200 transition-all uppercase flex items-center justify-center gap-1 cursor-pointer shadow-sm shadow-teal-500/5"
             id="btn-reset-view"
