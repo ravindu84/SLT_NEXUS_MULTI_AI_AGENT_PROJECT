@@ -2015,9 +2015,27 @@ export default function DigitalTwinMap({
 
     const latDelta = allMaxLat - allMinLat;
     const lonDelta = allMaxLon - allMinLon;
-    // Lowered the minimum bounds so closely packed nodes can scale properly to fill the 2D view
-    const baseLatSpan = Math.max(0.0005, latDelta * 1.3);
-    const baseLonSpan = Math.max(0.0005, lonDelta * 1.3);
+    
+    // To preserve geographic aspect ratio in a 100x100 square SVG view:
+    // 1 degree latitude = 111.32 km
+    // 1 degree longitude = 111.32 * cos(lat) km
+    const cosLat = Math.cos(((allMinLat + allMaxLat) / 2) * (Math.PI / 180));
+    
+    const latMeters = latDelta * 111320;
+    const lonMeters = lonDelta * 111320 * cosLat;
+    
+    // Find the dominant dimension to make the bounding box a physical square
+    const maxMeters = Math.max(latMeters, lonMeters);
+    
+    // Ensure we don't divide by zero if there's only 1 node
+    const safeMeters = maxMeters === 0 ? 100 : maxMeters;
+    
+    // Add 30% padding
+    const paddedMeters = safeMeters * 1.3;
+    
+    // Convert back to degrees for the spans
+    const baseLatSpan = paddedMeters / 111320;
+    const baseLonSpan = paddedMeters / (111320 * cosLat);
 
     // Dynamic centering coordinate selection
     const selectedNodeObj = selectedNodeId ? nodes.find(n => n.id === selectedNodeId) : null;
