@@ -39,16 +39,16 @@ const capacityData = [
   { name: 'Allocated', value: 62 },
   { name: 'Available', value: 38 },
 ];
-const COLORS = ['#ef4444', '#1e293b']; // Red and dark slate
+const COLORS = ['#06b6d4', '#1e293b']; // Cyan and dark slate
 
-const revenueData = [
-  { name: '2016', sales: 40, revenue: 24 },
-  { name: '2017', sales: 30, revenue: 13 },
-  { name: '2018', sales: 20, revenue: 98 },
-  { name: '2019', sales: 27, revenue: 39 },
-  { name: '2020', sales: 18, revenue: 48 },
-  { name: '2021', sales: 23, revenue: 38 },
-  { name: '2022', sales: 34, revenue: 43 },
+const networkData = [
+  { name: 'Mon', traffic: 120, faults: 24 },
+  { name: 'Tue', traffic: 130, faults: 13 },
+  { name: 'Wed', traffic: 110, faults: 48 },
+  { name: 'Thu', traffic: 160, faults: 39 },
+  { name: 'Fri', traffic: 140, faults: 48 },
+  { name: 'Sat', traffic: 150, faults: 38 },
+  { name: 'Sun', traffic: 180, faults: 43 },
 ];
 
 export default function AdminDashboard() {
@@ -180,53 +180,69 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* CHART 1: System Load (DarkPan Style Bar Chart) */}
-        <div className="bg-[#1c1d25] border border-slate-800/50 rounded-xl p-6 h-[350px] flex flex-col shadow-lg">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-base font-bold text-white">Worldwide Sales (Traffic)</h3>
-            <button className="text-xs text-cyan-500 hover:text-cyan-400 font-bold transition-colors">Show All</button>
+        <div className="bg-[#1c1d25] border border-slate-800/50 rounded-xl p-6 h-[350px] flex flex-col shadow-lg relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-cyan-500/5 blur-[50px] rounded-full pointer-events-none"></div>
+          <div className="flex justify-between items-center mb-6 relative z-10">
+            <h3 className="text-base font-bold text-white flex items-center gap-2"><Activity className="w-4 h-4 text-cyan-400"/> Network Traffic (TB)</h3>
+            <button className="text-xs text-cyan-500 hover:text-cyan-400 font-bold transition-colors border border-cyan-500/30 px-3 py-1 rounded-full bg-cyan-500/10">Show All</button>
           </div>
-          <div className="flex-1 min-h-0">
+          <div className="flex-1 min-h-0 relative z-10">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={revenueData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-                <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
-                <RechartsTooltip 
-                  contentStyle={{ backgroundColor: '#13141a', border: '1px solid #334155', borderRadius: '8px' }}
-                  itemStyle={{ color: '#e2e8f0' }}
-                  cursor={{fill: '#1e293b'}}
-                />
-                <Bar dataKey="sales" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="revenue" fill="#7f1d1d" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* CHART 2: Sales & Revenue (DarkPan Style Area Chart) */}
-        <div className="bg-[#1c1d25] border border-slate-800/50 rounded-xl p-6 h-[350px] flex flex-col shadow-lg">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-base font-bold text-white">Sales & Revenue (Faults)</h3>
-            <button className="text-xs text-cyan-500 hover:text-cyan-400 font-bold transition-colors">Show All</button>
-          </div>
-          <div className="flex-1 min-h-0">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <BarChart data={networkData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
-                  <linearGradient id="colorSales" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1}/>
+                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#06b6d4" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#0891b2" stopOpacity={0.4}/>
+                  </linearGradient>
+                  <linearGradient id="barGradient2" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#10b981" stopOpacity={1}/>
+                    <stop offset="100%" stopColor="#047857" stopOpacity={0.4}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
                 <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
                 <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
                 <RechartsTooltip 
-                  contentStyle={{ backgroundColor: '#13141a', border: '1px solid #334155', borderRadius: '8px' }}
+                  contentStyle={{ backgroundColor: 'rgba(19, 20, 26, 0.9)', border: '1px solid rgba(6, 182, 212, 0.3)', borderRadius: '8px', backdropFilter: 'blur(8px)' }}
+                  itemStyle={{ color: '#e2e8f0' }}
+                  cursor={{fill: 'rgba(30, 41, 59, 0.5)'}}
+                />
+                <Bar dataKey="traffic" fill="url(#barGradient)" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="faults" fill="url(#barGradient2)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* CHART 2: Sales & Revenue (DarkPan Style Area Chart) */}
+        <div className="bg-[#1c1d25] border border-slate-800/50 rounded-xl p-6 h-[350px] flex flex-col shadow-lg relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-[50px] rounded-full pointer-events-none"></div>
+          <div className="flex justify-between items-center mb-6 relative z-10">
+            <h3 className="text-base font-bold text-white flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-emerald-400"/> Fault Tickets Volume</h3>
+            <button className="text-xs text-cyan-500 hover:text-cyan-400 font-bold transition-colors border border-cyan-500/30 px-3 py-1 rounded-full bg-cyan-500/10">Show All</button>
+          </div>
+          <div className="flex-1 min-h-0 relative z-10">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={networkData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorTraffic" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.6}/>
+                    <stop offset="95%" stopColor="#06b6d4" stopOpacity={0.0}/>
+                  </linearGradient>
+                  <linearGradient id="colorFaults" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.6}/>
+                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+                <XAxis dataKey="name" stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="#64748b" fontSize={12} tickLine={false} axisLine={false} />
+                <RechartsTooltip 
+                  contentStyle={{ backgroundColor: 'rgba(19, 20, 26, 0.9)', border: '1px solid rgba(16, 185, 129, 0.3)', borderRadius: '8px', backdropFilter: 'blur(8px)' }}
                   itemStyle={{ color: '#e2e8f0' }}
                 />
-                <Area type="monotone" dataKey="sales" stroke="#ef4444" strokeWidth={3} fillOpacity={1} fill="url(#colorSales)" />
-                <Area type="monotone" dataKey="revenue" stroke="#7f1d1d" strokeWidth={3} fill="none" />
+                <Area type="monotone" dataKey="traffic" stroke="#06b6d4" strokeWidth={3} fillOpacity={1} fill="url(#colorTraffic)" />
+                <Area type="monotone" dataKey="faults" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorFaults)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -237,9 +253,10 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* CHART 3: Pie Chart capacity */}
-        <div className="bg-[#1c1d25] border border-slate-800/50 rounded-xl p-6 h-[350px] flex flex-col shadow-lg">
-          <div className="flex justify-between items-center mb-6">
-            <h3 className="text-base font-bold text-white">Total Revenue (Capacity)</h3>
+        <div className="bg-[#1c1d25] border border-slate-800/50 rounded-xl p-6 h-[350px] flex flex-col shadow-lg relative overflow-hidden">
+          <div className="absolute bottom-0 left-0 w-32 h-32 bg-cyan-500/5 blur-[50px] rounded-full pointer-events-none"></div>
+          <div className="flex justify-between items-center mb-6 relative z-10">
+            <h3 className="text-base font-bold text-white flex items-center gap-2"><Database className="w-4 h-4 text-cyan-400"/> Network Capacity Allocation</h3>
           </div>
           <div className="flex-1 min-h-0 relative flex items-center justify-center">
             <ResponsiveContainer width="100%" height="100%">
