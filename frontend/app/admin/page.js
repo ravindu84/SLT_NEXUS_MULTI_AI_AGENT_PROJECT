@@ -171,12 +171,12 @@ export default function AdminDashboard() {
       {/* Premium Stats Row like DarkPan */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: 'Active Tickets', value: totalTickets - resolvedTickets, icon: AlertTriangle, color: 'text-cyan-500', bg: 'bg-[#1c1d25]' },
-          { label: 'Technicians Online', value: activeTechs, icon: Users, color: 'text-cyan-500', bg: 'bg-[#1c1d25]' },
-          { label: 'Loops Bound', value: totalLoops, icon: Zap, color: 'text-cyan-500', bg: 'bg-[#1c1d25]' },
-          { label: 'Blocks Mined', value: data.ledger.length, icon: Database, color: 'text-cyan-500', bg: 'bg-[#1c1d25]' }
+          { label: 'Active Tickets', value: totalTickets - resolvedTickets, icon: AlertTriangle, color: 'text-blue-400', bg: 'bg-gradient-to-br from-blue-900/80 to-[#0f172a] border-t border-l border-blue-500/30 border-b-black/60 border-r-black/60 shadow-[4px_4px_15px_rgba(0,0,0,0.6)] shadow-blue-900/20' },
+          { label: 'Technicians Online', value: activeTechs, icon: Users, color: 'text-emerald-400', bg: 'bg-gradient-to-br from-emerald-900/80 to-[#0f172a] border-t border-l border-emerald-500/30 border-b-black/60 border-r-black/60 shadow-[4px_4px_15px_rgba(0,0,0,0.6)] shadow-emerald-900/20' },
+          { label: 'Loops Bound', value: totalLoops, icon: Zap, color: 'text-sky-400', bg: 'bg-gradient-to-br from-sky-800/80 to-[#0f172a] border-t border-l border-sky-400/30 border-b-black/60 border-r-black/60 shadow-[4px_4px_15px_rgba(0,0,0,0.6)] shadow-sky-800/20' },
+          { label: 'Blocks Mined', value: data.ledger.length, icon: Database, color: 'text-teal-400', bg: 'bg-gradient-to-br from-teal-800/80 to-[#0f172a] border-t border-l border-teal-400/30 border-b-black/60 border-r-black/60 shadow-[4px_4px_15px_rgba(0,0,0,0.6)] shadow-teal-800/20' }
         ].map((stat, i) => (
-          <div key={i} className={`${stat.bg} rounded-xl p-6 flex items-center justify-between border border-slate-800/50 hover:border-cyan-500/30 transition-all shadow-lg`}>
+          <div key={i} className={`${stat.bg} rounded-xl p-6 flex items-center justify-between transition-all transform hover:-translate-y-1 hover:shadow-2xl`}>
             <div className="flex items-center gap-4">
               <stat.icon className={`w-10 h-10 ${stat.color}`} />
               <div>
