@@ -2384,8 +2384,8 @@ export default function DigitalTwinMap({
       {isGlobalHudVisible && (
         !isTopHeaderOpen ? (
           <div 
-            className="absolute top-4 left-1/2 -translate-x-1/2 z-10"
-            style={{ transform: `translate3d(calc(-50% + ${topHeaderPos.x}px), ${topHeaderPos.y}px, 0px)` }}
+            className="absolute top-20 left-4 z-10"
+            style={{ transform: `translate3d(${topHeaderPos.x}px, ${topHeaderPos.y}px, 0px)` }}
           >
             <button
               onClick={() => setIsTopHeaderOpen(true)}
@@ -2398,9 +2398,9 @@ export default function DigitalTwinMap({
           </div>
         ) : (
           <div 
-            className="absolute top-4 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur border border-slate-800 rounded-2xl px-4 py-2 z-10 flex flex-col xs:flex-row items-center justify-between gap-3 xs:gap-5 shadow-2xl pointer-events-auto select-none w-[90%] xs:w-[480px] sm:w-[580px] md:w-[660px] pt-3.5" 
+            className="absolute top-20 left-4 bg-slate-900/95 backdrop-blur border border-slate-800 rounded-2xl px-4 py-2 z-10 flex flex-col xs:flex-row items-center justify-between gap-3 xs:gap-5 shadow-2xl pointer-events-auto select-none w-[90%] xs:w-[480px] sm:w-[580px] md:w-[660px] pt-3.5" 
             id="map-top-header"
-            style={{ transform: `translate3d(calc(-50% + ${topHeaderPos.x}px), ${topHeaderPos.y}px, 0px)` }}
+            style={{ transform: `translate3d(${topHeaderPos.x}px, ${topHeaderPos.y}px, 0px)` }}
           >
             {/* Elegant high-tech Grab-Handle at the top */}
             <div
@@ -2579,7 +2579,7 @@ export default function DigitalTwinMap({
           </div>
         ) : (
           <div 
-            className="absolute top-4 right-4 p-3 bg-slate-900/95 backdrop-blur border border-slate-800 rounded-xl text-[10px] font-mono text-slate-300 shadow-2xl z-10 w-44 sm:w-52 pointer-events-auto select-none space-y-2.5 transition-all hover:border-[#38bdf8]/40 flex flex-col"
+            className="absolute top-4 right-4 p-3 bg-slate-900/95 backdrop-blur border border-slate-800 rounded-xl text-[10px] font-mono text-slate-300 shadow-2xl z-10 w-64 sm:w-[350px] pointer-events-auto select-none space-y-2.5 transition-all hover:border-[#38bdf8]/40 flex flex-col"
             id="persistent-2d-minimap"
             style={{ transform: `translate3d(${minimapPos.x}px, ${minimapPos.y}px, 0px)` }}
           >

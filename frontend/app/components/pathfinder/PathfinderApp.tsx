@@ -2082,8 +2082,8 @@ export default function App() {
 
         </div>
 
-        {/* Card C: The 3D Digital Twin map container viewport - Full-width horizontal expansion with increased 510px height */}
-        <div className="relative overflow-hidden bg-slate-950 border border-[rgba(56,189,248,0.2)] rounded-xl shadow-lg h-[510px]" id="bento-map-viewport">
+        {/* Card C: The 3D Digital Twin map container viewport - Full-width horizontal expansion with increased 800px height */}
+        <div className="relative overflow-hidden bg-slate-950 border border-[rgba(56,189,248,0.2)] rounded-xl shadow-lg h-[800px] min-h-[800px]" id="bento-map-viewport">
           
           {/* Overlay Tag for actively selected Sector */}
           <div className="absolute top-4 left-4 z-[40] pointer-events-none flex flex-col gap-1 font-mono select-none">
