@@ -6,7 +6,10 @@ import { useAudio } from "../context/AudioContext";
 import { Phone, Lock, Hash, ArrowRight, Zap, User, CreditCard, Mail, MapPin, ShieldCheck, QrCode, Smartphone } from "lucide-react";
 import styles from "../page.module.css";
 
-export default function AuthPage({ onAuthSuccess }) {
+import { useRouter } from "next/navigation";
+
+export default function AuthPage() {
+  const router = useRouter();
   const { playMusic } = useAudio();
   const [tab, setTab] = useState("existing"); // "existing" or "new"
   const [step, setStep] = useState(1);
@@ -63,7 +66,7 @@ export default function AuthPage({ onAuthSuccess }) {
     // Prototype: Accept any 6 digit OTP
     setTimeout(() => {
       setLoading(false);
-      if (onAuthSuccess) onAuthSuccess(phone);
+      router.push('/admin');
     }, 800);
   };
 
@@ -104,7 +107,7 @@ export default function AuthPage({ onAuthSuccess }) {
     // Prototype: Accept any OTP for new connection
     setTimeout(() => {
       setLoading(false);
-      if (onAuthSuccess) onAuthSuccess(mobile);
+      router.push('/admin');
     }, 800);
   };
 
