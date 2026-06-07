@@ -1844,7 +1844,7 @@ export default function App({ onBack }: { onBack?: () => void }) {
 
         {/* UNIFIED GLOBAL COMMAND BAR */}
         <div 
-          className="relative bg-slate-900/85 backdrop-blur-md border border-[rgba(56,189,248,0.25)] rounded-2xl p-3.5 shadow-2xl flex flex-col lg:flex-row flex-wrap items-stretch lg:items-center justify-between gap-4 select-none"
+          className="relative z-[100] bg-slate-900/85 backdrop-blur-md border border-[rgba(56,189,248,0.25)] rounded-2xl p-3.5 shadow-2xl flex flex-col lg:flex-row flex-wrap items-stretch lg:items-center justify-between gap-4 select-none"
           id="unified-global-command-bar"
         >
           {/* Active scanning overlay pattern */}
@@ -1853,7 +1853,7 @@ export default function App({ onBack }: { onBack?: () => void }) {
           )}
 
           {/* Section 1: Search & Page Dropdown */}
-          <div className="flex-1 min-w-[280px] flex flex-col md:flex-row items-stretch gap-2 relative text-[11px] font-mono z-50">
+          <div className="flex-1 min-w-[280px] flex flex-col md:flex-row items-stretch gap-2 relative text-[11px] font-mono">
             
             {/* Custom Page Dropdown */}
             <div className="relative shrink-0">
@@ -1866,21 +1866,21 @@ export default function App({ onBack }: { onBack?: () => void }) {
                    activeTab === 'copper' ? <Radio className="w-4 h-4 text-orange-400" /> : 
                    <Network className="w-4 h-4 text-emerald-400" />}
                   <span>
-                    {activeTab === 'main' ? '[PAGE 1] HOMAGAMA TWIN' : 
-                     activeTab === 'copper' ? '[PAGE 2] COPPER MSAN' : '[PAGE 3] FTTH CABINETS'}
+                    {activeTab === 'main' ? 'HOMAGAMA TWIN' : 
+                     activeTab === 'copper' ? 'COPPER MSAN INFRA' : 'FTTH FIBER CABS'}
                   </span>
                 </div>
                 <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isPageDropdownOpen ? 'rotate-180' : ''}`} />
               </button>
               
               {isPageDropdownOpen && (
-                <div className="absolute top-full left-0 mt-2 w-full min-w-[240px] bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2">
+                <div className="absolute top-full left-0 mt-2 w-full min-w-[240px] bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-[110] animate-in fade-in slide-in-from-top-2">
                   <button 
                     onClick={() => { setActiveTab('main'); setIsPageDropdownOpen(false); }}
                     className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-left hover:bg-slate-800 transition-colors ${activeTab === 'main' ? 'bg-slate-800 text-cyan-400' : 'text-slate-300'}`}
                   >
                     <div className="flex items-center gap-2 font-bold">
-                      <Compass className="w-4 h-4" /> [PAGE 1] HOMAGAMA
+                      <Compass className="w-4 h-4" /> HOMAGAMA TWIN
                     </div>
                     {nodes.filter(n => n.id.startsWith('node-') && n.status === 'fault').length > 0 && (
                       <span className="text-[9px] bg-rose-500 text-slate-950 font-black px-1.5 py-0.5 rounded animate-pulse">ALARM</span>
@@ -1891,7 +1891,7 @@ export default function App({ onBack }: { onBack?: () => void }) {
                     className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-left hover:bg-slate-800 border-t border-slate-800 transition-colors ${activeTab === 'copper' ? 'bg-slate-800 text-orange-400' : 'text-slate-300'}`}
                   >
                     <div className="flex items-center gap-2 font-bold">
-                      <Radio className="w-4 h-4" /> [PAGE 2] COPPER MSAN
+                      <Radio className="w-4 h-4" /> COPPER MSAN INFRA
                     </div>
                     {nodes.filter(n => n.id.startsWith('msan-') && n.status === 'fault').length > 0 && (
                       <span className="text-[9px] bg-rose-500 text-slate-950 font-black px-1.5 py-0.5 rounded animate-pulse">DOWN</span>
@@ -1902,7 +1902,7 @@ export default function App({ onBack }: { onBack?: () => void }) {
                     className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-left hover:bg-slate-800 border-t border-slate-800 transition-colors ${activeTab === 'ftth' ? 'bg-slate-800 text-emerald-400' : 'text-slate-300'}`}
                   >
                     <div className="flex items-center gap-2 font-bold">
-                      <Network className="w-4 h-4" /> [PAGE 3] FTTH CABS
+                      <Network className="w-4 h-4" /> FTTH FIBER CABS
                     </div>
                     {nodes.filter(n => n.id.startsWith('cab-') && n.status === 'fault').length > 0 && (
                       <span className="text-[9px] bg-rose-500 text-slate-950 font-black px-1.5 py-0.5 rounded animate-pulse">DOWN</span>
