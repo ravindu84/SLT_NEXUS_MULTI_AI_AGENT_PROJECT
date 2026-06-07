@@ -1705,23 +1705,8 @@ export default function DigitalTwinMap({
   const [isPanningSvg, setIsPanningSvg] = useState<boolean>(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
-  useEffect(() => {
-    try {
-      const canvas = document.createElement('canvas');
-      const supported = !!(
-        window.WebGLRenderingContext &&
-        (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
-      );
-      setIsWebGLSupported(supported);
-      if (!supported) {
-        setViewMode('2d');
-        console.warn('WebGL support not found. Falling back to High-Fidelity 2D SVG vector mode.');
-      }
-    } catch (e) {
-      setIsWebGLSupported(false);
-      setViewMode('2d');
-    }
-  }, []);
+  // WebGL Support check removed to prevent premature 2D fallback when contexts are exhausted.
+  // We rely on WebGLErrorBoundary to catch actual rendering failures.
 
   const handleSvgMouseDown = (e: React.MouseEvent<SVGSVGElement>) => {
     const target = e.target as SVGElement;
@@ -2344,7 +2329,6 @@ export default function DigitalTwinMap({
       {viewMode === '3d' ? (
         <WebGLErrorBoundary
           fallback={renderFullscreen2DMap()}
-          onError={() => setViewMode('2d')}
         >
           <Canvas
             shadows
@@ -3126,9 +3110,43 @@ export default function DigitalTwinMap({
           </div>
         </div>
 
-        <div>ZOOM: <span className="text-neutral-400">MOUSE SCROLL</span></div>
-        <div>ORBIT: <span className="text-neutral-400">LEFT DRAG</span></div>
-        <div>PAN: <span className="text-neutral-400">RIGHT DRAG</span></div>
+        <div className="flex items-center justify-between mt-1">
+          <div>ZOOM: <span className="text-neutral-400">MOUSE SCROLL</span></div>
+          <div className="flex gap-1">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                if (viewMode === '2d') {
+                  setSvgZoom(z => Math.max(0.6, z / 1.2));
+                } else {
+                  const canvas = document.querySelector('canvas');
+                  if (canvas) canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: 500, clientX: window.innerWidth/2, clientY: window.innerHeight/2, bubbles: true }));
+                }
+              }}
+              className="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-[#38bdf8] font-bold rounded flex items-center justify-center pointer-events-auto shadow cursor-pointer border border-slate-700 hover:border-sky-500/50 transition-all"
+              title="Zoom Out"
+            >
+              -
+            </button>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                if (viewMode === '2d') {
+                  setSvgZoom(z => Math.min(4.0, z * 1.2));
+                } else {
+                  const canvas = document.querySelector('canvas');
+                  if (canvas) canvas.dispatchEvent(new WheelEvent('wheel', { deltaY: -500, clientX: window.innerWidth/2, clientY: window.innerHeight/2, bubbles: true }));
+                }
+              }}
+              className="w-5 h-5 bg-slate-800 hover:bg-slate-700 text-[#38bdf8] font-bold rounded flex items-center justify-center pointer-events-auto shadow cursor-pointer border border-slate-700 hover:border-sky-500/50 transition-all"
+              title="Zoom In"
+            >
+              +
+            </button>
+          </div>
+        </div>
+        <div className="mt-1">ORBIT: <span className="text-neutral-400">LEFT DRAG</span></div>
+        <div className="mt-1">PAN: <span className="text-neutral-400">RIGHT DRAG</span></div>
         
         <div className="grid grid-cols-2 gap-1.5 mt-2">
           <button
