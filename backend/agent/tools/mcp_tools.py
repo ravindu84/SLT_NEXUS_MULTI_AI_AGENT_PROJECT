@@ -31,6 +31,23 @@ async def create_fault_ticket(phone_number: str, issue_type: str, description: s
 async def register_customer_agreement(name: str, address: str, contact_number: str, id_number: str, package_name: str) -> str:
     """Registers a new customer agreement in the CRM and commits it to the Vault Blockchain."""
     from backend.agent.tools.vault import commit_sla_to_ledger
+    import sqlite3
+    import os
+    
+    # Save to SQLite prospects table
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "slt_dummy.db")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute('''
+            INSERT OR REPLACE INTO prospects (mobile_number, name, nic, email, kyc_verified, created_at)
+            VALUES (?, ?, ?, ?, ?, datetime('now'))
+        ''', (contact_number, name, id_number, address, 1))
+        conn.commit()
+        conn.close()
+    except Exception as e:
+        print(f"Error saving prospect: {e}")
+
     # Mocking CRM update
     crm_msg = f"Customer {name} ({id_number}) added to CRM for {package_name}."
     # Calling the Vault Agent tool directly inside this tool to chain the blockchain hook
@@ -68,7 +85,7 @@ def get_data_usage(phone_number: str) -> str:
 
 @tool
 def get_billing_info(phone_number: str) -> str:
-    """Fetches the outstanding bill balance, NXC coin balance, and 3-month billing history."""
+    """Fetches the outstanding bill balance, NXC coin balance, and 3-month billing history. Use this to answer any questions about the current bill, past 3 months' bills, or NXC balance."""
     import sqlite3
     import os
     import json
@@ -104,7 +121,7 @@ def get_billing_info(phone_number: str) -> str:
 
 @tool
 async def get_daily_usage_logs(phone_number: str):
-    """Fetches the day with the HIGHEST data consumption in the last 30 days, including GB and percentage breakdown per site (Facebook, YouTube, Google, etc.). Use this to tell the user their maximum usage day and what sites consumed the most data."""
+    """Fetches the daily data consumption logs for the last 30 days, including GB and percentage breakdown per site (Facebook, YouTube, Google, etc.). Use this to answer questions about specific dates (e.g. usage on the 21st) or to find their maximum usage day."""
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{MOCK_BASE_URL}/billing/daily-usage/{phone_number}")
         return response.json()

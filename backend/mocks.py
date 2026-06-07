@@ -488,7 +488,7 @@ async def get_daily_usage(phone_number: str):
             return {
                 "phone_number": phone_number,
                 "highest_usage_day": highest_usage_day,
-                "daily_logs_summary": "30 days of logs are available but omitted to save space. Refer to highest_usage_day for max usage."
+                "daily_logs": logs
             }
     except Exception as e:
         print(f"Mock daily usage DB error: {e}")
@@ -686,14 +686,23 @@ async def finalize_connection(request: FinalizeRequest):
         cursor.execute("SELECT COUNT(*) FROM new_connections")
         count = cursor.fetchone()[0]
         
-        # Generate new number: 0112800100 + count
-        new_slt_number = f"011280{str(100 + count).zfill(4)}"
+        # Get prospect details
+        cursor.execute("SELECT name, address, nic, kyc_verified FROM prospects WHERE mobile_number=?", (request.mobile_number,))
+        prospect = cursor.fetchone()
+        
+        name = prospect[0] if prospect else "Unknown"
+        address = prospect[1] if prospect else "Unknown"
+        nic = prospect[2] if prospect else "Unknown"
+        kyc_status = "Verified" if prospect and prospect[3] else "Pending"
+        
+        # Generate new number: 0112896000 + count
+        new_slt_number = f"0112896{str(count).zfill(3)}"
         connection_id = f"SLT-NC-{uuid_gen()}"
         
         cursor.execute('''
-            INSERT INTO new_connections (connection_id, mobile_number, slt_number, package, payment_status, status, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (connection_id, request.mobile_number, new_slt_number, request.package_name, "Paid", "Pending Provisioning", datetime.now().isoformat()))
+            INSERT INTO new_connections (connection_id, mobile_number, slt_number, name, address, id_number, package, payment_status, kyc_status, status, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (connection_id, request.mobile_number, new_slt_number, name, address, nic, request.package_name, "Paid", kyc_status, "Pending Provisioning", datetime.now().isoformat()))
         
         conn.commit()
         conn.close()
@@ -712,6 +721,23 @@ def uuid_gen():
     return str(uuid.uuid4())[:8].upper()
 
 # --- ADMIN NOC DASHBOARD ENDPOINTS ---
+
+@router.get("/admin/new-connections")
+async def get_new_connections():
+    """Fetches all new connections for the Admin CRM."""
+    import sqlite3
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM new_connections ORDER BY created_at DESC")
+        rows = cursor.fetchall()
+        connections = [dict(row) for row in rows]
+        conn.close()
+        return {"status": "success", "new_connections": connections}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
 
 @router.get("/admin/tickets")
 async def get_admin_tickets():
@@ -987,7 +1013,11 @@ def send_whatsapp(request: WhatsAppRequest):
         client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
         
         # Format for WhatsApp
-        to_num = f"whatsapp:{request.to_number}" if not request.to_number.startswith('whatsapp:') else request.to_number
+        to_num = request.to_number
+        if to_num.startswith('07'):
+            to_num = "+94" + to_num[1:]
+            
+        to_num = f"whatsapp:{to_num}" if not to_num.startswith('whatsapp:') else to_num
         if not to_num.startswith('whatsapp:+'):
             to_num = to_num.replace('whatsapp:', 'whatsapp:+')
             
@@ -1015,6 +1045,12 @@ def send_whatsapp(request: WhatsAppRequest):
         message = client.messages.create(**kwargs)
         return {"status": "success", "message_sid": message.sid, "details": "WhatsApp message queued successfully"}
     except Exception as e:
-        return {"status": "error", "message": str(e)}
+        error_msg = str(e)
+        if "free trial" in error_msg.lower() or "unverified" in error_msg.lower():
+            return {
+                "status": "error", 
+                "message": "Twilio Sandbox Error: The destination number is not verified. Please ask the user to send 'join length-far' to +14155238886 on WhatsApp first to join the sandbox."
+            }
+        return {"status": "error", "message": error_msg}
 
 

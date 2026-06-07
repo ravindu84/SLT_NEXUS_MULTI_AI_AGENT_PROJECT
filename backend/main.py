@@ -252,11 +252,7 @@ from datetime import datetime
 async def run_scheduler():
     print("[INFO] Automated Report Scheduler started!")
     default_emails = [
-        "wfm_dispatch@slt.lk",
-        "nms_diagnostics@slt.lk",
-        "liya_desk@slt.lk",
-        "regional_manager@slt.lk",
-        "team_lead_ops@slt.lk"
+        "aravindaslt@gmail.com"
     ]
     while True:
         try:
@@ -524,9 +520,9 @@ def enhance_sinhala_pronunciation(text: str) -> str:
     if not text:
         return text
     
-    # 1. Fix numbers with units — add natural pauses so TTS reads "rupees 1490" not "one-four-nine-zero"
-    text = re.sub(r'Rs\.?\s*(\d[\d,]*)', r'රුපියල් \1', text)
-    text = re.sub(r'LKR\s*(\d[\d,]*)', r'රුපියල් \1', text, flags=re.IGNORECASE)
+    # 1. Fix numbers with units — add natural pauses
+    text = re.sub(r'Rs\.?\s*([\d,]+)', r'රුපියල් \1', text, flags=re.IGNORECASE)
+    text = re.sub(r'LKR\s*([\d,]+)', r'රුපියල් \1', text, flags=re.IGNORECASE)
     
     # 1.5 Convert decimal rupees to "සත" (cents) instead of reading as decimals
     def replace_cents(match):
@@ -538,32 +534,40 @@ def enhance_sinhala_pronunciation(text: str) -> str:
     
     # 1.6 Fix Dates YYYY-MM-DD
     text = re.sub(r'\b(\d{4})-(\d{2})-(\d{2})\b', r'\1 වසරේ \2 වෙනි මාසෙ \3 වෙනිදා', text)
+    text = re.sub(r'\b(\d{4})/(\d{2})/(\d{2})\b', r'\1 වසරේ \2 වෙනි මාසෙ \3 වෙනිදා', text)
     
-    # 1.7 Fix Decimals
+    # 1.7 Fix Decimals with commas support
     def replace_decimals(match):
-        return f"{match.group(1)} දශම {match.group(2)}"
-    text = re.sub(r'(\d+)\.(\d+)', replace_decimals, text)
+        return f"{match.group(1).replace(',', '')} දශම {match.group(2)}"
+    text = re.sub(r'([\d,]+)\.(\d+)', replace_decimals, text)
     
-    # 2. Fix "Mbps" — spell out for clear pronunciation
+    # 2. Fix "Mbps" and other speed/size metrics
     text = re.sub(r'(\d+)\s*Mbps', r'\1 Megabits per second', text, flags=re.IGNORECASE)
     text = re.sub(r'(\d+)\s*Kbps', r'\1 Kilobits per second', text, flags=re.IGNORECASE)
+    text = re.sub(r'(\d+)\s*GB', r'\1 ගිගා බයිට්', text, flags=re.IGNORECASE)
+    text = re.sub(r'(\d+)\s*MB', r'\1 මෙගා බයිට්', text, flags=re.IGNORECASE)
     
-    # 3. Fix emoji characters — remove them as TTS tries to describe them
+    # 3. Fix emoji characters
     text = re.sub(r'[\U0001F600-\U0001F9FF\U00002702-\U000027B0\U0001F1E0-\U0001F1FF\U0001FA00-\U0001FA6F\U0001FA70-\U0001FAFF]', '', text)
     
-    # 4. Fix URL-like patterns — skip them entirely
+    # 4. Fix URL-like patterns
     text = re.sub(r'https?://\S+', '', text)
     text = re.sub(r'www\.\S+', '', text)
     
     # 4.5 Acronym and Brand Pronunciation fixes
-    text = re.sub(r'\bSLT\b', 'එස් එල් ටී', text, flags=re.IGNORECASE)
+    # Use word boundaries or dot boundaries to catch S.L.T. as well
+    text = re.sub(r'\bS\.?L\.?T\.?\b', 'එස් එල් ටී', text, flags=re.IGNORECASE)
     text = re.sub(r'\bMOBITEL\b', 'මොබිටෙල්', text, flags=re.IGNORECASE)
-    text = re.sub(r'\bGB\b', 'ගිගා බයිට්', text, flags=re.IGNORECASE)
-    text = re.sub(r'\bMB\b', 'මෙගා බයිට්', text, flags=re.IGNORECASE)
     text = re.sub(r'\bNXC\b', 'එන් එක්ස් සී', text, flags=re.IGNORECASE)
     text = re.sub(r'\bWFM\b', 'ඩබ්ලිව් එෆ් එම්', text, flags=re.IGNORECASE)
     text = re.sub(r'\bDP\b', 'ඩීපී', text, flags=re.IGNORECASE)
     text = re.sub(r'\bSNR\b', 'එස් එන් ආර්', text, flags=re.IGNORECASE)
+    text = re.sub(r'\bPEO\b', 'පියෝ', text, flags=re.IGNORECASE)
+    text = re.sub(r'\bTV\b', 'ටීවී', text, flags=re.IGNORECASE)
+    
+    # Word specific fixes for Azure TTS Sinhala mispronunciations
+    text = re.sub(r'\b[Bb]ill\b', 'බිල්', text)
+    text = re.sub(r'බිල්', 'බිල් ', text) # Add space after 'බිල්' to prevent TTS blending it incorrectly
     
     # 5. Fix numbered lists (1. 2. 3.) — add slight pauses
     text = re.sub(r'(\d+)\.\s+', r'\1, ', text)
@@ -621,10 +625,12 @@ async def text_to_speech(request: TTSRequest):
         voice_name = "si-LK-SameeraNeural" if use_male_voice else "si-LK-ThiliniNeural"
         lang_code = "si-LK"
     elif target_lang == 'ta':
-        voice_name = "ta-LK-KumarNeural" if use_male_voice else "ta-LK-SaranyaNeural"
-        lang_code = "ta-LK"
+        # Use premium Indian Tamil voices for better quality than LK if needed, or stick to LK
+        voice_name = "ta-IN-ValluvarNeural" if use_male_voice else "ta-IN-PallaviNeural"
+        lang_code = "ta-IN"
     else:
-        voice_name = "en-US-GuyNeural" if use_male_voice else "en-US-JennyNeural"
+        # English: Use Aria/Davis for very natural, beautiful voices
+        voice_name = "en-US-DavisNeural" if use_male_voice else "en-US-AriaNeural"
         lang_code = "en-US"
 
     import html

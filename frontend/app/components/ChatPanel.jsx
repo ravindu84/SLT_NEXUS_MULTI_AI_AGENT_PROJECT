@@ -530,6 +530,36 @@ export default function ChatPanel({
                 🛡️ Scam Sign
               </button>
             </div>
+            
+            {/* KYC Upload Action */}
+            <div style={{ marginTop: '4px' }}>
+              <button
+                onClick={() => {
+                  setGestureStatus("KYC Selfie Captured!");
+                  sendMessage("[IMAGE UPLOADED: KYC Selfie with ID Card]");
+                }}
+                style={{
+                  width: '100%',
+                  background: 'linear-gradient(135deg, #00bcd4, #008ba3)',
+                  border: '1px solid rgba(0, 188, 212, 0.5)',
+                  color: 'white',
+                  padding: '8px',
+                  borderRadius: '8px',
+                  fontSize: '10px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px'
+                }}
+                onMouseEnter={(e) => { e.target.style.transform = 'scale(1.02)'; }}
+                onMouseLeave={(e) => { e.target.style.transform = 'scale(1)'; }}
+              >
+                📸 Capture KYC Selfie & Upload
+              </button>
+            </div>
           </div>
         </div>
       )}

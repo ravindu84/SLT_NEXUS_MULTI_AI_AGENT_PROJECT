@@ -5,6 +5,7 @@ import NeoAvatarScene from "./NeoAvatarScene";
 import TechBackground from "./TechBackground";
 import { Zap, Play, RotateCcw, Volume2, ShieldAlert, Cpu, Layers, Sliders, MessageSquare, Mic, MicOff, Camera, Upload, X } from "lucide-react";
 import SignCamera from "./SignCamera";
+import AdminCRM from "./AdminCRM";
 import styles from "../page.module.css";
 import "./NeoDashboard.css";
 
@@ -17,7 +18,7 @@ export default function NeoDashboard({
   sessionId: propSessionId
 }) {
   // Mode selection
-  const [controlMode, setControlMode] = useState("chat"); // "chat", "ai" or "manual"
+  const [controlMode, setControlMode] = useState("chat"); // "chat", "ai", "manual", or "crm"
   
   // States for avatar animation
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -456,6 +457,17 @@ export default function NeoDashboard({
                 onClick={() => {
                   if (audioRef.current) audioRef.current.pause();
                   setIsSpeaking(false);
+                  setControlMode("crm");
+                }}
+                className={`neoModeBtn ${controlMode === "crm" ? "neoModeActive" : ""}`}
+              >
+                <Layers size={14} />
+                🗄️ Admin CRM
+              </button>
+              <button
+                onClick={() => {
+                  if (audioRef.current) audioRef.current.pause();
+                  setIsSpeaking(false);
                   setControlMode("manual");
                 }}
                 className={`neoModeBtn ${controlMode === "manual" ? "neoModeActive" : ""}`}
@@ -466,10 +478,6 @@ export default function NeoDashboard({
             </div>
           </>
         )}
-
-
-
-
 
         {controlMode === "ai" && (
           <div className="neoDashPanel">
@@ -652,9 +660,15 @@ export default function NeoDashboard({
             </div>
           </div>
         )}
+        
+        {controlMode === "crm" && (
+          <div style={{ flex: 1, overflowY: "auto", width: "100%" }}>
+            <AdminCRM />
+          </div>
+        )}
 
         {/* Information Alert Badge */}
-        {controlMode !== "chat" && (
+        {controlMode !== "chat" && controlMode !== "crm" && (
           <div className="neoInfoAlert">
             <ShieldAlert size={16} className="neoAlertIcon" />
             <p>
