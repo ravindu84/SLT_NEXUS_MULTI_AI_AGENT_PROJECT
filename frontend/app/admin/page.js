@@ -876,16 +876,8 @@ export default function AdminDashboard() {
               {activeTab === 'connections' && renderConnections()}
               {activeTab === 'pathfinder-map' && (
                 <div className="w-full h-full flex flex-col relative">
-                  <div className="p-3 bg-[#02040a] shrink-0 border-b border-slate-800/50 flex justify-end">
-                    <button 
-                      onClick={() => setActiveTab('overview')}
-                      className="px-4 py-2 bg-[#02040a]/80 hover:bg-[#13141a] text-cyan-400 border border-cyan-500/30 rounded-lg inline-flex items-center gap-2 backdrop-blur-md transition-colors text-sm font-bold shadow-[0_0_15px_rgba(6,182,212,0.2)]"
-                    >
-                      <ChevronLeft className="w-5 h-5" /> BACK TO SYSTEM
-                    </button>
-                  </div>
                   <div className="flex-1 overflow-hidden">
-                    <DigitalTwinMap />
+                    <DigitalTwinMap onBack={() => setActiveTab('overview')} />
                   </div>
                 </div>
               )}

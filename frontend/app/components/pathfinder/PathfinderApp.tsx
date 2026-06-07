@@ -8,6 +8,8 @@ import {
   Wrench,
   CheckCircle2,
   AlertTriangle,
+  ChevronDown,
+  ChevronLeft,
   Info,
   Trash2,
   MapPin,
@@ -452,11 +454,12 @@ export function AnimatedTimer({ timerStr }: { timerStr: string }) {
 
 const SCALE_COEFF = 600;
 
-export default function App() {
+export default function App({ onBack }: { onBack?: () => void }) {
   // Master states
   const [nodes, setNodes] = useState<NetworkNode[]>(INITIAL_NODES);
   const [connections, setConnections] = useState<Connection[]>(INITIAL_CONNECTIONS);
   const [activeTab, setActiveTab] = useState<'main' | 'copper' | 'ftth'>('main');
+  const [isPageDropdownOpen, setIsPageDropdownOpen] = useState(false);
   const [secondsTick, setSecondsTick] = useState<number>(0);
 
   // Periodic interval to drive real-time countdown clocks
@@ -1781,7 +1784,17 @@ export default function App() {
           </div>
 
           {/* Action buttons with unified design */}
-          <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
+          <div className="flex flex-wrap items-center justify-end gap-2 w-full md:w-auto shrink-0">
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-[#02040a]/80 hover:bg-[#13141a] active:scale-95 text-cyan-400 border border-cyan-500/30 rounded-lg font-bold text-[10px] uppercase tracking-wider cursor-pointer transition-all shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                <span>BACK TO SYSTEM</span>
+              </button>
+            )}
+
             <button
               onClick={handleExportCSV}
               className="flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-teal-500/10 hover:bg-teal-500/20 active:scale-95 text-teal-400 border border-teal-500/20 hover:border-teal-500/40 rounded-lg font-bold text-[10px] uppercase tracking-wider cursor-pointer transition-all w-full md:w-auto"
@@ -1828,82 +1841,6 @@ export default function App() {
 
       {/* 2. Elevate the 3D map viewport to sit prominently at the top across 100% full-width */}
       <div className="w-full flex flex-col gap-4 flex-1 items-stretch" id="bento-grid-workspace">
-        
-        {/* Dynamic Sub-Page Tab Navigation Controller */}
-        <div className="flex flex-col xl:flex-row items-center justify-between gap-3 bg-[rgba(15,23,42,0.8)] border border-[rgba(56,189,248,0.15)] rounded-2xl p-2.5 backdrop-blur-md shadow-lg" id="subpage-nav-bar">
-          <div className="flex items-center gap-2 font-mono text-[10px] tracking-widest text-[#38bdf8] pl-2 shrink-0">
-            <Layers className="w-4 h-4 text-[#38bdf8] animate-pulse" />
-            <span className="font-black uppercase">ACTIVE MONITORING SUB-PAGE:</span>
-          </div>
-          
-          <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
-            {/* Main Baseline Twin Tab */}
-            <button
-              onClick={() => setActiveTab('main')}
-              className={`flex items-center gap-2.5 px-4 h-10 rounded-xl text-xs font-mono font-bold tracking-tight cursor-pointer transition-all ${
-                activeTab === 'main'
-                  ? 'bg-gradient-to-r from-sky-500/20 to-cyan-500/10 border-2 border-cyan-400 text-white shadow-[0_0_15px_rgba(6,182,212,0.25)]'
-                  : 'bg-slate-950/40 border border-slate-800/80 text-slate-400 hover:text-white hover:border-slate-700 hover:bg-slate-900/50'
-              }`}
-            >
-              <Compass className="w-4 h-4 text-cyan-400" />
-              <span>[PAGE 1] HOMAGAMA TWIN</span>
-              {nodes.filter(n => n.id.startsWith('node-') && n.status === 'fault').length > 0 ? (
-                <span className="text-[9px] bg-rose-500 text-slate-950 font-black px-2 py-0.5 rounded animate-pulse">
-                  {nodes.filter(n => n.id.startsWith('node-') && n.status === 'fault').length} ALARM
-                </span>
-              ) : (
-                <span className="text-[8px] bg-emerald-500/20 text-emerald-400 font-extrabold px-1.5 py-0.5 rounded leading-none">
-                  SECURE
-                </span>
-              )}
-            </button>
-
-            {/* Copper PSTN MSAN Tab */}
-            <button
-              onClick={() => setActiveTab('copper')}
-              className={`flex items-center gap-2.5 px-4 h-10 rounded-xl text-xs font-mono font-bold tracking-tight cursor-pointer transition-all ${
-                activeTab === 'copper'
-                  ? 'bg-gradient-to-r from-orange-500/20 to-amber-500/10 border-2 border-orange-500 text-white shadow-[0_0_15px_rgba(249,115,22,0.25)]'
-                  : 'bg-slate-950/40 border border-slate-800/80 text-slate-400 hover:text-white hover:border-slate-700 hover:bg-slate-900/50'
-              }`}
-            >
-              <Radio className="w-4 h-4 text-orange-400 anim-pulse-slow" />
-              <span>[PAGE 2] COPPER MSAN INFRA (10 NODES)</span>
-              {nodes.filter(n => n.id.startsWith('msan-') && n.status === 'fault').length > 0 ? (
-                <span className="text-[9px] bg-rose-500 text-slate-950 font-black px-2 py-0.5 rounded animate-pulse">
-                  {nodes.filter(n => n.id.startsWith('msan-') && n.status === 'fault').length} DOWN
-                </span>
-              ) : (
-                <span className="text-[8px] bg-emerald-500/20 text-emerald-400 font-extrabold px-1.5 py-0.5 rounded leading-none">
-                  NORMAL
-                </span>
-              )}
-            </button>
-
-            {/* FTTH Fiber Cabinets Tab */}
-            <button
-              onClick={() => setActiveTab('ftth')}
-              className={`flex items-center gap-2.5 px-4 h-10 rounded-xl text-xs font-mono font-bold tracking-tight cursor-pointer transition-all ${
-                activeTab === 'ftth'
-                  ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/10 border-2 border-emerald-400 text-white shadow-[0_0_15px_rgba(16,185,129,0.25)]'
-                  : 'bg-slate-950/40 border border-slate-800/80 text-slate-400 hover:text-white hover:border-slate-700 hover:bg-slate-900/50'
-              }`}
-            >
-              <Network className="w-4 h-4 text-emerald-400" />
-              <span>[PAGE 3] FTTH FIBER CABS (10 CABINETS)</span>
-              {nodes.filter(n => n.id.startsWith('cab-') && n.status === 'fault').length > 0 ? (
-                <span className="text-[9px] bg-rose-500 text-slate-950 font-black px-2 py-0.5 rounded animate-pulse">
-                  {nodes.filter(n => n.id.startsWith('cab-') && n.status === 'fault').length} DOWN
-                </span>
-              ) : (
-                <span className="text-[8px] bg-emerald-500/20 text-emerald-400 font-extrabold px-1.5 py-0.5 rounded leading-none">
-                  ONLINE
-                </span>
-              )}
-            </button>
-          </div>
-        </div>
 
         {/* UNIFIED GLOBAL COMMAND BAR */}
         <div 
@@ -1915,9 +1852,68 @@ export default function App() {
             <div className="absolute inset-0 bg-cyan-500/[0.02] border border-cyan-500/20 rounded-2xl pointer-events-none animate-pulse" />
           )}
 
-          {/* Section 1: Search Node ID or Label */}
-          <div className="flex-1 min-w-[280px] flex flex-col gap-1 relative text-[11px] font-mono">
-            <div className="flex items-center gap-2 bg-slate-950/80 border border-slate-800 rounded-lg px-3 py-1.5 focus-within:border-cyan-500/50 focus-within:shadow-[0_0_12px_rgba(6,182,212,0.15)] transition-all">
+          {/* Section 1: Search & Page Dropdown */}
+          <div className="flex-1 min-w-[280px] flex flex-col md:flex-row items-stretch gap-2 relative text-[11px] font-mono z-50">
+            
+            {/* Custom Page Dropdown */}
+            <div className="relative shrink-0">
+              <button 
+                onClick={() => setIsPageDropdownOpen(!isPageDropdownOpen)}
+                className="flex items-center justify-between gap-3 h-full bg-slate-950/80 border border-slate-800 rounded-xl px-4 py-2 min-w-[220px] text-cyan-400 hover:border-cyan-500/50 transition-all shadow-inner font-bold"
+              >
+                <div className="flex items-center gap-2">
+                  {activeTab === 'main' ? <Compass className="w-4 h-4 text-cyan-500" /> : 
+                   activeTab === 'copper' ? <Radio className="w-4 h-4 text-orange-400" /> : 
+                   <Network className="w-4 h-4 text-emerald-400" />}
+                  <span>
+                    {activeTab === 'main' ? '[PAGE 1] HOMAGAMA TWIN' : 
+                     activeTab === 'copper' ? '[PAGE 2] COPPER MSAN' : '[PAGE 3] FTTH CABINETS'}
+                  </span>
+                </div>
+                <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isPageDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              
+              {isPageDropdownOpen && (
+                <div className="absolute top-full left-0 mt-2 w-full min-w-[240px] bg-slate-900 border border-slate-700 rounded-xl shadow-2xl overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2">
+                  <button 
+                    onClick={() => { setActiveTab('main'); setIsPageDropdownOpen(false); }}
+                    className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-left hover:bg-slate-800 transition-colors ${activeTab === 'main' ? 'bg-slate-800 text-cyan-400' : 'text-slate-300'}`}
+                  >
+                    <div className="flex items-center gap-2 font-bold">
+                      <Compass className="w-4 h-4" /> [PAGE 1] HOMAGAMA
+                    </div>
+                    {nodes.filter(n => n.id.startsWith('node-') && n.status === 'fault').length > 0 && (
+                      <span className="text-[9px] bg-rose-500 text-slate-950 font-black px-1.5 py-0.5 rounded animate-pulse">ALARM</span>
+                    )}
+                  </button>
+                  <button 
+                    onClick={() => { setActiveTab('copper'); setIsPageDropdownOpen(false); }}
+                    className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-left hover:bg-slate-800 border-t border-slate-800 transition-colors ${activeTab === 'copper' ? 'bg-slate-800 text-orange-400' : 'text-slate-300'}`}
+                  >
+                    <div className="flex items-center gap-2 font-bold">
+                      <Radio className="w-4 h-4" /> [PAGE 2] COPPER MSAN
+                    </div>
+                    {nodes.filter(n => n.id.startsWith('msan-') && n.status === 'fault').length > 0 && (
+                      <span className="text-[9px] bg-rose-500 text-slate-950 font-black px-1.5 py-0.5 rounded animate-pulse">DOWN</span>
+                    )}
+                  </button>
+                  <button 
+                    onClick={() => { setActiveTab('ftth'); setIsPageDropdownOpen(false); }}
+                    className={`w-full flex items-center justify-between gap-2 px-4 py-3 text-left hover:bg-slate-800 border-t border-slate-800 transition-colors ${activeTab === 'ftth' ? 'bg-slate-800 text-emerald-400' : 'text-slate-300'}`}
+                  >
+                    <div className="flex items-center gap-2 font-bold">
+                      <Network className="w-4 h-4" /> [PAGE 3] FTTH CABS
+                    </div>
+                    {nodes.filter(n => n.id.startsWith('cab-') && n.status === 'fault').length > 0 && (
+                      <span className="text-[9px] bg-rose-500 text-slate-950 font-black px-1.5 py-0.5 rounded animate-pulse">DOWN</span>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Existing Search Input */}
+            <div className="flex-1 flex items-center gap-2 bg-slate-950/80 border border-slate-800 rounded-xl px-3 py-2.5 focus-within:border-cyan-500/50 focus-within:shadow-[0_0_12px_rgba(6,182,212,0.15)] transition-all">
               <Search className="w-4 h-4 text-cyan-400 shrink-0" />
               <input
                 type="text"
