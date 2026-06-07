@@ -1703,7 +1703,7 @@ export default function DigitalTwinMap({
   const [viewMode, setViewMode] = useState<'3d' | '2d'>('3d');
   const [svgPanX, setSvgPanX] = useState<number>(0);
   const [svgPanY, setSvgPanY] = useState<number>(0);
-  const [svgZoom, setSvgZoom] = useState<number>(1.0);
+  const [svgZoom, setSvgZoom] = useState<number>(4.0);
   const [isPanningSvg, setIsPanningSvg] = useState<boolean>(false);
   const [panStart, setPanStart] = useState({ x: 0, y: 0 });
 
@@ -2365,171 +2365,7 @@ export default function DigitalTwinMap({
         renderFullscreen2DMap()
       )}
 
-      {/* Floating collapsible Map weather and topology header control panel */}
-      {isGlobalHudVisible && (
-        !isTopHeaderOpen ? (
-          <div 
-            className="absolute top-4 left-1/2 -translate-x-1/2 z-10"
-            style={{ transform: `translate3d(calc(-50% + ${topHeaderPos.x}px), ${topHeaderPos.y}px, 0px)` }}
-          >
-            <button
-              onClick={() => setIsTopHeaderOpen(true)}
-              className="flex items-center gap-2 px-3.5 py-1.5 bg-slate-900/95 backdrop-blur border border-slate-800 hover:border-slate-700 hover:bg-slate-850 rounded-full text-[9px] font-mono text-[#38bdf8] font-bold tracking-wider uppercase transition-all shadow-xl cursor-pointer select-none focus:outline-none"
-              title="Expand weather and environment controls panel"
-            >
-              <CloudLightning className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-              <span>ENV & TOPOLOGY TOOLS [Expand ▼]</span>
-            </button>
-          </div>
-        ) : (
-          <div 
-            className="absolute top-4 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur border border-slate-800 rounded-2xl px-4 py-2 z-10 flex flex-col xs:flex-row items-center justify-between gap-3 xs:gap-5 shadow-2xl pointer-events-auto select-none w-[90%] xs:w-[480px] sm:w-[580px] md:w-[660px] pt-3.5" 
-            id="map-top-header"
-            style={{ transform: `translate3d(calc(-50% + ${topHeaderPos.x}px), ${topHeaderPos.y}px, 0px)` }}
-          >
-            {/* Elegant high-tech Grab-Handle at the top */}
-            <div
-              onMouseDown={(e) => handleDragStart(e, 'topHeader')}
-              onTouchStart={(e) => handleDragStart(e, 'topHeader')}
-              className="absolute top-0 left-0 right-0 h-2 bg-slate-800/80 hover:bg-cyan-500/50 active:bg-cyan-500 cursor-grab active:cursor-grabbing rounded-t-2xl transition-all flex items-center justify-center"
-              title="Drag here to move the weather and topology panel"
-            >
-              <div className="flex gap-1 pointer-events-none">
-                <span className="w-1 h-1 rounded-full bg-slate-600" />
-                <span className="w-1 h-1 rounded-full bg-slate-600" />
-                <span className="w-1 h-1 rounded-full bg-slate-600" />
-              </div>
-            </div>
-        {/* Left Segment: Weather Controller */}
-        <div className="flex flex-col gap-1.5 border-b xs:border-b-0 xs:border-r border-slate-800/80 pb-2 xs:pb-0 xs:pr-4 shrink-0 justify-center">
-          <div className="flex items-center justify-between w-full xs:w-[260px] gap-3">
-            <div className="flex items-center gap-2">
-              <CloudLightning className={`w-4 h-4 shrink-0 ${isWeatherActive ? 'text-amber-400 animate-bounce' : 'text-slate-500'}`} />
-              <div className="flex flex-col">
-                <span className="text-[9px] font-bold text-slate-400 font-mono uppercase tracking-wider leading-none">WEATHER SIM</span>
-                <span className="text-[8px] font-mono leading-none text-slate-500 mt-0.5 max-w-[100px] truncate">
-                  {isWeatherActive ? "STORM ACTIVE" : "STABLE SKY"}
-                </span>
-              </div>
-            </div>
 
-            <button
-              onClick={() => setIsWeatherActive(!isWeatherActive)}
-              className={`px-2 py-1 rounded border font-mono text-[8.5px] font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
-                isWeatherActive
-                  ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border-amber-500/50 animate-pulse shadow-md"
-                  : "bg-slate-800 hover:bg-slate-750 text-slate-350 border-slate-700 hover:text-white"
-              }`}
-              id="btn-simulate-weather"
-              title="Simulate tropical storm front over Homagama (toggles weather-induced attenuation overlays)"
-            >
-              {isWeatherActive ? "SHUTDOWN" : "🌩️ TRIGGER STORM"}
-            </button>
-          </div>
-
-          {/* Expanded Storm Intensity / Wind Vectors control */}
-          {isWeatherActive && (
-            <div className="flex items-center gap-2 pt-1.5 border-t border-slate-800/40 w-full xs:w-[260px]">
-              {/* Wind Speed Selector */}
-              <div className="flex flex-col gap-0.5 flex-1">
-                <div className="flex justify-between items-center text-[7.5px] text-slate-400 font-mono">
-                  <span>WIND SPEED</span>
-                  <span className="text-amber-400 font-bold">{windSpeed} km/h</span>
-                </div>
-                <input
-                  type="range"
-                  min="15"
-                  max="120"
-                  step="5"
-                  value={windSpeed}
-                  onChange={(e) => setWindSpeed(parseInt(e.target.value))}
-                  className="w-full h-1 bg-slate-950 rounded appearance-none cursor-pointer accent-amber-400 border border-slate-800"
-                />
-              </div>
-
-              {/* Wind Direction Selector */}
-              <div className="flex flex-col gap-0.5 w-[75px]">
-                <span className="text-[7.5px] text-slate-400 font-mono">WIND DIR</span>
-                <select
-                  value={windDirection}
-                  onChange={(e) => setWindDirection(e.target.value)}
-                  className="bg-slate-950 border border-slate-800 text-[8px] font-mono text-amber-400 rounded py-0.5 px-0.5 outline-none w-full scrollbar-none"
-                >
-                  <option value="N">North ↑</option>
-                  <option value="NE">N-East ↗</option>
-                  <option value="E">East →</option>
-                  <option value="SE">S-East ↘</option>
-                  <option value="S">South ↓</option>
-                  <option value="SW">S-West ↙</option>
-                  <option value="W">West ←</option>
-                  <option value="NW">N-West ↖</option>
-                </select>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Middle Segment: View Presentation Mode Selection (Visible only if WebGL available) */}
-        {isWebGLSupported && (
-          <div className="flex items-center gap-2 border-b xs:border-b-0 xs:border-r border-slate-800/80 pb-2 xs:pb-0 xs:pr-4 shrink-0 justify-center">
-            <div className="flex items-center gap-2">
-              <Layers className="w-4 h-4 text-cyan-400" />
-              <div className="flex flex-col">
-                <span className="text-[9px] font-bold text-slate-400 font-mono uppercase tracking-wider leading-none">MAP PRESENTATION</span>
-                <span className="text-[8px] font-mono leading-none text-slate-500 mt-0.5">
-                  {viewMode === '3d' ? "3D CYBER" : "2D VECTOR"}
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={() => setViewMode(prev => prev === '3d' ? '2d' : '3d')}
-              className={`px-2 py-1 rounded border font-mono text-[8.5px] font-bold uppercase transition-all cursor-pointer select-none ${
-                viewMode === '3d'
-                  ? 'bg-slate-800 hover:bg-slate-750 text-slate-200 border-slate-700'
-                  : 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300 shadow-md shadow-cyan-500/10'
-              }`}
-            >
-              {viewMode === '3d' ? "⚙️ GO 2D SVG" : "📡 GO 3D MAP"}
-            </button>
-          </div>
-        )}
-
-        {/* Right Segment: Topology Overview */}
-        <div className="flex items-center justify-between w-full xs:w-auto gap-3 shrink-0">
-          <div className="flex items-center gap-2">
-            <Network className={`w-4 h-4 shrink-0 transition-all ${isTopologyOverviewActive ? 'text-cyan-400 animate-pulse' : 'text-slate-500'}`} />
-            <div className="flex flex-col">
-              <span className="text-[9px] font-bold text-slate-400 font-mono uppercase tracking-wider leading-none">TOPOLOGY CTL</span>
-              <span className="text-[8px] font-mono leading-none text-slate-500 mt-0.5 max-w-[100px] truncate">
-                {isTopologyOverviewActive ? "FLOW PARTICLES EN" : "STATIC GRID ONLY"}
-              </span>
-            </div>
-          </div>
-          <button
-            onClick={() => setIsTopologyOverviewActive(!isTopologyOverviewActive)}
-            className={`px-2 py-1 rounded border font-mono text-[8.5px] font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
-              isTopologyOverviewActive
-                ? "bg-cyan-500/20 hover:bg-cyan-505/30 text-cyan-300 border-cyan-505/50 shadow-md shadow-cyan-505/10"
-                : "bg-slate-800 hover:bg-slate-750 text-slate-355 border-slate-700 hover:text-white"
-            }`}
-            id="btn-topology-overview"
-            title="Toggle animated data transmission particles based on fiber vs copper transmission directions"
-          >
-            {isTopologyOverviewActive ? "DEACTIVATE" : "📡 ENGAGE FLOW"}
-          </button>
-        </div>
-
-        {/* Rightmost: Close/Collapse header button */}
-        <button
-          onClick={() => setIsTopHeaderOpen(false)}
-          className="p-1 px-1.5 text-slate-505 hover:text-[#38bdf8] bg-slate-950/60 hover:bg-slate-850 rounded-lg border border-slate-805 transition-colors cursor-pointer text-[8.5px] font-mono leading-none flex items-center justify-center shadow focus:outline-none"
-          title="Collapse weather and topology controls"
-        >
-          ▲
-        </button>
-      </div>
-        )
-      )}
 
       {/* Animated Weather rain canvas and atmospheric lighting overlays */}
       {isWeatherActive && (
@@ -3485,8 +3321,8 @@ export default function DigitalTwinMap({
         </div>
       </div>
 
-      {/* GLOBAL FLOATING ZOOM CONTROLS (Bottom Right) */}
-      <div className="absolute bottom-8 right-8 flex flex-col gap-2 z-50 pointer-events-none">
+      {/* GLOBAL FLOATING ZOOM CONTROLS (Bottom Right, shifted left to avoid overlapping minimap) */}
+      <div className="absolute bottom-10 right-[380px] flex flex-col gap-3 z-50 pointer-events-none">
         <button 
           onClick={(e) => {
             e.stopPropagation();
