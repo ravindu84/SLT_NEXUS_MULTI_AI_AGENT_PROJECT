@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Activity, Server, Users, Shield, Terminal, Settings, 
   MapPin, CheckCircle, AlertTriangle, Clock, ChevronRight, ChevronLeft,
-  Search, Bell, Menu, Zap, Globe, Cpu, Database, User, MessageSquare, CreditCard
+  Search, Bell, Menu, Zap, Globe, Cpu, Database, User, MessageSquare, CreditCard, Sparkles
 } from 'lucide-react';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
@@ -952,9 +952,11 @@ export default function AdminDashboard() {
                   
                   {/* Sub-tab content */}
                   <div className="flex-1 relative overflow-hidden bg-[#13141a]">
-                    <div style={{ opacity: aiChatTab === 'innovations' ? 1 : 0, pointerEvents: aiChatTab === 'innovations' ? 'auto' : 'none', position: 'absolute', inset: 0, overflowY: 'auto' }}>
-                      <FutureInnovations />
-                    </div>
+                    {aiChatTab === 'innovations' && (
+                      <div className="absolute inset-0 overflow-y-auto">
+                        <FutureInnovations />
+                      </div>
+                    )}
                     <div style={{ opacity: aiChatTab === 'liya' ? 1 : 0, pointerEvents: aiChatTab === 'liya' ? 'auto' : 'none', position: 'absolute', inset: 0 }}>
                       <LiyaProDashboard isAdmin={true} agent="liya" language={language} />
                     </div>

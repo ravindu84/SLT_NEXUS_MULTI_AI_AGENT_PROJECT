@@ -11,3 +11,12 @@
  ○ Compiling /admin ...
  ✓ Compiled /admin in 16.5s (3636 modules)
  GET /admin 200 in 17695ms
+ ✓ Compiled in 1813ms (1829 modules)
+ GET /admin 200 in 390ms
+ ○ Compiling /_not-found ...
+(node:16616) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+ ✓ Compiled /_not-found in 3.3s (3625 modules)
+ GET /assets/background-music.mp3 404 in 3825ms
+ GET /assets/icon-192x192.png 404 in 2450ms
+ ✓ Compiled in 4.4s (3636 modules)
