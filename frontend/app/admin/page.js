@@ -312,66 +312,27 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* CUSTOMER SEARCH WIDGET */}
-        <div className="lg:col-span-2 bg-[#1c1d25] border border-slate-800/50 rounded-xl p-6 shadow-lg flex flex-col">
+        {/* INNOVATION SHOWCASE WIDGET */}
+        <div className="lg:col-span-2 bg-[#1c1d25] border border-slate-800/50 rounded-xl p-6 shadow-lg flex flex-col justify-center">
            <div className="flex justify-between items-center mb-6">
-            <h3 className="text-base font-bold text-white">Customer Database Search</h3>
+            <h3 className="text-base font-bold text-white">Future Enterprise Innovations</h3>
+            <Sparkles className="w-5 h-5 text-cyan-400" />
           </div>
           
-          <form onSubmit={handleSearch} className="mb-6 flex gap-3">
-             <div className="relative flex-1">
-                <input 
-                  type="text" 
-                  placeholder="Enter Phone Number (e.g. 0112895800)"
-                  className="w-full bg-[#13141a] border border-slate-800 text-white text-sm rounded-lg pl-10 pr-4 py-3 focus:outline-none focus:border-cyan-500 transition-colors placeholder:text-slate-500"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
-                <Search className="absolute left-3.5 top-3.5 w-5 h-5 text-slate-500" />
-             </div>
-             <button type="submit" className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50" disabled={isSearching}>
-                {isSearching ? 'Searching...' : 'Search'}
-             </button>
-          </form>
-
-          {customerData && !customerData.error && (
-            <div className="flex-1 bg-[#13141a] border border-slate-800 rounded-lg p-5 flex flex-col justify-center animate-in fade-in">
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-white"><User className="w-5 h-5"/></div>
-                      <div>
-                        <p className="text-xs text-slate-400 mb-1">Customer ID</p>
-                        <p className="font-bold text-white">{customerData.user_id}</p>
-                        <p className="text-xs text-cyan-500">{customerData.phone_number}</p>
-                      </div>
-                  </div>
-                  <div className="flex items-center gap-4 sm:border-l sm:border-slate-800 sm:pl-6">
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${customerData.status === 'UP' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-cyan-500/10 text-cyan-500'}`}><Activity className="w-5 h-5"/></div>
-                      <div>
-                        <p className="text-xs text-slate-400 mb-1">Status</p>
-                        <p className={`font-bold ${customerData.status === 'UP' ? 'text-emerald-500' : 'text-cyan-500'}`}>{customerData.status}</p>
-                        <p className="text-xs text-slate-500">Speed: {customerData.speed_mbps} Mbps</p>
-                      </div>
-                  </div>
-                  <div className="flex items-center gap-4 sm:border-l sm:border-slate-800 sm:pl-6">
-                      <div className="w-12 h-12 rounded-full bg-cyan-500/10 text-cyan-500 flex items-center justify-center"><Server className="w-5 h-5"/></div>
-                      <div>
-                        <p className="text-xs text-slate-400 mb-1">Data Usage</p>
-                        <p className="font-bold text-white">{customerData.data_used_gb} <span className="text-xs text-slate-500">/ {customerData.data_total_gb} GB</span></p>
-                        <div className="w-full h-1.5 bg-slate-800 rounded-full mt-2">
-                            <div className="h-full bg-cyan-500 rounded-full" style={{width: `${(customerData.data_used_gb/customerData.data_total_gb)*100}%`}}></div>
-                        </div>
-                      </div>
-                  </div>
-                </div>
-            </div>
-          )}
-
-          {customerData && customerData.error && (
-             <div className="flex-1 flex items-center justify-center p-4 bg-cyan-500/10 border border-cyan-500/20 rounded-lg">
-                <p className="text-cyan-500 font-medium">{customerData.error}</p>
-             </div>
-          )}
+          <div className="flex-1 flex flex-col items-center justify-center py-6 text-center">
+            <p className="text-slate-400 mb-6 max-w-md">
+              Discover how Liya and our Multi-Agent AI Architecture is evolving to scale across the entire enterprise, beyond customer service.
+            </p>
+            <button 
+              onClick={() => {
+                setActiveTab('ai-chat');
+                setAiChatTab('innovations');
+              }}
+              className="w-full sm:w-auto py-3 px-8 rounded-lg font-bold transition-all flex items-center justify-center gap-2 bg-gradient-to-r from-blue-900/40 to-cyan-900/40 border border-cyan-500/50 text-cyan-400 hover:from-blue-800/60 hover:to-cyan-800/60 hover:shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:-translate-y-1"
+            >
+              <Sparkles className="w-5 h-5" /> View Future Enterprise Innovations Showcase
+            </button>
+          </div>
         </div>
       </div>
 
@@ -894,15 +855,7 @@ export default function AdminDashboard() {
               {activeTab === 'vault' && renderVault()}
               {activeTab === 'ai-chat' && (
                 <div className="flex-1 min-h-full w-full flex flex-col bg-[#1c1d25] overflow-hidden shadow-lg">
-                  {/* Innovation Showcase Banner (Udin Button) */}
-                  <div className="p-2 bg-[#13141a] border-b border-slate-800/50">
-                    <button 
-                      onClick={() => setAiChatTab('innovations')}
-                      className={`w-full py-2 border rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${aiChatTab === 'innovations' ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300' : 'bg-gradient-to-r from-blue-900/40 to-cyan-900/40 border-cyan-500/30 text-cyan-400 hover:from-blue-800/50 hover:to-cyan-800/50'}`}
-                    >
-                      <Sparkles className="w-4 h-4" /> View Future Enterprise Innovations Showcase
-                    </button>
-                  </div>
+                  {/* Innovation Showcase Banner removed from here */}
 
                   {/* Internal Sub-tabs for AI Chat */}
                   <div className="flex border-b border-slate-800/50 bg-[#13141a]">
