@@ -4,15 +4,19 @@ const nextConfig = {
     return [
       {
         source: '/api/:path*',
-        destination: 'http://16.171.166.199:8000/api/:path*',
+        destination: 'https://slt-nexus-demo.loca.lt/api/:path*',
       },
       {
         source: '/tts',
-        destination: 'http://16.171.166.199:8000/tts',
+        destination: 'https://slt-nexus-demo.loca.lt/tts',
       },
       {
         source: '/wfm/:path*',
-        destination: 'http://16.171.166.199:8000/wfm/:path*',
+        destination: 'https://slt-nexus-demo.loca.lt/wfm/:path*',
+      },
+      {
+        source: '/mocks/:path*',
+        destination: 'https://slt-nexus-demo.loca.lt/mocks/:path*',
       },
     ]
   },
