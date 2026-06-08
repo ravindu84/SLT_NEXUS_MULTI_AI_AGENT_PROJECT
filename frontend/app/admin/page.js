@@ -10,6 +10,9 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   PieChart, Pie, Cell, BarChart, Bar
 } from 'recharts';
+import DashboardWidgets from '../components/DashboardWidgets';
+import PathfinderApp from '../components/pathfinder/PathfinderApp';
+import FutureInnovations from '../components/FutureInnovations';
 import dynamic from 'next/dynamic';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -890,6 +893,16 @@ export default function AdminDashboard() {
               {activeTab === 'vault' && renderVault()}
               {activeTab === 'ai-chat' && (
                 <div className="flex-1 min-h-full w-full flex flex-col bg-[#1c1d25] overflow-hidden shadow-lg">
+                  {/* Innovation Showcase Banner (Udin Button) */}
+                  <div className="p-2 bg-[#13141a] border-b border-slate-800/50">
+                    <button 
+                      onClick={() => setAiChatTab('innovations')}
+                      className={`w-full py-2 border rounded-lg font-bold transition-all flex items-center justify-center gap-2 ${aiChatTab === 'innovations' ? 'bg-cyan-500/20 border-cyan-500 text-cyan-300' : 'bg-gradient-to-r from-blue-900/40 to-cyan-900/40 border-cyan-500/30 text-cyan-400 hover:from-blue-800/50 hover:to-cyan-800/50'}`}
+                    >
+                      <Sparkles className="w-4 h-4" /> View Future Enterprise Innovations Showcase
+                    </button>
+                  </div>
+
                   {/* Internal Sub-tabs for AI Chat */}
                   <div className="flex border-b border-slate-800/50 bg-[#13141a]">
                     <button 
@@ -938,6 +951,9 @@ export default function AdminDashboard() {
                   
                   {/* Sub-tab content */}
                   <div className="flex-1 relative overflow-hidden bg-[#13141a]">
+                    <div style={{ opacity: aiChatTab === 'innovations' ? 1 : 0, pointerEvents: aiChatTab === 'innovations' ? 'auto' : 'none', position: 'absolute', inset: 0, overflowY: 'auto' }}>
+                      <FutureInnovations />
+                    </div>
                     <div style={{ opacity: aiChatTab === 'liya' ? 1 : 0, pointerEvents: aiChatTab === 'liya' ? 'auto' : 'none', position: 'absolute', inset: 0 }}>
                       <LiyaProDashboard isAdmin={true} agent="liya" language={language} />
                     </div>
