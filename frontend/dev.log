@@ -1,0 +1,13 @@
+
+> frontend@0.1.0 dev
+> next dev
+
+  ▲ Next.js 14.2.15
+  - Local:        http://localhost:3000
+  - Environments: .env.local
+
+ ✓ Starting...
+ ✓ Ready in 10.1s
+ ○ Compiling /admin ...
+ ✓ Compiled /admin in 16.5s (3636 modules)
+ GET /admin 200 in 17695ms

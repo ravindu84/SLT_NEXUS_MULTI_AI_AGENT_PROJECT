@@ -12,7 +12,10 @@ import {
 } from 'recharts';
 import dynamic from 'next/dynamic';
 import { useLanguage } from '../context/LanguageContext';
-import FutureInnovations from '../components/FutureInnovations';
+
+const FutureInnovations = dynamic(() => import('../components/FutureInnovations'), {
+  ssr: false,
+});
 
 const LiyaProDashboard = dynamic(() => import('../components/LiyaProDashboard'), {
   ssr: false,
