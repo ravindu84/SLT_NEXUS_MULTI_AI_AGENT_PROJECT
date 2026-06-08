@@ -226,7 +226,7 @@ export default function ChatPanel({
     setTimeout(scrollToBottom, 50);
 
     const lowerMsg = messageText.toLowerCase();
-    if (lowerMsg.includes("kanu") || lowerMsg.includes("msan") || lowerMsg.includes("ftth") || lowerMsg.includes("down") || lowerMsg.includes("horu")) {
+    if (lowerMsg.includes("kanu") || lowerMsg.includes("msan") || lowerMsg.includes("ftth") || lowerMsg.includes("down") || lowerMsg.includes("horu") || lowerMsg.includes("wisthara") || lowerMsg.includes("කණු") || lowerMsg.includes("විස්තර")) {
       const dps = parseInt(localStorage.getItem('theft_dp_down') || '0', 10);
       const msan = parseInt(localStorage.getItem('theft_msan_down') || '0', 10);
       const ftth = parseInt(localStorage.getItem('theft_ftth_down') || '0', 10);
