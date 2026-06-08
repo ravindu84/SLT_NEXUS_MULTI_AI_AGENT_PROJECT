@@ -30,7 +30,9 @@ import {
   Sparkles,
   Mic,
   MicOff,
-  CloudLightning
+  CloudLightning,
+  Truck,
+  Siren
 } from 'lucide-react';
 import { NetworkNode, Connection, NodeStatus, NodeType } from './types';
 import { HISTORICAL_TIMELINE } from './historicalData';
@@ -809,10 +811,10 @@ export default function App({ onBack }: { onBack?: () => void }) {
               e.stopPropagation();
               handleOneClickRepair(node.id, node.label || node.id);
             }}
-            className={`flex items-center gap-1 px-2 py-1 ${meta.btnBg} text-[10px] font-extrabold uppercase rounded cursor-pointer transition-all shadow-md shrink-0 hover:scale-105`}
+            className={`flex items-center gap-1 px-2 py-1 ${node.status === 'fault' ? 'bg-amber-400 hover:bg-amber-300 text-amber-950' : meta.btnBg} text-[10px] font-extrabold uppercase rounded cursor-pointer transition-all shadow-md shrink-0 hover:scale-105`}
           >
-            <Wrench className="w-3 h-3 text-slate-950" />
-            <span>REPAIR</span>
+            {node.status === 'fault' ? <Truck className="w-3 h-3 text-amber-950" /> : <Wrench className="w-3 h-3 text-slate-950" />}
+            <span>{node.status === 'fault' ? 'ASSIGN TEAM' : 'REPAIR'}</span>
           </button>
         </div>
       </motion.div>
@@ -848,6 +850,75 @@ export default function App({ onBack }: { onBack?: () => void }) {
       addLog('[WEATHER] Storm front dispersed. Microwave / fiber propagation normal.');
     };
   }, [isWeatherActive, audioAlertEnabled]);
+
+  const [isTheftActive, setIsTheftActive] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!isTheftActive) return;
+
+    addLog('[SECURITY] CRITICAL: Simultaneous fiber optic cuts detected in Homagama, Kottawa, and Pitipana sectors!');
+    
+    setNodes(prev => {
+      let dpsF = 0; let msanF = 0; let ftthF = 0;
+      const nextNodes = prev.map(n => {
+        if (n.status === 'normal' && Math.random() < 0.15) {
+          if (n.type === 'dp') dpsF++;
+          if (n.type === 'msan') msanF++;
+          if (n.type === 'cabinet') ftthF++;
+          return { ...n, status: 'fault', faultDetectedAt: Date.now() };
+        }
+        return n;
+      });
+      
+      localStorage.setItem('theft_dp_down', dpsF.toString());
+      localStorage.setItem('theft_msan_down', msanF.toString());
+      localStorage.setItem('theft_ftth_down', ftthF.toString());
+      
+      fetch('http://localhost:8000/mocks/report/cable-theft-alarm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          emails: ['aravindaslt@gmail.com'],
+          dp_count: dpsF,
+          msan_count: msanF,
+          ftth_count: ftthF
+        })
+      }).catch(e => console.warn(e));
+
+      return nextNodes;
+    });
+
+    if (audioAlertEnabled) playAlertSound();
+
+    const alarmInterval = setInterval(() => {
+      const dps = parseInt(localStorage.getItem('theft_dp_down') || '0', 10);
+      const msan = parseInt(localStorage.getItem('theft_msan_down') || '0', 10);
+      const ftth = parseInt(localStorage.getItem('theft_ftth_down') || '0', 10);
+      
+      if (dps > 0 || msan > 0 || ftth > 0) {
+        addLog('[SECURITY] Recurring Alarm Dispatching Email to aravindaslt@gmail.com');
+        fetch('http://localhost:8000/mocks/report/cable-theft-alarm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            emails: ['aravindaslt@gmail.com'],
+            dp_count: dps,
+            msan_count: msan,
+            ftth_count: ftth
+          })
+        }).catch(e => console.warn(e));
+        if (audioAlertEnabled) playAlertSound();
+      }
+    }, 60000); // 60s for demo
+
+    return () => {
+      clearInterval(alarmInterval);
+      addLog('[SECURITY] Cable theft emergency cleared.');
+      localStorage.setItem('theft_dp_down', '0');
+      localStorage.setItem('theft_msan_down', '0');
+      localStorage.setItem('theft_ftth_down', '0');
+    };
+  }, [isTheftActive]);
 
   // Play a beautiful, futuristic telecom alarm sound via Web Audio API synth
   const playAlertSound = () => {
@@ -980,6 +1051,42 @@ export default function App({ onBack }: { onBack?: () => void }) {
   
   // Ticket Generator simulation state
   const [ticketRef, setTicketRef] = useState<string | null>(null);
+
+  // Listen to Liya dispatching team
+  useEffect(() => {
+    const handleLiyaDispatch = () => {
+      const ticketId = `TKT-${Math.floor(100000 + Math.random() * 900000)}`;
+      setTicketRef(ticketId);
+      addLog(`[AI AGENT] Automated Field Team Dispatched. Ticket ${ticketId}.`);
+      
+      setNodes(prev => {
+        let resolved = 0;
+        const next = prev.map(n => {
+          if (n.status === 'fault') {
+            resolved++;
+            return { ...n, status: 'normal', faultDetectedAt: undefined };
+          }
+          return n;
+        });
+        if (resolved > 0) {
+          setResolvedAlarmsCount(r => r + resolved);
+          addLog(`[REPAIR] AI Agent successfully assigned field team. ${resolved} nodes are under repair.`);
+          localStorage.setItem('theft_dp_down', '0');
+          localStorage.setItem('theft_msan_down', '0');
+          localStorage.setItem('theft_ftth_down', '0');
+          setIsTheftActive(false);
+        }
+        return next;
+      });
+
+      setTimeout(() => {
+        setTicketRef(null);
+      }, 15000);
+    };
+    
+    window.addEventListener('liya_dispatch_team', handleLiyaDispatch);
+    return () => window.removeEventListener('liya_dispatch_team', handleLiyaDispatch);
+  }, []);
 
   // Live clock display
   const [timeStr, setTimeStr] = useState('2026-06-05 13:56:27 UTC');
@@ -2038,6 +2145,29 @@ export default function App({ onBack }: { onBack?: () => void }) {
                 }`}
               >
                 {isWeatherActive ? "SHUTDOWN" : "🌩️ TRIGGER STORM"}
+              </button>
+            </div>
+
+            {/* Cable Theft Simulator */}
+            <div className="flex items-center gap-3 border-r border-slate-800/80 pr-4">
+              <div className="flex items-center gap-2">
+                <Siren className={`w-5 h-5 shrink-0 ${isTheftActive ? 'text-rose-500 animate-pulse' : 'text-slate-500'}`} />
+                <div className="flex flex-col">
+                  <span className="text-[10px] font-bold text-slate-400 font-mono uppercase tracking-wider leading-none">CABLE THEFT SIM</span>
+                  <span className="text-[10px] font-mono leading-none text-rose-400 mt-1 max-w-[120px] truncate">
+                    {isTheftActive ? "CRITICAL THEFT" : "SYSTEM SECURE"}
+                  </span>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsTheftActive(!isTheftActive)}
+                className={`px-3 py-1.5 rounded border font-mono text-xs font-bold uppercase tracking-wider transition-all cursor-pointer select-none ${
+                  isTheftActive
+                    ? "bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 border-rose-500/50 animate-pulse shadow-md"
+                    : "bg-slate-800 hover:bg-slate-750 text-slate-300 border-slate-700 hover:text-white"
+                }`}
+              >
+                {isTheftActive ? "RESOLVED" : "🚨 CUT CABLES"}
               </button>
             </div>
 

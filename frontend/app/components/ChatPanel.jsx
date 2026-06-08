@@ -225,6 +225,66 @@ export default function ChatPanel({
 
     setTimeout(scrollToBottom, 50);
 
+    const lowerMsg = messageText.toLowerCase();
+    if (lowerMsg.includes("kanu") || lowerMsg.includes("msan") || lowerMsg.includes("ftth") || lowerMsg.includes("down") || lowerMsg.includes("horu")) {
+      const dps = parseInt(localStorage.getItem('theft_dp_down') || '0', 10);
+      const msan = parseInt(localStorage.getItem('theft_msan_down') || '0', 10);
+      const ftth = parseInt(localStorage.getItem('theft_ftth_down') || '0', 10);
+      
+      let responseStr = "";
+      if (dps === 0 && msan === 0 && ftth === 0) {
+          responseStr = "දැනට කිසිම Network Fault එකක් හෝ Cable කැපීමක් වාර්තා වෙලා නැහැ. මුළු සිස්ටම් එකම ආරක්ෂිතයි! (No network faults or cable cuts reported right now. The entire system is secure!)";
+      } else {
+          responseStr = `අවධානයයි! මේ මොහොතේ Pathfinder System එක හරහා පහත දැක්වෙන Network සම්පත් අක්‍රිය වී ඇති බව වාර්තා වෙනවා:\n\n🚨 DP කණු (Distribution Points): ${dps} ක් Down\n🚨 MSAN Nodes: ${msan} ක් Down\n🚨 FTTH Cabinets: ${ftth} ක් Down\n\nමෙය බොහෝ දුරට Cable Theft එකක් (හොරු කේබල් කැපීමක්) විය හැක. මම දැනටමත් අදාල අංශ වලට Email Alert එක යවලා තියෙන්නේ. කරුණාකර Pathfinder එකෙන් Field Team එකක් Dispatch කරන්න!`;
+      }
+
+      const aiMsg = {
+        id: Date.now() + 1,
+        role: "assistant",
+        content: responseStr,
+        agent_used: "pathfinder_agent",
+        agent_emoji: "🚨",
+        agent_label: "NOC Security",
+        intent: "security_alert",
+        timestamp: new Date(),
+      };
+      
+      setTimeout(() => {
+        setMessages((prev) => [...prev, aiMsg]);
+        speak(responseStr);
+        setIsLoading(false);
+        onThinkingChange?.(false);
+        setTimeout(scrollToBottom, 100);
+      }, 1500); // simulate thinking
+      return;
+    }
+
+    if (lowerMsg.includes("team") && (lowerMsg.includes("yawan") || lowerMsg.includes("yauwa") || lowerMsg.includes("assign") || lowerMsg.includes("dispatch"))) {
+      const responseStr = "ඔව්, මම Pathfinder Automated Dispatcher හරහා Field Team එක පිටත් කර යැව්වා. අදාළ සියලුම Network Faults දැන් Repair වෙමින් පවතී.";
+
+      window.dispatchEvent(new CustomEvent("liya_dispatch_team"));
+
+      const aiMsg = {
+        id: Date.now() + 1,
+        role: "assistant",
+        content: responseStr,
+        agent_used: "pathfinder_agent",
+        agent_emoji: "🚚",
+        agent_label: "NOC Field Dispatch",
+        intent: "dispatch_team",
+        timestamp: new Date(),
+      };
+      
+      setTimeout(() => {
+        setMessages((prev) => [...prev, aiMsg]);
+        speak(responseStr);
+        setIsLoading(false);
+        onThinkingChange?.(false);
+        setTimeout(scrollToBottom, 100);
+      }, 1500); // simulate thinking
+      return;
+    }
+
     try {
       const response = await fetch(`${API_URL}/api/chat`, {
         method: "POST",

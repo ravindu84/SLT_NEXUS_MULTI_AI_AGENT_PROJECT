@@ -672,6 +672,83 @@ async def email_report(request: ReportEmailRequest):
         "image_url": image_url
     }
 
+class CableTheftAlarmRequest(BaseModel):
+    emails: List[str]
+    dp_count: int
+    msan_count: int
+    ftth_count: int
+
+@router.post("/report/cable-theft-alarm")
+async def email_cable_theft_alarm(request: CableTheftAlarmRequest):
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    
+    timestamp = datetime.now().isoformat()
+    subject = "🚨 CRITICAL ALARM: Suspected Cable Theft Detected 🚨"
+    
+    sender_email = os.getenv("GMAIL_USER")
+    sender_password = os.getenv("GMAIL_APP_PASSWORD")
+    
+    email_status = "sent"
+    error_msg = ""
+    
+    if sender_email and sender_password:
+        try:
+            msg = MIMEMultipart()
+            msg['From'] = sender_email
+            msg['To'] = ", ".join(request.emails)
+            msg['Subject'] = subject
+            
+            html_body = f"""
+            <html>
+                <body style="font-family: Arial, sans-serif; color: #333; background-color: #111; padding: 20px;">
+                    <div style="background-color: #222; border: 2px solid #e74c3c; padding: 20px; border-radius: 8px;">
+                        <h2 style="color: #e74c3c; text-align: center;">⚠️ CRITICAL INCIDENT REPORT ⚠️</h2>
+                        <h3 style="color: #fff;">Network Event: Suspected Copper/Fiber Cable Theft</h3>
+                        <p style="color: #ccc;">The SLT NEXUS Pathfinder has detected simultaneous hard-down anomalies across multiple network segments, highly indicative of malicious physical damage (Cable Cut/Theft).</p>
+                        
+                        <div style="background-color: #333; padding: 15px; border-left: 4px solid #e74c3c; margin: 20px 0;">
+                            <h4 style="color: #e74c3c; margin-top: 0;">Impacted Assets:</h4>
+                            <ul style="color: #fff; font-size: 16px;">
+                                <li><strong>Distribution Points (DP):</strong> {request.dp_count} Down</li>
+                                <li><strong>MSAN Nodes:</strong> {request.msan_count} Down</li>
+                                <li><strong>FTTH Cabinets:</strong> {request.ftth_count} Down</li>
+                            </ul>
+                        </div>
+                        
+                        <p style="color: #ccc;">Immediate dispatch of field teams is strongly advised. Coordinates have been locked on the Pathfinder NOC dashboard.</p>
+                        <br>
+                        <p style="color: #777;"><small>Automated dispatch by SLT NEXUS Security System<br>Timestamp: {timestamp}</small></p>
+                    </div>
+                </body>
+            </html>
+            """
+            msg.attach(MIMEText(html_body, 'html'))
+            
+            server = smtplib.SMTP('smtp.gmail.com', 587)
+            server.starttls()
+            server.login(sender_email, sender_password)
+            text = msg.as_string()
+            server.sendmail(sender_email, request.emails, text)
+            server.quit()
+            
+            print(f"✅ Theft Alarm Email sent successfully to {', '.join(request.emails)}!")
+        except Exception as e:
+            email_status = "failed"
+            error_msg = str(e)
+            print(f"❌ Failed to send alarm email: {error_msg}")
+    else:
+        email_status = "failed"
+        error_msg = "GMAIL_USER or GMAIL_APP_PASSWORD not configured in .env"
+        print("❌ Theft Alarm Email simulated (Credentials missing).")
+
+    return {
+        "status": email_status,
+        "error": error_msg,
+        "timestamp": timestamp
+    }
+
 class FinalizeRequest(BaseModel):
     mobile_number: str
     package_name: str
