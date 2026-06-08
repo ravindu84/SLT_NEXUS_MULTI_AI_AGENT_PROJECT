@@ -10,11 +10,9 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
   PieChart, Pie, Cell, BarChart, Bar
 } from 'recharts';
-import DashboardWidgets from '../components/DashboardWidgets';
-import PathfinderApp from '../components/pathfinder/PathfinderApp';
-import FutureInnovations from '../components/FutureInnovations';
 import dynamic from 'next/dynamic';
 import { useLanguage } from '../context/LanguageContext';
+import FutureInnovations from '../components/FutureInnovations';
 
 const LiyaProDashboard = dynamic(() => import('../components/LiyaProDashboard'), {
   ssr: false,

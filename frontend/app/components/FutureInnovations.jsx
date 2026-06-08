@@ -1,3 +1,4 @@
+"use client";
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Users, BarChart, Package, ShieldCheck, Scale, Sparkles, ChevronDown } from 'lucide-react';

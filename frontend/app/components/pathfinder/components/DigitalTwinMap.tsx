@@ -3212,6 +3212,7 @@ export default function DigitalTwinMap({
           </button>
         </div>
       </div>
+      </div>
         )
       )}
 
