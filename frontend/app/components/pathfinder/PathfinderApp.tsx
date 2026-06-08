@@ -874,7 +874,7 @@ export default function App({ onBack }: { onBack?: () => void }) {
       localStorage.setItem('theft_msan_down', msanF.toString());
       localStorage.setItem('theft_ftth_down', ftthF.toString());
       
-      fetch('http://localhost:8000/mocks/report/cable-theft-alarm', {
+      fetch('http://16.171.166.199:8000/mocks/report/cable-theft-alarm', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -897,7 +897,7 @@ export default function App({ onBack }: { onBack?: () => void }) {
       
       if (dps > 0 || msan > 0 || ftth > 0) {
         addLog('[SECURITY] Recurring Alarm Dispatching Email to aravindaslt@gmail.com');
-        fetch('http://localhost:8000/mocks/report/cable-theft-alarm', {
+        fetch('http://16.171.166.199:8000/mocks/report/cable-theft-alarm', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
