@@ -358,7 +358,7 @@ export default function Home() {
   }
 
   if (!showAuth && !showApp) {
-    return <LandingPage onTryLiya={() => { setShowAuth(true); playBgMusic(); }} />;
+    return <LandingPage onTryLiya={() => { setShowAuth(true); stopBgMusic(); }} />;
   }
 
   if (showAuth) {
@@ -366,6 +366,7 @@ export default function Home() {
       <AuthPage onAuthSuccess={(phoneNum) => {
         setShowAuth(false);
         setShowApp(true);
+        playBgMusic();
         if (phoneNum) {
           setSessionId(phoneNum); // Backend will use this as the user identifier!
         }
