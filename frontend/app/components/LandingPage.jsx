@@ -74,7 +74,16 @@ const B2B_INDUSTRIES = [
   { icon: "🎓", name: "Schools", desc: "Student helpdesk AI, fee management, parent notifications" },
   { icon: "🛒", name: "Supermarkets", desc: "Inventory AI, customer loyalty programs, delivery tracking" },
   { icon: "🏨", name: "Hotels", desc: "Guest concierge AI, booking management, multilingual support" },
-  { icon: "🏢", name: "Corporate", desc: "Employee helpdesk, WFM reporting, automated HR workflows" },
+  { icon: "✂️", name: "Salons", desc: "Appointment booking, style recommendations, beauty tips AI" },
+  { icon: "🚉", name: "Transportation", desc: "Bus & Railway schedules, smart ticketing, delay alerts" },
+  { icon: "✈️", name: "Airports", desc: "Flight status updates, baggage tracking, check-in AI" },
+  { icon: "📮", name: "Post Offices", desc: "Parcel tracking, postage calculation, delivery notifications" },
+  { icon: "🛂", name: "Passport Offices", desc: "Passport status tracking, visa guidelines, appointments" },
+  { icon: "🚗", name: "License Offices", desc: "License renewals, driving test scheduling, fine payments" },
+  { icon: "🪪", name: "ID Offices", desc: "NIC application tracking, document verification, appointments" },
+  { icon: "🏛️", name: "Embassies", desc: "Visa requirements, consular services, travel advisories" },
+  { icon: "🏢", name: "Ministries", desc: "Public health & education inquiries, government service requests" },
+  { icon: "⚖️", name: "Courts", desc: "Case status updates, hearing schedules, legal aid routing" },
 ];
 
 const B2B_PLANS = [
