@@ -20,7 +20,7 @@ export default function AuthPage(props) {
     </svg>
   );
 
-  const { onAuthSuccess, onLanguageSelected } = props;
+  const { onAuthSuccess, onLanguageSelected, onBackToLanguageSelection } = props;
   const router = useRouter();
   
   // Video Background Sync
@@ -348,39 +348,39 @@ export default function AuthPage(props) {
                   whileHover={{ scale: 1.02, x: 5 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleLanguageSelect("en")}
-                  className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-6 text-left flex items-center justify-between transition-all group"
+                  className="w-full bg-black/40 hover:bg-black/60 border border-white/10 hover:border-blue-500/50 rounded-2xl p-6 text-left flex items-center justify-between transition-all group shadow-xl"
                 >
                   <div>
-                    <h3 className="text-3xl font-bold text-white mb-1">English</h3>
-                    <p className="text-sm text-zinc-400">Continue in English</p>
+                    <h3 className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 mb-1 drop-shadow-md">English</h3>
+                    <p className="text-sm text-zinc-400 font-medium">Continue in English</p>
                   </div>
-                  <ArrowRight className="text-zinc-500 group-hover:text-blue-400 transition-colors" size={24} />
+                  <ArrowRight className="text-zinc-500 group-hover:text-blue-400 transition-colors" size={28} />
                 </motion.button>
 
                 <motion.button
                   whileHover={{ scale: 1.02, x: 5 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleLanguageSelect("si")}
-                  className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-6 text-left flex items-center justify-between transition-all group"
+                  className="w-full bg-black/40 hover:bg-black/60 border border-white/10 hover:border-blue-500/50 rounded-2xl p-6 text-left flex items-center justify-between transition-all group shadow-xl"
                 >
                   <div>
-                    <h3 className="text-4xl font-bold text-white mb-1">සිංහල</h3>
-                    <p className="text-sm text-zinc-400">සිංහලෙන් ඉදිරියට යන්න</p>
+                    <h3 className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 mb-1 drop-shadow-md">සිංහල</h3>
+                    <p className="text-sm text-zinc-400 font-medium">සිංහලෙන් ඉදිරියට යන්න</p>
                   </div>
-                  <ArrowRight className="text-zinc-500 group-hover:text-blue-400 transition-colors" size={24} />
+                  <ArrowRight className="text-zinc-500 group-hover:text-blue-400 transition-colors" size={28} />
                 </motion.button>
 
                 <motion.button
                   whileHover={{ scale: 1.02, x: 5 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => handleLanguageSelect("ta")}
-                  className="w-full bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl p-6 text-left flex items-center justify-between transition-all group"
+                  className="w-full bg-black/40 hover:bg-black/60 border border-white/10 hover:border-blue-500/50 rounded-2xl p-6 text-left flex items-center justify-between transition-all group shadow-xl"
                 >
                   <div>
-                    <h3 className="text-3xl font-bold text-white mb-1">தமிழ்</h3>
-                    <p className="text-sm text-zinc-400">தமிழில் தொடரவும்</p>
+                    <h3 className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500 mb-1 drop-shadow-md">தமிழ்</h3>
+                    <p className="text-sm text-zinc-400 font-medium">தமிழில் தொடரவும்</p>
                   </div>
-                  <ArrowRight className="text-zinc-500 group-hover:text-blue-400 transition-colors" size={24} />
+                  <ArrowRight className="text-zinc-500 group-hover:text-blue-400 transition-colors" size={28} />
                 </motion.button>
               </div>
             </div>
@@ -456,7 +456,11 @@ export default function AuthPage(props) {
               
               {/* Back to Language Selection Button */}
               <button 
-                onClick={() => { setShowLanguageSelection(true); }}
+                onClick={() => { 
+                  setShowLanguageSelection(true); 
+                  if (onBackToLanguageSelection) onBackToLanguageSelection();
+                  if (audioRef.current) audioRef.current.play().catch(e=>console.log(e));
+                }}
                 className="absolute top-6 right-6 text-sm flex items-center gap-1 text-zinc-400 hover:text-white transition-colors"
               >
                 <Globe size={14} /> {curr.selectLanguage}
