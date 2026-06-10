@@ -363,7 +363,9 @@ export default function Home() {
 
   if (showAuth) {
     return (
-      <AuthPage onAuthSuccess={(phoneNum) => {
+      <AuthPage 
+        onLanguageSelected={playBgMusic}
+        onAuthSuccess={(phoneNum) => {
         setShowAuth(false);
         setShowApp(true);
         playBgMusic();
