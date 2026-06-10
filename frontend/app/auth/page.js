@@ -401,21 +401,31 @@ export default function AuthPage(props) {
           >
             {/* Left Sidebar - QR Codes (Modern App Download) */}
             {isDesktop && (
-              <div className="flex-1 bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-8 flex flex-col justify-center items-center text-white shadow-2xl relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent" />
+              <div className="flex-1 border border-white/10 rounded-2xl p-8 flex flex-col justify-center items-center text-white shadow-2xl relative overflow-hidden">
                 
-                <div className="mb-8 hover:scale-105 transition-transform duration-300">
+                {/* Circuit Board Background with Reduced Transparency */}
+                <div 
+                  className="absolute inset-0 z-0 opacity-40 mix-blend-screen bg-cover bg-center"
+                  style={{ backgroundImage: "url('/assets/circuit_bg.png')" }}
+                />
+                
+                {/* Dark overlay to ensure text is readable */}
+                <div className="absolute inset-0 z-0 bg-black/50 backdrop-blur-md" />
+
+                <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent z-10" />
+                
+                <div className="mb-8 hover:scale-105 transition-transform duration-300 relative z-10">
                   <img src="/assets/logo.png" alt="SLT NEXUS" className="h-[60px] w-auto drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]" />
                 </div>
                 
-                <h2 className="text-2xl font-bold mb-2 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">
+                <h2 className="text-2xl font-bold mb-2 text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400 relative z-10">
                   {curr.getApp}
                 </h2>
-                <p className="text-zinc-300 text-sm text-center mb-8 max-w-[200px]">
+                <p className="text-zinc-300 text-sm text-center mb-8 max-w-[200px] relative z-10">
                   {curr.scanToDownload}
                 </p>
                 
-                <div className="flex flex-row items-center justify-center gap-5 w-full mt-2">
+                <div className="flex flex-row items-center justify-center gap-5 w-full mt-2 relative z-10">
                   <div className="bg-white p-2.5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.1)] flex items-center justify-center hover:scale-105 transition-transform">
                     <QrCode size={80} className="text-black" />
                   </div>
