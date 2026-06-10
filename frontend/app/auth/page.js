@@ -7,7 +7,8 @@ import { Phone, Lock, Hash, ArrowRight, Zap, User, CreditCard, Mail, MapPin, Shi
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 
-export default function AuthPage({ onAuthSuccess }) {
+export default function AuthPage(props) {
+  const onAuthSuccess = props.onAuthSuccess;
   const router = useRouter();
   const { playMusic } = useAudio();
   const [tab, setTab] = useState("existing");
