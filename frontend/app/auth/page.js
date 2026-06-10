@@ -166,31 +166,40 @@ export default function AuthPage(props) {
               Scan to download on your device for the ultimate experience.
             </p>
             
-            <div className="flex flex-col gap-3 w-full max-w-[200px]">
-              <motion.a 
-                whileHover={{ scale: 1.05, y: -2 }} 
-                whileTap={{ scale: 0.95 }}
-                href="#" 
-                className="flex items-center gap-3 bg-black/60 hover:bg-black border border-white/10 hover:border-white/30 rounded-xl px-4 py-2.5 transition-all shadow-lg"
+            <div className="flex flex-row items-center justify-center gap-5 w-full mt-2">
+              <motion.div 
+                whileHover={{ scale: 1.05 }} 
+                className="bg-white p-2.5 rounded-xl shadow-[0_0_15px_rgba(255,255,255,0.1)] flex items-center justify-center"
               >
-                <AppleIcon />
-                <div className="flex flex-col items-start justify-center">
-                  <span className="text-[10px] text-zinc-400 leading-none mb-0.5">Download on the</span>
-                  <span className="text-sm font-semibold text-white leading-tight">App Store</span>
-                </div>
-              </motion.a>
-              <motion.a 
-                whileHover={{ scale: 1.05, y: -2 }} 
-                whileTap={{ scale: 0.95 }}
-                href="#" 
-                className="flex items-center gap-3 bg-black/60 hover:bg-black border border-white/10 hover:border-white/30 rounded-xl px-4 py-2.5 transition-all shadow-lg"
-              >
-                <PlayIcon />
-                <div className="flex flex-col items-start justify-center">
-                  <span className="text-[10px] text-zinc-400 leading-none mb-0.5">GET IT ON</span>
-                  <span className="text-sm font-semibold text-white leading-tight">Google Play</span>
-                </div>
-              </motion.a>
+                <QrCode size={80} className="text-black" />
+              </motion.div>
+
+              <div className="flex flex-col gap-3 w-full max-w-[160px]">
+                <motion.a 
+                  whileHover={{ scale: 1.05, x: 2 }} 
+                  whileTap={{ scale: 0.95 }}
+                  href="#" 
+                  className="flex items-center gap-3 bg-black/60 hover:bg-black border border-white/10 hover:border-white/30 rounded-xl px-3 py-2 transition-all shadow-lg w-full"
+                >
+                  <AppleIcon />
+                  <div className="flex flex-col items-start justify-center">
+                    <span className="text-[9px] text-zinc-400 leading-none mb-0.5">Download on the</span>
+                    <span className="text-xs font-semibold text-white leading-tight">App Store</span>
+                  </div>
+                </motion.a>
+                <motion.a 
+                  whileHover={{ scale: 1.05, x: 2 }} 
+                  whileTap={{ scale: 0.95 }}
+                  href="#" 
+                  className="flex items-center gap-3 bg-black/60 hover:bg-black border border-white/10 hover:border-white/30 rounded-xl px-3 py-2 transition-all shadow-lg w-full"
+                >
+                  <PlayIcon />
+                  <div className="flex flex-col items-start justify-center">
+                    <span className="text-[9px] text-zinc-400 leading-none mb-0.5">GET IT ON</span>
+                    <span className="text-xs font-semibold text-white leading-tight">Google Play</span>
+                  </div>
+                </motion.a>
+              </div>
             </div>
           </motion.div>
         )}
