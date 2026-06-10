@@ -293,13 +293,17 @@ export default function AuthPage(props) {
   return (
     <main className="relative min-h-screen flex items-center justify-center p-4 bg-[#09090b] overflow-hidden font-sans">
       
+      {/* Animated Background Orbs (Fallback and beautiful colors) */}
+      <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-blue-600/30 rounded-full blur-[120px] mix-blend-screen animate-pulse pointer-events-none z-0" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-purple-600/30 rounded-full blur-[150px] mix-blend-screen animate-pulse pointer-events-none z-0" />
+      <div className="absolute top-[20%] right-[10%] w-[400px] h-[400px] bg-pink-600/20 rounded-full blur-[150px] mix-blend-screen animate-pulse pointer-events-none z-0" style={{ animationDelay: '1s' }} />
+
       {/* BACKGROUND VIDEO & AUDIO */}
       <video 
         ref={videoRef}
         src="/assets/kiosk_video.mp4" 
         autoPlay loop muted playsInline
-        className="absolute top-0 left-0 w-full h-full object-cover opacity-100 z-0"
-        style={{ zIndex: 0 }}
+        className="absolute top-0 left-0 w-full h-full object-cover opacity-60 mix-blend-screen z-0"
       />
       <audio ref={audioRef} src="/assets/kiosk_sound.mp3" loop />
       
