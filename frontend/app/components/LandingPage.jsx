@@ -1,145 +1,28 @@
 "use client";
 
+import { useState } from "react";
 import styles from "./LandingPage.module.css";
 import Link from "next/link";
 import { Check, ArrowRight, Smartphone, Globe, Bot, Sparkles, Shield, BarChart3, Zap } from "lucide-react";
 import InteractiveTechVisual from "./InteractiveTechVisual";
-
-const AGENTS = [
-  { emoji: "🧠", name: "LIYA", role: "Manager & Orchestrator" },
-  { emoji: "🤟", name: "Signa", role: "Accessibility Specialist" },
-  { emoji: "🔮", name: "Oracle", role: "Predictive Analyst" },
-  { emoji: "📍", name: "Pathfinder", role: "Logistics & Dispatch" },
-  { emoji: "💓", name: "Pulse", role: "Tech & Infrastructure" },
-  { emoji: "👁️", name: "Insight", role: "Usage & Packages" },
-  { emoji: "⚡", name: "Spark", role: "Sales & Onboarding" },
-  { emoji: "🛡️", name: "Guardian", role: "Digital Detective" },
-  { emoji: "🔗", name: "Vault", role: "Blockchain Ledger" },
-  { emoji: "🔌", name: "Provisioner", role: "Operations & Scheduling" },
-  { emoji: "🔍", name: "Analyzer", role: "B2B Reporting" },
-  { emoji: "✉️", name: "Messenger", role: "Automations & Dispatch" },
-];
-
-const B2C_PLANS = [
-  {
-    tier: "Starter",
-    price: "Free",
-    currency: "",
-    period: "Forever free",
-    popular: false,
-    features: [
-      "5 AI queries per day",
-      "Basic network diagnostics",
-      "Package information",
-      "English language support",
-      "Community support",
-    ],
-  },
-  {
-    tier: "Pro",
-    price: "499",
-    currency: "Rs. ",
-    period: "/month",
-    popular: true,
-    features: [
-      "Unlimited AI queries",
-      "Voice conversations (Sinhala, Tamil, English)",
-      "Real-time usage analytics",
-      "Scam detection & alerts",
-      "Priority ticket resolution",
-      "Smart package recommendations",
-    ],
-  },
-  {
-    tier: "Premium",
-    price: "999",
-    currency: "Rs. ",
-    period: "/month",
-    popular: false,
-    features: [
-      "Everything in Pro",
-      "VR Teleshop access",
-      "Predictive maintenance alerts",
-      "Blockchain SLA verification",
-      "Dedicated AI concierge",
-      "Family account (up to 5 lines)",
-      "24/7 human escalation",
-    ],
-  },
-];
-
-const B2B_INDUSTRIES = [
-  { icon: "🏥", name: "Hospitals", desc: "Patient communication AI, appointment scheduling, lab report dispatch" },
-  { icon: "🏦", name: "Banks", desc: "Customer support automation, fraud detection, transaction alerts" },
-  { icon: "🎓", name: "Schools", desc: "Student helpdesk AI, fee management, parent notifications" },
-  { icon: "🛒", name: "Supermarkets", desc: "Inventory AI, customer loyalty programs, delivery tracking" },
-  { icon: "🏨", name: "Hotels", desc: "Guest concierge AI, booking management, multilingual support" },
-  { icon: "✂️", name: "Salons", desc: "Appointment booking, style recommendations, beauty tips AI" },
-  { icon: "🚉", name: "Transportation", desc: "Bus & Railway schedules, smart ticketing, delay alerts" },
-  { icon: "✈️", name: "Airports", desc: "Flight status updates, baggage tracking, check-in AI" },
-  { icon: "📮", name: "Post Offices", desc: "Parcel tracking, postage calculation, delivery notifications" },
-  { icon: "🛂", name: "Passport Offices", desc: "Passport status tracking, visa guidelines, appointments" },
-  { icon: "🚗", name: "License Offices", desc: "License renewals, driving test scheduling, fine payments" },
-  { icon: "🪪", name: "ID Offices", desc: "NIC application tracking, document verification, appointments" },
-  { icon: "🏛️", name: "Embassies", desc: "Visa requirements, consular services, travel advisories" },
-  { icon: "🏢", name: "Ministries", desc: "Public health & education inquiries, government service requests" },
-  { icon: "⚖️", name: "Courts", desc: "Case status updates, hearing schedules, legal aid routing" },
-];
-
-const B2B_PLANS = [
-  {
-    tier: "Starter",
-    price: "14,999",
-    currency: "Rs. ",
-    period: "/month",
-    popular: false,
-    features: [
-      "Single department deployment",
-      "Up to 500 queries/day",
-      "3 custom AI agents",
-      "Email & WhatsApp dispatch",
-      "Basic analytics dashboard",
-    ],
-  },
-  {
-    tier: "Business",
-    price: "49,999",
-    currency: "Rs. ",
-    period: "/month",
-    popular: true,
-    features: [
-      "Multi-department deployment",
-      "Unlimited queries",
-      "8 custom AI agents",
-      "Full API integration",
-      "Advanced analytics & reporting",
-      "Dedicated account manager",
-      "Custom branding",
-    ],
-  },
-  {
-    tier: "Enterprise",
-    price: "Custom",
-    currency: "",
-    period: "Contact sales",
-    popular: false,
-    features: [
-      "Unlimited departments",
-      "12 fully customized AI agents",
-      "On-premise deployment option",
-      "Blockchain audit trail",
-      "Custom ML model training",
-      "24/7 premium support",
-      "SLA guaranteed uptime",
-      "White-label solution",
-    ],
-  },
-];
+import { tLanding, getAgents, getB2CPlans, getB2BIndustries, getB2BPlans } from "./landingTranslations";
 
 export default function LandingPage({ onTryLiya }) {
+  const [lang, setLang] = useState("en");
+
   const scrollTo = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
   };
+
+  const toggleLanguage = () => {
+    setLang(prev => prev === "en" ? "si" : prev === "si" ? "ta" : "en");
+  };
+
+  const curr = tLanding[lang];
+  const AGENTS = getAgents(lang);
+  const B2C_PLANS = getB2CPlans(lang);
+  const B2B_INDUSTRIES = getB2BIndustries(lang);
+  const B2B_PLANS = getB2BPlans(lang);
 
   return (
     <div className={styles.landing}>
@@ -149,14 +32,21 @@ export default function LandingPage({ onTryLiya }) {
           <img src="/assets/logo.png" alt="SLT NEXUS" className={styles.navLogo} />
           <div className={styles.heroBadge} style={{ margin: 0, color: '#ffffff', background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.2)' }}>
             <span className={styles.heroBadgeDot}></span>
-            Sri Lanka&apos;s First Multi-Agent AI Platform
+            {curr.platformBadge}
           </div>
         </div>
         <div className={styles.navLinks}>
-          <button className={styles.navLink} onClick={() => scrollTo("features")}>Features</button>
-          <button className={styles.navLink} onClick={() => scrollTo("pricing")}>Pricing</button>
-          <button className={styles.navLink} onClick={() => scrollTo("b2b")}>Enterprise</button>
-          <button className={styles.navCta} onClick={onTryLiya}>Try LIYA AI →</button>
+          <button className={styles.navLink} onClick={() => scrollTo("features")}>{curr.navFeatures}</button>
+          <button className={styles.navLink} onClick={() => scrollTo("pricing")}>{curr.navPricing}</button>
+          <button className={styles.navLink} onClick={() => scrollTo("b2b")}>{curr.navEnterprise}</button>
+          
+          {/* Language Switcher */}
+          <button className={styles.navLink} onClick={toggleLanguage} style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.1)', padding: '5px 10px', borderRadius: '20px' }}>
+            <Globe size={16} /> 
+            {lang === "en" ? "English" : lang === "si" ? "සිංහල" : "தமிழ்"}
+          </button>
+
+          <button className={styles.navCta} onClick={onTryLiya}>{curr.navTryLiya}</button>
         </div>
       </nav>
 
@@ -171,10 +61,10 @@ export default function LandingPage({ onTryLiya }) {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', zIndex: 2, marginBottom: '10px' }}>
           <div className={styles.heroButtons}>
             <button className={styles.btnPrimary} onClick={onTryLiya}>
-              <Sparkles size={18} /> Experience LIYA AI
+              <Sparkles size={18} /> {curr.experienceLiya}
             </button>
             <button className={styles.btnSecondary} onClick={() => scrollTo("intro")}>
-              View Plans <ArrowRight size={16} />
+              {curr.viewPlans} <ArrowRight size={16} />
             </button>
           </div>
         </div>
@@ -185,45 +75,41 @@ export default function LandingPage({ onTryLiya }) {
         <InteractiveTechVisual />
         
         <h1 className={styles.heroTitle}>
-          The Future of
-          <br />
-          <span className={styles.heroGradient}>Telecom AI</span>
+          {curr.heroTitleLine1}
+          {curr.heroTitleLine1 !== "" && <br />}
+          <span className={styles.heroGradient}>{curr.heroTitleGradient}</span>
         </h1>
 
         <p className={styles.heroSub}>
-          Meet LIYA — 12 specialized AI agents working together to transform
-          customer support, network operations, and enterprise communications
-          for SLT-MOBITEL.
+          {curr.heroSub}
         </p>
 
         <div className={styles.heroStats} style={{ marginTop: '80px' }}>
           <div className={styles.stat}>
             <div className={styles.statNum}>12</div>
-            <div className={styles.statLabel} style={{ color: '#ffffff' }}>AI Agents</div>
+            <div className={styles.statLabel} style={{ color: '#ffffff' }}>{curr.statAgents}</div>
           </div>
           <div className={styles.stat}>
             <div className={styles.statNum}>3</div>
-            <div className={styles.statLabel} style={{ color: '#ffffff' }}>Languages</div>
+            <div className={styles.statLabel} style={{ color: '#ffffff' }}>{curr.statLanguages}</div>
           </div>
           <div className={styles.stat}>
             <div className={styles.statNum}>200+</div>
-            <div className={styles.statLabel} style={{ color: '#ffffff' }}>Accounts</div>
+            <div className={styles.statLabel} style={{ color: '#ffffff' }}>{curr.statAccounts}</div>
           </div>
           <div className={styles.stat}>
             <div className={styles.statNum}>24/7</div>
-            <div className={styles.statLabel} style={{ color: '#ffffff' }}>Available</div>
+            <div className={styles.statLabel} style={{ color: '#ffffff' }}>{curr.statAvailable}</div>
           </div>
         </div>
       </section>
 
       {/* --- Agents Showcase --- */}
       <section className={styles.section} id="features">
-        <div className={styles.sectionTag}>Swarm Intelligence</div>
-        <h2 className={styles.sectionTitle}>12 AI Agents, One Unified Brain</h2>
+        <div className={styles.sectionTag}>{curr.swarmTag}</div>
+        <h2 className={styles.sectionTitle}>{curr.swarmTitle}</h2>
         <p className={styles.sectionDesc}>
-          Each agent specializes in a unique domain — from network diagnostics
-          to blockchain security. Together they form an intelligent swarm
-          orchestrated by LIYA.
+          {curr.swarmDesc}
         </p>
 
         <div className={styles.agentsGrid}>
@@ -240,40 +126,39 @@ export default function LandingPage({ onTryLiya }) {
       {/* --- Mobile App Section --- */}
       <section className={styles.appSection}>
         <div className={styles.appContent}>
-          <div className={styles.sectionTag}>Mobile Experience</div>
-          <h2 className={styles.sectionTitle}>SLT NEXUS in Your Pocket</h2>
+          <div className={styles.sectionTag}>{curr.appTag}</div>
+          <h2 className={styles.sectionTitle}>{curr.appTitle}</h2>
           <p className={styles.sectionDesc}>
-            Access LIYA AI, check your usage, pay bills, and manage your SLT
-            account — all from the palm of your hand.
+            {curr.appDesc}
           </p>
 
           <div className={styles.appFeatures}>
             <div className={styles.appFeature}>
               <div className={styles.featureIcon}><Bot size={20} /></div>
               <div>
-                <div className={styles.featureTitle}>Voice-Powered AI Chat</div>
-                <div className={styles.featureDesc}>Talk to LIYA in Sinhala, Tamil, or English with natural voice recognition</div>
+                <div className={styles.featureTitle}>{curr.appFeature1Title}</div>
+                <div className={styles.featureDesc}>{curr.appFeature1Desc}</div>
               </div>
             </div>
             <div className={styles.appFeature}>
               <div className={styles.featureIcon}><Globe size={20} /></div>
               <div>
-                <div className={styles.featureTitle}>Real-Time Network Status</div>
-                <div className={styles.featureDesc}>Instant diagnostics — power levels, SNR, attenuation at your fingertips</div>
+                <div className={styles.featureTitle}>{curr.appFeature2Title}</div>
+                <div className={styles.featureDesc}>{curr.appFeature2Desc}</div>
               </div>
             </div>
             <div className={styles.appFeature}>
               <div className={styles.featureIcon}><Shield size={20} /></div>
               <div>
-                <div className={styles.featureTitle}>Scam Protection</div>
-                <div className={styles.featureDesc}>Guardian AI analyzes suspicious messages and protects you from fraud</div>
+                <div className={styles.featureTitle}>{curr.appFeature3Title}</div>
+                <div className={styles.featureDesc}>{curr.appFeature3Desc}</div>
               </div>
             </div>
             <div className={styles.appFeature}>
               <div className={styles.featureIcon}><Smartphone size={20} /></div>
               <div>
-                <div className={styles.featureTitle}>VR Teleshop</div>
-                <div className={styles.featureDesc}>Browse and purchase SLT products in an immersive 3D virtual showroom</div>
+                <div className={styles.featureTitle}>{curr.appFeature4Title}</div>
+                <div className={styles.featureDesc}>{curr.appFeature4Desc}</div>
               </div>
             </div>
           </div>
@@ -300,11 +185,10 @@ export default function LandingPage({ onTryLiya }) {
 
       {/* --- B2C Pricing --- */}
       <section className={styles.section} id="pricing">
-        <div className={styles.sectionTag}>B2C Plans</div>
-        <h2 className={styles.sectionTitle}>Choose Your Plan</h2>
+        <div className={styles.sectionTag}>{curr.pricingTag}</div>
+        <h2 className={styles.sectionTitle}>{curr.pricingTitle}</h2>
         <p className={styles.sectionDesc}>
-          Whether you&apos;re a casual user or need premium AI-powered telecom services,
-          we have a plan for you.
+          {curr.pricingDesc}
         </p>
 
         <div className={styles.pricingGrid}>
@@ -325,7 +209,7 @@ export default function LandingPage({ onTryLiya }) {
                 ))}
               </ul>
               <button className={`${styles.priceBtn} ${plan.popular ? styles.priceBtnPrimary : styles.priceBtnOutline}`}>
-                {plan.price === "Free" ? "Get Started" : "Subscribe Now"}
+                {plan.price === "Free" || plan.price === "නොමිලේ" || plan.price === "இலவசம்" ? curr.getStartedBtn : curr.subscribeBtn}
               </button>
             </div>
           ))}
@@ -334,11 +218,10 @@ export default function LandingPage({ onTryLiya }) {
 
       {/* --- B2B Enterprise --- */}
       <section className={styles.section} id="b2b">
-        <div className={styles.sectionTag}>Enterprise Solutions</div>
-        <h2 className={styles.sectionTitle}>Transform Your Industry</h2>
+        <div className={styles.sectionTag}>{curr.b2bTag}</div>
+        <h2 className={styles.sectionTitle}>{curr.b2bTitle}</h2>
         <p className={styles.sectionDesc}>
-          Deploy LIYA&apos;s multi-agent AI system across your organization.
-          Customized for hospitals, banks, schools, and more.
+          {curr.b2bDesc}
         </p>
 
         <div className={styles.b2bGrid}>
@@ -369,7 +252,7 @@ export default function LandingPage({ onTryLiya }) {
                 ))}
               </ul>
               <button className={`${styles.priceBtn} ${plan.popular ? styles.priceBtnPrimary : styles.priceBtnOutline}`}>
-                {plan.price === "Custom" ? "Contact Sales" : "Get Started"}
+                {plan.price === "Custom" || plan.price === "අභිරුචි" || plan.price === "தனிப்பயன்" ? curr.contactSalesBtn : curr.getStartedBtn}
               </button>
             </div>
           ))}
@@ -379,23 +262,24 @@ export default function LandingPage({ onTryLiya }) {
       {/* --- CTA Footer --- */}
       <section className={styles.cta}>
         <h2 className={styles.ctaTitle}>
-          Ready to <span className={styles.heroGradient}>Transform</span>?
+          {curr.ctaTitleLine1}
+          <span className={styles.heroGradient}>{curr.ctaTitleGradient}</span>
+          {curr.ctaTitleLine2}
         </h2>
         <p className={styles.ctaSub}>
-          Experience the power of 12 AI agents working together.
-          Try LIYA now — no signup required.
+          {curr.ctaSub}
         </p>
         <button className={styles.btnPrimary} onClick={onTryLiya}>
-          <Zap size={18} /> Launch LIYA AI
+          <Zap size={18} /> {curr.launchLiyaBtn}
         </button>
       </section>
 
       <footer className={styles.footer}>
-        <div className={styles.footerText}>© 2026 SLT-MOBITEL. SLT NEXUS — Powered by NexGen Creators. All rights reserved.</div>
+        <div className={styles.footerText}>{curr.footerText}</div>
         <div className={styles.footerLinks}>
-          <Link href="/privacy" className={styles.footerLink}>Privacy Policy</Link>
-          <Link href="/terms" className={styles.footerLink}>Terms of Service</Link>
-          <Link href="/support" className={styles.footerLink}>Support</Link>
+          <Link href="/privacy" className={styles.footerLink}>{curr.footerPrivacy}</Link>
+          <Link href="/terms" className={styles.footerLink}>{curr.footerTerms}</Link>
+          <Link href="/support" className={styles.footerLink}>{curr.footerSupport}</Link>
         </div>
       </footer>
     </div>
