@@ -482,7 +482,8 @@ async def chat_endpoint(request: ChatRequest):
         result = await get_graph().ainvoke({
             "messages": messages,
             "user_language": request.lang or "si",  # Default to Sinhala
-            "is_admin": request.is_admin
+            "is_admin": request.is_admin,
+            "phone_number": session_id if not request.is_admin else None
         })
         ai_message = result["messages"][-1]
         # Censor AI response to prevent bad words being generated/spoken
@@ -744,16 +745,46 @@ async def get_account_details(phone_number: str):
         conn = sqlite3.connect(DB_PATH)
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
+        
+        # 1. Customer Name
         cursor.execute("SELECT * FROM customers WHERE phone_number = ?", (phone_number,))
         customer = cursor.fetchone()
+        if not customer:
+            conn.close()
+            return {"error": "Not Found"}
+            
+        # 2. Billing (with credit limit mock)
+        cursor.execute("SELECT * FROM billing WHERE phone_number = ?", (phone_number,))
+        billing_row = cursor.fetchone()
+        billing = dict(billing_row) if billing_row else {}
+        if billing:
+            billing["credit_limit"] = 5000.00
+            
+        # 3. Data Usage
+        cursor.execute("SELECT * FROM data_usage WHERE phone_number = ?", (phone_number,))
+        usage_row = cursor.fetchone()
+        data_usage = dict(usage_row) if usage_row else {}
+        
+        # 4. Billing History
+        cursor.execute("SELECT month, year, amount_billed, amount_paid, arrears FROM billing_history WHERE phone_number = ? ORDER BY id ASC", (phone_number,))
+        history_rows = cursor.fetchall()
+        billing_history = [dict(row) for row in history_rows]
+        
+        # 5. Daily Usage Logs
+        cursor.execute("SELECT log_date, google_gb, facebook_gb, youtube_gb, amazon_gb, tiktok_gb, total_gb FROM daily_usage_logs WHERE phone_number = ? ORDER BY log_date ASC", (phone_number,))
+        daily_rows = cursor.fetchall()
+        daily_logs = [dict(row) for row in daily_rows]
+        
         conn.close()
         
-        if customer:
-            return {
-                "phone_number": customer["phone_number"],
-                "customer_name": customer["registered_name"]
-            }
-        return {"error": "Not Found"}
+        return {
+            "phone_number": customer["phone_number"],
+            "customer_name": customer["registered_name"],
+            "billing": billing,
+            "data_usage": data_usage,
+            "billing_history": billing_history,
+            "daily_logs": daily_logs
+        }
     except Exception as e:
         print(f"Error in /api/account: {e}")
         return {"error": "Internal Server Error"}
