@@ -6,3 +6,5 @@ frontend/
 mobile/
 mobile_customer/
 mobile_technician/
+.venv
+backend/.venv
