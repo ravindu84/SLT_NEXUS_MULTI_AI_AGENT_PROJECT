@@ -664,39 +664,77 @@ async def text_to_speech(request: TTSRequest):
             print(f"[ERROR] gTTS Fallback failed: {e}")
             raise HTTPException(status_code=500, detail=f"TTS synthesis completely failed: {e}")
 
-    speech_key = os.getenv("AZURE_SPEECH_KEY")
-    speech_region = os.getenv("AZURE_SPEECH_REGION")
+    # --- 1. Google Gemini Multimodal Speech (Premium Voice) ---
+    gemini_api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    if gemini_api_key:
+        print(f"[INFO] GENERATING GOOGLE GEMINI AUDIO FOR: {target_lang}...")
+        try:
+            # Build a language-specific, high-quality TTS prompt
+            if target_lang == 'si':
+                prompt = (
+                    "ඔබ LIYA, SLT-MOBITEL හි AI සහායකයා. "
+                    "පහත text එක හරියටම සිංහලෙන් කියවන්න. "
+                    "ස්වාභාවික, මිත්‍රශීලී, මෘදු ස්ත්‍රී හඬකින් කියවන්න. "
+                    "English words තිබෙනවා නම් ඒවා English pronunciation එකෙන්ම කියවන්න, "
+                    "ඒත් general tone එක Sinhala වෙන්න ඕනෙ. "
+                    "ආරම්භයේ හෝ අවසානයේ කිසිදු අමතර වචනයක් එකතු නොකරන්න. "
+                    f"මෙම text එක පමණක් කියවන්න: {clean_text}"
+                )
+            elif target_lang == 'ta':
+                prompt = (
+                    "நீங்கள் LIYA, SLT-MOBITEL இன் AI உதவியாளர். "
+                    "கீழே உள்ள உரையை சரியாக தமிழில் படிக்கவும். "
+                    "இயற்கையான, நட்பான, மென்மையான பெண் குரலில் படிக்கவும். "
+                    "English வார்த்தைகள் இருந்தால் English உச்சரிப்பிலேயே படிக்கவும். "
+                    "தொடக்கத்திலோ முடிவிலோ எந்த கூடுதல் வார்த்தையும் சேர்க்காதீர்கள். "
+                    f"இந்த உரையை மட்டும் படிக்கவும்: {clean_text}"
+                )
+            else:
+                prompt = (
+                    "You are LIYA, the AI assistant for SLT-MOBITEL Sri Lanka. "
+                    "Read the following text aloud in a sweet, friendly, natural female voice. "
+                    "Do not add any introductory or ending remarks. "
+                    f"Just read this text exactly as written: {clean_text}"
+                )
+            
+            gemini_voice = "Fenrir" if use_male_voice else "Aoede"
+            
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-tts-preview:generateContent?key={gemini_api_key}"
+            headers = {"Content-Type": "application/json"}
+            data = {
+                "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+                "generationConfig": {
+                    "responseModalities": ["AUDIO"],
+                    "speechConfig": {
+                        "voiceConfig": {
+                            "prebuiltVoiceConfig": {
+                                "voiceName": gemini_voice
+                            }
+                        }
+                    }
+                }
+            }
+            response = await http_client.post(url, json=data, headers=headers, timeout=30.0)
+            if response.status_code == 200:
+                res_json = response.json()
+                parts = res_json.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+                audio_bytes = None
+                for p in parts:
+                    if "inlineData" in p and "audio" in p["inlineData"]["mimeType"].lower():
+                        import base64
+                        audio_bytes = base64.b64decode(p["inlineData"]["data"])
+                        break
+                if audio_bytes:
+                    print(f"[SUCCESS] Gemini Audio generated ({len(audio_bytes)} bytes) for lang={target_lang}!")
+                    return Response(content=audio_bytes, media_type="audio/wav")
+            else:
+                print(f"[WARNING] Gemini TTS API error ({response.status_code}): {response.text[:200]}")
+        except Exception as e:
+            print(f"[ERROR] Gemini Speech Generation failed: {e}")
 
-    # If Azure keys are missing, immediately fall back to gTTS so it never crashes!
-    if not speech_key or not speech_region:
-        print("[WARNING] Azure keys missing in .env! Falling back to gTTS...")
-        return generate_gtts_fallback(clean_text, target_lang)
-
-    print(f"[INFO] GENERATING AZURE AUDIO WITH SSML FOR: {target_lang} Using voice: {voice_name}")
-
-    try:
-        # Configure Azure Speech
-        speech_config = speechsdk.SpeechConfig(subscription=speech_key, region=speech_region)
-        
-        # Don't play on server speakers, just return the audio stream
-        audio_config = None 
-        synthesizer = speechsdk.SpeechSynthesizer(speech_config=speech_config, audio_config=audio_config)
-        
-        # Synthesize using speak_ssml_async
-        result = synthesizer.speak_ssml_async(ssml_text).get()
-        
-        if result.reason == speechsdk.ResultReason.SynthesizingAudioCompleted:
-            audio_data = result.audio_data
-            print(f"[SUCCESS] Azure Audio generated ({len(audio_data)} bytes)!")
-            return Response(content=audio_data, media_type="audio/wav")
-        else:
-            error_details = result.cancellation_details.error_details
-            print(f"[ERROR] Azure TTS Failed: {error_details}. Falling back to gTTS...")
-            return generate_gtts_fallback(clean_text, target_lang)
-
-    except Exception as e:
-        print(f"[ERROR] Speech Generation Exception: {e}. Falling back to gTTS...")
-        return generate_gtts_fallback(clean_text, target_lang)
+    # --- 2. Free gTTS Fallback ---
+    print(f"[INFO] FALLING BACK TO FREE GOOGLE TTS (gTTS) FOR: {target_lang}...")
+    return generate_gtts_fallback(clean_text, target_lang)
 
 if __name__ == "__main__":
     import uvicorn
