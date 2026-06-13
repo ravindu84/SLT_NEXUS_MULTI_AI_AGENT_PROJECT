@@ -1,10 +1,12 @@
 """
 SLT NEXUS - Master Web Crawler & Ingestion Pipeline
-Crawls slt.lk/home and eteleshop.slt.lk for fixed-line broadband, PEO TV, devices, and routers.
+Crawls slt.lk/home and sltmobitel.lk for fixed-line broadband, PEO TV, devices, and routers.
+Includes logic to download and parse PDFs (like manuals and terms).
 Cleans web pages, chunks text, embeds them, and inserts them into ChromaDB.
 """
 
 import os
+import io
 import re
 import urllib.parse
 import requests
@@ -13,55 +15,51 @@ from dotenv import load_dotenv
 import chromadb
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_openai import OpenAIEmbeddings
+import pypdf
 
 load_dotenv()
 
-# Setup paths & configurations
 CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", "./chroma_db")
-MAX_PAGES_TO_CRAWL = 100  # Extract comprehensive data from entire site
+MAX_PAGES_TO_CRAWL = 200  # Extract comprehensive data from entire site
 
-# Pre-rendered seeds to ensure 100% extraction success
 SEEDS = [
     "https://www.slt.lk/home",
     "https://www.slt.lk/en/broadband",
     "https://www.slt.lk/en/personal/telephone",
-    "https://www.slt.lk/en/personal/peo-tv/peo-feature"
+    "https://www.slt.lk/en/personal/peo-tv/peo-feature",
+    "https://www.sltmobitel.lk/"
 ]
 
 HIGH_VALUE_KEYWORDS = [
     "broadband", "fibre", "fiber", "peo-tv", "packages", "rates", 
     "charges", "telephone", "router", "product", "device", "e-teleshop", 
     "new-connection", "sme", "enterprise", "business", "mobile", "4g", "5g",
-    "promotions", "offers", "vas", "postpaid", "prepaid", "smart-home", "faq"
+    "promotions", "offers", "vas", "postpaid", "prepaid", "smart-home", "faq",
+    "manual", "guide", "terms"
 ]
 
-# Initialize DB & Embeddings
 chroma_client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
 collection = chroma_client.get_or_create_collection("slt_knowledge", metadata={"hnsw:space": "cosine"})
 embeddings = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Headers to avoid bot blocks
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
 }
 
 
 def is_valid_slt_url(url: str) -> bool:
-    """Check if the URL belongs to SLT domain and contains high-value contents."""
     parsed = urllib.parse.urlparse(url)
     domain = parsed.netloc.lower()
     
-    # Allow slt.lk and subdomains like eteleshop.slt.lk
     if not any(d in domain for d in ["slt.lk", "sltmobitel.lk"]):
         return False
         
     path = parsed.path.lower()
     
-    # Skip binary files
-    if any(path.endswith(ext) for ext in [".pdf", ".png", ".jpg", ".jpeg", ".mp4", ".zip", ".css", ".js"]):
+    # Skip non-PDF binary files
+    if any(path.endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".mp4", ".zip", ".css", ".js"]):
         return False
         
-    # Allow roots and high-value keyword pages
     matches_keywords = any(kw in path for kw in HIGH_VALUE_KEYWORDS)
     is_root_or_home = path in ["", "/", "/home", "/en/broadband", "/en/personal", "/en/business"]
     
@@ -69,21 +67,21 @@ def is_valid_slt_url(url: str) -> bool:
 
 
 def clean_html_and_extract_text(html_content: str) -> tuple:
-    """Strip clutter HTML elements and retrieve pure content text blocks."""
     soup = BeautifulSoup(html_content, "html.parser")
     
-    # Strip script, style, and iframe tags
-    for element in soup(["script", "style", "iframe", "noscript"]):
+    # Aggressively strip headers, footers, scripts, navbars
+    for element in soup(["script", "style", "iframe", "noscript", "nav", "header", "footer", "aside"]):
         element.decompose()
         
+    # Also strip divs that might be common nav classes
+    for element in soup.find_all("div", class_=re.compile(r"nav|menu|footer|header|sidebar", re.I)):
+        element.decompose()
+
     title = soup.title.string.strip() if soup.title else "SLT-MOBITEL Services"
-    
     text_blocks = []
     
-    # Pull headers, paragraphs, list items, and key text blocks
     for tag in soup.find_all(["h1", "h2", "h3", "h4", "p", "li", "span", "td"]):
         text = tag.get_text().strip()
-        # Skip utility texts or empty fragments
         if len(text) > 25 and not any(text.startswith(char) for char in ["{", "}", "[", "]", "var ", "function"]):
             text_blocks.append(text)
             
@@ -93,9 +91,23 @@ def clean_html_and_extract_text(html_content: str) -> tuple:
     return title, cleaned_text
 
 
+def extract_pdf_text(pdf_bytes: bytes) -> str:
+    try:
+        reader = pypdf.PdfReader(io.BytesIO(pdf_bytes))
+        text = ""
+        for page in reader.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text += page_text + "\n"
+        return text.strip()
+    except Exception as e:
+        print(f"Failed to parse PDF: {e}")
+        return ""
+
+
 def crawl_slt_sites():
     print("=" * 60)
-    print("START: SLT NEXUS - Master Web Crawler Ingestion Pipeline")
+    print("START: SLT NEXUS - Master Web & PDF Crawler")
     print("=" * 60)
     
     visited = set()
@@ -114,15 +126,29 @@ def crawl_slt_sites():
         visited.add(current_url)
         
         try:
-            response = requests.get(current_url, headers=HEADERS, timeout=8)
+            response = requests.get(current_url, headers=HEADERS, timeout=10)
             if response.status_code != 200:
                 print(f"  [SKIP] Status Code: {response.status_code}")
                 continue
-                
+
+            content_type = response.headers.get('Content-Type', '').lower()
+            
+            # Handle PDF
+            if "application/pdf" in content_type or current_url.lower().endswith(".pdf"):
+                print(f"  [PDF DETECTED] Extracting PDF text...")
+                text = extract_pdf_text(response.content)
+                title = current_url.split("/")[-1]
+                if text and len(text) > 150:
+                    all_pages_data.append({"url": current_url, "title": f"PDF Document: {title}", "text": text})
+                    crawled_count += 1
+                    print(f"  [SUCCESS] Extracted PDF ({len(text)} chars)")
+                continue
+
+            # Handle HTML
             title, text = clean_html_and_extract_text(response.text)
             
             if text and len(text) > 150:
-                print(f"  [SUCCESS] Extracted '{title}' ({len(text)} characters)")
+                print(f"  [SUCCESS] Extracted HTML '{title}' ({len(text)} characters)")
                 all_pages_data.append({
                     "url": current_url,
                     "title": title,
@@ -132,13 +158,11 @@ def crawl_slt_sites():
             else:
                 print("  [SKIP] Page does not contain enough clean text.")
                 
-            # Parse links to expand crawls
+            # Parse links to expand crawls if it's an HTML page
             soup = BeautifulSoup(response.text, "html.parser")
             for link in soup.find_all("a", href=True):
                 href = link["href"]
-                # Resolve relative URL paths
                 absolute_url = urllib.parse.urljoin(current_url, href)
-                # Keep URL canonical
                 parsed_absolute = urllib.parse.urlparse(absolute_url)
                 clean_url = f"{parsed_absolute.scheme}://{parsed_absolute.netloc}{parsed_absolute.path}"
                 
@@ -152,8 +176,7 @@ def crawl_slt_sites():
         print("\nWARNING: No high-value pages were crawled. Ingestion aborted.")
         return
 
-    # Ingestion into ChromaDB
-    print("\n[STEP 2] Chunking crawled pages...")
+    print("\n[STEP 2] Chunking crawled pages & PDFs...")
     splitter = RecursiveCharacterTextSplitter(
         chunk_size=650,
         chunk_overlap=70,
@@ -165,24 +188,19 @@ def crawl_slt_sites():
     ids = []
     
     for i, page in enumerate(all_pages_data):
-        doc_text = f"""
-Source Webpage: {page['title']}
-URL Link: {page['url']}
-Content Details:
-{page['text']}
-"""
+        doc_text = f"Source Webpage/PDF: {page['title']}\nURL Link: {page['url']}\nContent Details:\n{page['text']}"
         chunks = splitter.split_text(doc_text.strip())
         for j, chunk in enumerate(chunks):
             texts.append(chunk)
             metadatas.append({
-                "source": "slt_website",
+                "source": "slt_website_crawler",
                 "url": page["url"],
                 "title": page["title"],
-                "category": "web_information"
+                "category": "pdf_manual" if "PDF" in page["title"] else "web_information"
             })
-            ids.append(f"web_doc_{i}_chunk_{j}")
+            ids.append(f"web_crawler_{i}_chunk_{j}")
 
-    print(f"INFO: Generated {len(texts)} chunks from {len(all_pages_data)} pages.")
+    print(f"INFO: Generated {len(texts)} chunks from {len(all_pages_data)} pages/PDFs.")
 
     print("\n[STEP 3] Generating embeddings and inserting into ChromaDB...")
     embedded_texts = embeddings.embed_documents(texts)

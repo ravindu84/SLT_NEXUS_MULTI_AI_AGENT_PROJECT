@@ -28,10 +28,13 @@ def self_fix_internet(query: str) -> str:
         Step-by-step troubleshooting guide from the SLT knowledge base
     """
     retriever = SLTRetriever()
-    context = retriever.get_context_string(query, n_results=5, source_filter="troubleshooting")
+    context = retriever.get_context_string(query, n_results=3, source_filter="troubleshooting")
     
     # Also check FAQ for relevant info
-    faq_context = retriever.get_context_string(query, n_results=2, source_filter="faq")
+    faq_context = retriever.get_context_string(query, n_results=1, source_filter="faq")
+    
+    # Check technical_support (PDFs)
+    tech_context = retriever.get_context_string(query, n_results=3, source_filter="technical_support")
     
     return f"""
 TROUBLESHOOTING GUIDE:
@@ -40,7 +43,10 @@ TROUBLESHOOTING GUIDE:
 RELATED FAQ:
 {faq_context}
 
-Provide a clear, step-by-step troubleshooting guide.
+TECHNICAL MANUALS (PDFs):
+{tech_context}
+
+Provide a clear, step-by-step troubleshooting guide using the above knowledge base data.
 Be empathetic and patient. Use simple language.
 If the issue cannot be self-fixed, provide escalation info (call 1212).
 """

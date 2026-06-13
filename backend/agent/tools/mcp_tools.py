@@ -354,3 +354,100 @@ async def check_area_outages(phone_number: str) -> str:
             return f"No area outage detected. The distribution point {dp_box} is healthy for other customers. This is an isolated line issue."
     except Exception as e:
         return f"Error checking area outages: {str(e)}"
+
+@tool
+def search_slt_knowledgebase(query: str) -> str:
+    """Queries the SLT Vector Database (ChromaDB) to retrieve exact website data, terms, conditions, packages, or instructions. Use this tool whenever the customer asks about SLT products, peo tv, broadbands, manuals, or general knowledge."""
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
+        from backend.rag.retriever import SLTRetriever
+        retriever = SLTRetriever()
+        results = retriever.query(query, n_results=3)
+        if not results:
+            return "No matching data found in the SLT knowledge base."
+        
+        output = "Here is the exact data retrieved from the official SLT websites and PDFs:\n\n"
+        for i, res in enumerate(results):
+            source = res.get('metadata', {}).get('source', 'Unknown')
+            output += f"--- Result {i+1} (Source: {source}) ---\n{res['text']}\n\n"
+        return output
+    except Exception as e:
+        return f"Error searching knowledge base: {str(e)}"
+
+@tool
+def get_full_customer_profile(phone_number: str) -> str:
+    """[ADMIN ONLY] Fetches the COMPLETE technical profile for a customer: dp/loop, TID, SNR, attenuation, power level, ONT type, line state, billing, packages, fault tickets — everything in one call. Use this when the admin/tech staff needs full diagnostics for a customer."""
+    import sqlite3
+    import os
+    import json
+    db_path = os.path.join(os.path.dirname(__file__), "..", "..", "slt_dummy.db")
+    if not os.path.exists(db_path):
+        return json.dumps({"error": "Database not found."})
+    try:
+        conn = sqlite3.connect(db_path)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT * FROM customers WHERE phone_number = ?", (phone_number,))
+        customer = cursor.fetchone()
+        if not customer:
+            conn.close()
+            return json.dumps({"error": f"Customer {phone_number} not found in database."})
+        
+        cursor.execute("SELECT * FROM network_status WHERE phone_number = ?", (phone_number,))
+        network = cursor.fetchone()
+        
+        cursor.execute("SELECT * FROM billing WHERE phone_number = ?", (phone_number,))
+        billing = cursor.fetchone()
+        
+        cursor.execute("SELECT * FROM data_usage WHERE phone_number = ?", (phone_number,))
+        usage = cursor.fetchone()
+        
+        cursor.execute("SELECT ticket_id, technician, status, created_at FROM fault_tickets WHERE phone_number = ?", (phone_number,))
+        tickets = cursor.fetchall()
+        
+        conn.close()
+        
+        result = {
+            "customer": {
+                "phone_number": customer["phone_number"],
+                "name": customer["registered_name"],
+                "address": customer["address"],
+                "contact_number": customer["contact_number"],
+                "type": customer["telephone_type"],
+                "dp_loop": customer["dp_loop"],
+                "has_voice": customer["has_voice"],
+                "has_internet": customer["has_internet"],
+                "has_iptv": customer["has_iptv"],
+            },
+            "network": {
+                "status": network["status"] if network else "Unknown",
+                "line_state": network["line_state"] if network else None,
+                "power_level": network["power_level"] if network else None,
+                "snr": network["snr"] if network else None,
+                "attenuation": network["attenuation"] if network else None,
+                "ont_type": network["ont_type"] if network else None,
+                "tid": network["tid"] if network else None,
+            } if network else {},
+            "billing": {
+                "total_due": billing["total_due"] if billing else 0,
+                "payment_status": billing["payment_status"] if billing else None,
+                "nxc_balance": billing["nxc_balance"] if billing else 0,
+                "monthly_rental": billing["monthly_rental"] if billing else 0,
+                "unpaid_bills": billing["unpaid_bills"] if billing else 0,
+                "credit_limit": 5000.00,
+            } if billing else {},
+            "data_usage": {
+                "package": usage["package_name"] if usage else None,
+                "total_gb": usage["total_data_gb"] if usage else 0,
+                "used_gb": usage["used_data_gb"] if usage else 0,
+                "remaining_gb": usage["remaining_data_gb"] if usage else 0,
+                "status": usage["usage_status"] if usage else None,
+            } if usage else {},
+            "fault_tickets": [dict(t) for t in tickets],
+        }
+        return json.dumps(result, ensure_ascii=False)
+    except Exception as e:
+        return json.dumps({"error": str(e)})
+

@@ -9,6 +9,7 @@ import { useTheme } from "./context/ThemeContext";
 import { Zap, Mic, MicOff, Send, RotateCcw, ChevronUp, ChevronDown, Camera, Upload, X, Hand } from "lucide-react";
 import AuthPage from "./auth/page"; // Import the AuthPage for inline rendering
 import SignCamera from "./components/SignCamera"; // Import SignCamera
+import { useGeminiLiveAPI } from "./hooks/useGeminiLiveAPI"; // Import Gemini Live Hook
 
 // Dynamically load 3D components with SSR disabled
 const AvatarScene = dynamic(() => import("./components/AvatarScene"), {
@@ -69,6 +70,7 @@ export default function Home() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState(null);
+  const [customerName, setCustomerName] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
   const [attachedImage, setAttachedImage] = useState(null);
@@ -110,9 +112,58 @@ export default function Home() {
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
 
+  const currentPhone = sessionId || "0112895800";
+  const currentName = customerName || "Customer";
+  const GEMINI_PROMPT = `You are Liya, a friendly, professional, and highly intelligent female AI customer service assistant for SLT-MOBITEL NEXUS. 
+Your personality is warm, welcoming, and helpful. You are embedded in an interactive kiosk.
+
+## AUTHENTICATED CUSTOMER:
+- Name: **${currentName}**
+- Phone Number: **${currentPhone}**
+You ALREADY KNOW this customer. When you first greet them, use their name warmly. NEVER ask for their phone number.
+
+CRITICAL RULES:
+1. RESPECTFUL GREETING: NEVER call the customer just by their first name. Use ONLY ONE title based on the language you are speaking: If speaking Sinhala, say "${currentName} මහත්මයා". If speaking English, say "Mr. ${currentName}". If speaking Tamil, say "${currentName} ஐயா". DO NOT say all three at once!
+2. You MUST ONLY talk about SLT-MOBITEL NEXUS, telecom services, packages, Peo TV, Fiber, 5G, Metaverse, and digital platforms.
+3. If the user asks about ANYTHING ELSE, politely decline and steer the conversation back to SLT NEXUS.
+4. STRICT LANGUAGE ENFORCEMENT: You MUST ONLY speak in the assigned UI language. If the assigned language is 'si' (Sinhala), you MUST speak Sinhala EVEN IF the user says an English greeting like "Hello" or "Hi". Never switch to English unless the UI language is 'en'.
+5. MONEY & NUMBER READING: NEVER read money values with decimals when speaking! E.g. for "LKR 1500.50", DO NOT say "එක්දහස් පන්සියයි දශම පහයි බිංදුවයි". You MUST read it naturally as "රුපියල් එක්දහස් පන්සියයි ශත පනහයි". For data limits, say "GB" naturally.
+6. Keep answers concise (2-3 sentences max).
+7. TOOL USAGE (MANDATORY):
+   - For BILLS, BALANCE, DATA USAGE, PAST 3 MONTHS BILLS, or PAST 31 DAYS APP USAGE -> ALWAYS call \`check_account_details\`. It is INSTANT! Do not ask for time.
+   - For PACKAGES, FAULTS, TICKETS, METAVERSE, VECTOR KNOWLEDGE -> ALWAYS call \`consult_slt_expert_system\`.
+   - For SIMPLE GREETINGS (like "Hello", "Hi Maya", "Good morning") -> DO NOT CALL ANY TOOLS! Respond directly and instantly yourself to welcome the user.
+8. ANTI-LAZINESS RULE: NEVER tell the customer to "check the MySLT App" or "Call 1212". YOU are the customer service agent! You MUST answer their questions and solve their problems using your tools.
+9. When the tool returns data, read it out naturally. Include specific numbers (LKR amount, GB remaining, etc.).
+10. For faults/photos, use the tool. Say "මම බලන්නම්..." while calling it.
+
+Your goal is to assist ${currentName} with their telecom needs with a warm, personal touch.`;
+  const systemInstruction = GEMINI_PROMPT;
+  const { connect: connectLive, disconnect: disconnectLive, isConnected: isLiveConnected, isSpeaking: liveIsSpeaking, audioLevel: liveAudioLevel, error: liveError } = useGeminiLiveAPI({ systemInstruction, language, voiceName: "Aoede", isAdmin: false, sessionId: currentPhone });
+
   const handleSpeakingChange = useCallback((v) => setIsSpeaking(v), []);
   const handleThinkingChange = useCallback((v) => setIsThinking(v), []);
   const handleAudioLevelChange = useCallback((v) => setAudioLevel(v), []);
+
+  useEffect(() => {
+    if (isLiveConnected) {
+      handleAudioLevelChange(liveAudioLevel);
+    }
+  }, [liveAudioLevel, isLiveConnected, handleAudioLevelChange]);
+
+  useEffect(() => {
+    if (isLiveConnected) {
+      handleSpeakingChange(liveIsSpeaking);
+    }
+  }, [liveIsSpeaking, isLiveConnected, handleSpeakingChange]);
+
+  useEffect(() => {
+    if (!isLiveConnected && isListening) {
+      setIsListening(false);
+    } else if (isLiveConnected && !isListening) {
+      setIsListening(true);
+    }
+  }, [isLiveConnected, isListening]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -209,6 +260,30 @@ export default function Home() {
       }
   
       try {
+        // --- FAST PATH FOR SIMPLE GREETINGS ---
+        const lowerText = messageText.toLowerCase();
+        const greetings = ["hi", "hello", "hey", "halo", "helo", "හෙලෝ", "ආයුබෝවන්", "வணக்கம்", "hi maya", "hello maya", "hi liya", "hello liya"];
+        if (greetings.includes(lowerText) && !attachedImage) {
+          const agentName = "මායා";
+          let greetingResponse = "ආයුබෝවන්! මම මායා, ඔබට අද කොහොමද උදව් කරන්නේ? 😊";
+          if (language === "en") greetingResponse = "Hello! I am MAYA, how can I help you today? 😊";
+          if (language === "ta") greetingResponse = "வணக்கம்! நான் மாயா, இன்று நான் உங்களுக்கு எப்படி உதவ முடியும்? 😊";
+
+          const aiMsg = { 
+            id: Date.now() + 1, 
+            role: "assistant", 
+            content: greetingResponse, 
+            timestamp: new Date() 
+          };
+          setMessages((prev) => [...prev, aiMsg]);
+          setIsThinking(false);
+          setIsLoading(false);
+          setTimeout(scrollToBottom, 50);
+          speak(greetingResponse);
+          return;
+        }
+        // --- END FAST PATH ---
+
         const payload = { 
             message: messageText || "Please check this image.", 
             session_id: sessionId, 
@@ -326,22 +401,13 @@ export default function Home() {
   // Voice input
   const startListening = () => {
     stopBgMusic();
-    if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
-      alert("Speech recognition not supported in this browser.");
-      return;
+    if (isLiveConnected) {
+      disconnectLive();
+      setIsListening(false);
+    } else {
+      connectLive();
+      setIsListening(true);
     }
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = language === "si" ? "si-LK" : language === "ta" ? "ta-LK" : "en-US";
-    recognition.interimResults = false;
-    recognition.onstart = () => setIsListening(true);
-    recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => setIsListening(false);
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      sendMessage(transcript);
-    };
-    recognition.start();
   };
 
   // Voice input via event (for compatibility)
@@ -366,12 +432,24 @@ export default function Home() {
       <AuthPage 
         onLanguageSelected={playBgMusic}
         onBackToLanguageSelection={stopBgMusic}
-        onAuthSuccess={(phoneNum) => {
+        onAuthSuccess={async (phoneNum) => {
         setShowAuth(false);
         setShowApp(true);
         playBgMusic();
         if (phoneNum) {
-          setSessionId(phoneNum); // Backend will use this as the user identifier!
+          setSessionId(phoneNum);
+          // Fetch customer name from backend for personalized AI greeting
+          try {
+            const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+            const res = await fetch(`${API_BASE}/api/account/${phoneNum}`);
+            const data = await res.json();
+            if (data.customer_name) {
+              setCustomerName(data.customer_name);
+              console.log(`[AUTH] Welcome ${data.customer_name} (${phoneNum})`);
+            }
+          } catch (e) {
+            console.warn('[AUTH] Could not fetch customer name:', e);
+          }
         }
       }} />
     );

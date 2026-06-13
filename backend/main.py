@@ -439,6 +439,7 @@ async def chat_endpoint(request: ChatRequest):
             f"4. The current session_id ({session_id}) is an INTERNAL TRACKING ID, NOT a phone number! If they ask for specific customer details (bill, profile), ask for the 10-digit number. BUT if they ask for internal system reports (WFM reports, dispatch data, general stats), DO NOT ask for a phone number! Just generate the report. "
             f"5. GREETING RULE: Do NOT use customer greetings like 'Ayubowan'. Use a professional internal greeting. "
             f"6. CONCISENESS RULE: ONLY provide the EXACT information requested."
+            f"7. CRITICAL TOOL ASSIGNMENT: Use the 'get_full_customer_profile' tool to instantly fetch ALL technical, network, billing, and usage data for a customer. Use this whenever the admin asks to check a customer!"
         )
     else:
         context_msg = (
@@ -723,7 +724,23 @@ async def text_to_speech(request: TTSRequest):
                 for p in parts:
                     if "inlineData" in p and "audio" in p["inlineData"]["mimeType"].lower():
                         import base64
-                        audio_bytes = base64.b64decode(p["inlineData"]["data"])
+                        import struct
+                        raw_pcm = base64.b64decode(p["inlineData"]["data"])
+                        # Gemini returns Raw PCM (audio/l16) at 24000Hz, 1 channel. Browsers need a WAV header!
+                        channels = 1
+                        sample_rate = 24000
+                        bits_per_sample = 16
+                        byte_rate = sample_rate * channels * (bits_per_sample // 8)
+                        block_align = channels * (bits_per_sample // 8)
+                        data_size = len(raw_pcm)
+                        
+                        wav_header = struct.pack('<4sI4s4sIHHIIHH4sI',
+                            b'RIFF', 36 + data_size, b'WAVE',
+                            b'fmt ', 16, 1, channels, sample_rate,
+                            byte_rate, block_align, bits_per_sample,
+                            b'data', data_size
+                        )
+                        audio_bytes = wav_header + raw_pcm
                         break
                 if audio_bytes:
                     print(f"[SUCCESS] Gemini Audio generated ({len(audio_bytes)} bytes) for lang={target_lang}!")

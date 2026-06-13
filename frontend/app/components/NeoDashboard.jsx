@@ -9,6 +9,7 @@ import AdminCRM from "./AdminCRM";
 import DigitalTwinMap from "./DigitalTwinMap";
 import styles from "../page.module.css";
 import "./NeoDashboard.css";
+import { useGeminiLiveAPI } from "../hooks/useGeminiLiveAPI";
 
 export default function NeoDashboard({
   language = "si",
@@ -21,6 +22,25 @@ export default function NeoDashboard({
   // Mode selection
   const [controlMode, setControlMode] = useState("chat"); // "chat", "ai", "manual", or "crm"
   
+  const langName = language === "si" ? "Sri Lankan Sinhala" : language === "ta" ? "Sri Lankan Tamil" : "English";
+  const GEMINI_PROMPT = `You are NEO, a highly intelligent male AI assistant for SLT-MOBITEL NEXUS. 
+Your personality is professional, tech-savvy, and helpful. You are embedded in an interactive kiosk.
+
+CRITICAL RULES:
+1. You MUST ONLY talk about SLT-MOBITEL NEXUS, telecom services, packages, Peo TV, Fiber, 5G, Metaverse, and digital platforms.
+2. If the user asks about ANYTHING ELSE, politely decline and steer the conversation back to SLT NEXUS.
+3. You must listen to the user and respond ONLY in natural, fluent, spoken ${langName}.
+4. Keep your answers extremely concise, short, and to the point (maximum 2-3 sentences).
+5. You are speaking with an SLT Admin/Technician. You have FULL ACCESS to fetch dummy systems data (CRM, Billing, WFM, Tickets, Faults).
+6. TOOL USAGE (MANDATORY):
+   - For BILLS, BALANCE, DATA USAGE, PAST 3 MONTHS BILLS, or PAST 31 DAYS APP USAGE -> ALWAYS call \`check_account_details\` with the phone number you ask the admin for. It is INSTANT! Do not ask for time.
+   - For PACKAGES, FAULTS, TICKETS, METAVERSE, VECTOR KNOWLEDGE -> ALWAYS call \`consult_slt_expert_system\`.
+7. Because you are on the admin side, you DO NOT know the customer's phone number beforehand. You MUST politely ask the technician/admin for the customer's Landline number before looking up bills, usages, or faults, UNLESS they already provided it.
+
+Your goal is to assist users with their telecom needs and guide them with a professional attitude.`;
+
+  const { connect: connectLive, disconnect: disconnectLive, isConnected: isLiveConnected, isSpeaking: liveIsSpeaking, audioLevel: liveAudioLevel, error: liveError } = useGeminiLiveAPI({ systemInstruction: GEMINI_PROMPT, language, voiceName: "Charon", isAdmin: true });
+
   // States for avatar animation
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
@@ -137,6 +157,18 @@ export default function NeoDashboard({
   // Audio Level trigger
   const handleSpeakingChange = useCallback((v) => setIsSpeaking(v), []);
   const handleAudioLevelChange = useCallback((v) => setAudioLevel(v), []);
+
+  useEffect(() => {
+    if (isLiveConnected) {
+      handleAudioLevelChange(liveAudioLevel);
+    }
+  }, [liveAudioLevel, isLiveConnected, handleAudioLevelChange]);
+
+  useEffect(() => {
+    if (isLiveConnected) {
+      handleSpeakingChange(liveIsSpeaking);
+    }
+  }, [liveIsSpeaking, isLiveConnected, handleSpeakingChange]);
 
   // Text to speech function — uses voice=male parameter for male voice
   const speakNeo = async (text) => {
@@ -364,10 +396,10 @@ export default function NeoDashboard({
         <div className={styles.avatarCanvas} style={{ zIndex: 3 }}>
           <NeoAvatarScene 
             isAdmin={isAdmin}
-            isSpeaking={isSpeaking}
-            isListening={isListening}
+            isSpeaking={isSpeaking || liveIsSpeaking}
+            isListening={isListening || isLiveConnected}
             isThinking={isThinking}
-            audioLevel={audioLevel}
+            audioLevel={liveIsSpeaking ? liveAudioLevel : audioLevel}
             manualOverride={controlMode === "manual"}
             overrideValues={manualValues}
           />
@@ -741,12 +773,12 @@ export default function NeoDashboard({
         <div className="proBottomInputContainer">
           <div className="neoChatInputArea" style={{ background: 'rgba(10, 14, 26, 0.8)', padding: '12px 24px', borderRadius: '99px', border: '1px solid rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(20px)', boxShadow: '0 8px 32px rgba(0,0,0,0.5)', display: 'flex', gap: '12px', alignItems: 'center' }}>
             <button 
-              className={`neoChatMicBtn ${isListening ? 'neoChatMicBtnActive' : ''}`}
-              onClick={startListeningNeo}
+              className={`neoChatMicBtn ${isLiveConnected ? 'neoChatMicBtnActive' : ''}`}
+              onClick={isLiveConnected ? disconnectLive : connectLive}
               disabled={chatLoading}
-              title="Speak to NEO"
+              title={isLiveConnected ? "Stop Live Chat" : "Speak to NEO"}
             >
-              {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+              {isLiveConnected ? <MicOff size={18} color="#ff3b30" /> : <Mic size={18} />}
             </button>
             <button className="neoChatMicBtn" title="Accessibility Camera" onClick={() => setShowCamera(true)}>
               <Camera size={18} />

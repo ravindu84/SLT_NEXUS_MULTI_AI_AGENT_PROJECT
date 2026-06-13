@@ -52,7 +52,9 @@ from backend.agent.tools.mcp_tools import (
     send_sms_notification,
     send_whatsapp_notification,
     check_area_outages,
-    register_customer_agreement
+    register_customer_agreement,
+    search_slt_knowledgebase,
+    get_full_customer_profile
 )
 
 from backend.agent.tools.package_advisor import package_advisor
@@ -128,6 +130,7 @@ tools = [
     send_sms_notification,
     send_whatsapp_notification,
     register_customer_agreement,
+    search_slt_knowledgebase,
     # Vault/Blockchain Tools
     commit_sla_to_ledger,
     commit_visit_handshake_to_ledger,
@@ -135,7 +138,8 @@ tools = [
     # Provisioner tools
     allocate_fiber_dp_loop,
     dispatch_installation_job,
-    check_area_outages
+    check_area_outages,
+    get_full_customer_profile
 ]
 tool_node = ToolNode(tools)
 
@@ -208,7 +212,7 @@ def get_rag_context(query: str, agent_name: str) -> str:
         source_filter = agent_source_map.get(agent_name)
         
         # Get primary context (filtered or general)
-        primary_docs = retriever.query(query, n_results=4, source_filter=source_filter)
+        primary_docs = retriever.query(query, n_results=3, source_filter=source_filter)
         
         # Also get general context from web crawled data for broader knowledge
         web_docs = retriever.query(query, n_results=2, source_filter="slt_website")
@@ -297,10 +301,11 @@ async def classify_intent(state: AgentState):
             "loop_count": 0,
             "task_resolved": False,
             "phone_number": existing_phone,
+            "rag_context": "",
         }
     
-    # --- RAG Context Retrieval ---
-    rag_context = get_rag_context(msg_text, "liya_agent")
+    # We no longer load RAG context unconditionally!
+    rag_context = ""
         
     # Pass the recent text-only messages to give the Manager context (avoid ToolMessages which break OpenAI API if sliced)
     safe_history = []

@@ -3,8 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import AvatarScenePro from "./AvatarScenePro";
 import TechBackground from "./TechBackground";
-import { Zap, Play, RotateCcw, Volume2, ShieldAlert, Cpu, Layers, Sliders, MessageSquare, Mic, MicOff, Camera, Upload, X } from "lucide-react";
+import { Zap, Play, RotateCcw, Volume2, ShieldAlert, Cpu, Layers, Sliders, MessageSquare, Mic, MicOff, Camera, Upload, X, Radio } from "lucide-react";
 import SignCamera from "./SignCamera";
+import { useGeminiLiveAPI } from "../hooks/useGeminiLiveAPI";
 import styles from "../page.module.css";
 import "./LiyaProLab.css";
 
@@ -24,7 +25,70 @@ export default function LiyaProDashboard({
 
   // Mode selection
   const [controlMode, setControlMode] = useState("chat"); // "chat", "ai" or "manual"
+  const [customerName, setCustomerName] = useState(null);
   
+  const currentPhone = propSessionId || "0112895800";
+  const currentName = customerName || "Customer";
+
+  // Fetch customer name on mount for personalized greeting
+  useEffect(() => {
+    if (currentPhone && currentPhone !== "0112895800") {
+      const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      fetch(`${API_BASE}/api/account/${currentPhone}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.customer_name) setCustomerName(data.customer_name);
+        })
+        .catch(e => console.warn('[LiyaPro] Could not fetch customer name:', e));
+    }
+  }, [currentPhone]);
+  
+  const GEMINI_PROMPT = `You are ${isMaya ? "Maya" : "Liya"}, a friendly, professional, and highly intelligent female AI customer service assistant for SLT-MOBITEL NEXUS. 
+Your personality is warm, welcoming, and helpful. You are embedded in an interactive kiosk.
+
+## AUTHENTICATED CUSTOMER:
+- Name: **${currentName}**
+- Phone Number: **${currentPhone}**
+You ALREADY KNOW this customer. When you first greet them, use their name warmly. NEVER ask for their phone number.
+
+CRITICAL RULES:
+1. RESPECTFUL GREETING: NEVER call the customer just by their first name. Use ONLY ONE title based on the language you are speaking: If speaking Sinhala, say "${currentName} මහත්මයා". If speaking English, say "Mr. ${currentName}". If speaking Tamil, say "${currentName} ஐயா". DO NOT say all three at once!
+2. You MUST ONLY talk about SLT-MOBITEL NEXUS, telecom services, packages, Peo TV, Fiber, 5G, Metaverse, and digital platforms.
+3. If the user asks about ANYTHING ELSE, politely decline and steer the conversation back to SLT NEXUS.
+4. LANGUAGE ENFORCEMENT: If the UI language is NOT English, you MUST respond in the UI language (e.g. Sinhala script for 'si') EVEN IF the user speaks English!
+5. Keep answers concise (2-3 sentences max).
+6. TOOL USAGE (MANDATORY):
+   - For BILLS, BALANCE, DATA USAGE, PAST 3 MONTHS BILLS, or PAST 31 DAYS APP USAGE -> ALWAYS call \`check_account_details\`. It is INSTANT! Do not ask for time.
+   - For PACKAGES, FAULTS, TICKETS, METAVERSE, VECTOR KNOWLEDGE -> ALWAYS call \`consult_slt_expert_system\`.
+   - For SIMPLE GREETINGS (like "Hello", "Hi Maya", "Good morning") -> DO NOT CALL ANY TOOLS! Respond directly and instantly yourself to welcome the user.
+7. ANTI-LAZINESS RULE: NEVER tell the customer to "check the MySLT App" or "Call 1212". YOU are the customer service agent! You MUST answer their questions and solve their problems using your tools.
+8. When the tool returns data, read it out naturally. Include specific numbers (LKR amount, GB remaining, etc.).
+9. When the tool returns package details with FUP limits, DO NOT omit them. Never lie about unlimited.
+10. For faults/photos, use the tool. Say "මම බලන්නම්..." while calling it.
+
+Your goal is to assist ${currentName} with their telecom needs with a warm, personal touch.`;
+
+  const voiceName = isMaya ? "Kore" : "Aoede";
+  const { connect: connectLive, disconnect: disconnectLive, isConnected: isLiveConnected, isSpeaking: liveIsSpeaking, audioLevel: liveAudioLevel, error: liveError } = useGeminiLiveAPI({ 
+    systemInstruction: GEMINI_PROMPT, 
+    language, 
+    voiceName, 
+    isAdmin, 
+    sessionId: currentPhone,
+    onTextResponse: (text) => {
+      const aiMsg = {
+        id: Date.now() + Math.random(),
+        role: "assistant",
+        content: text,
+        agent_used: "liya_agent",
+        agent_emoji: isMaya ? "✨" : "🧠",
+        agent_label: agentName,
+      };
+      setChatMessages((prev) => [...prev, aiMsg]);
+      speakPro(text);
+    }
+  });
+
   // States for avatar animation
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
@@ -100,14 +164,16 @@ export default function LiyaProDashboard({
       // AI / Automatic mode
       const updateMetrics = () => {
         const time = Date.now() / 1000;
-        const level = isSpeaking 
-          ? (audioLevel > 0 ? Math.min(1, audioLevel) : (0.4 + Math.sin(time * 12) * 0.4)) 
+        const activeSpeaking = isLiveConnected ? liveIsSpeaking : isSpeaking;
+        const activeLevel = isLiveConnected ? liveAudioLevel : audioLevel;
+        const level = activeSpeaking 
+          ? (activeLevel > 0 ? Math.min(1, activeLevel) : (0.4 + Math.sin(time * 12) * 0.4)) 
           : 0;
         
         const blinkLevel = Math.sin(time * 2.5) > 0.96 ? 1.0 : 0.0;
-        const joyLevel = isSpeaking ? 0.15 : 0.25;
+        const joyLevel = activeSpeaking ? 0.15 : 0.25;
 
-        if (isSpeaking) {
+        if (activeSpeaking) {
           const phonemeCycle = Math.floor(time * 8) % 5;
           setLiveMetrics({
             mthA: phonemeCycle === 0 || phonemeCycle === 3 ? level * 0.85 : level * 0.15,
@@ -243,6 +309,30 @@ export default function LiyaProDashboard({
     setChatLoading(true);
 
     try {
+      // --- FAST PATH FOR SIMPLE GREETINGS ---
+      const lowerText = text.toLowerCase();
+      const greetings = ["hi", "hello", "hey", "halo", "helo", "හෙලෝ", "ආයුබෝවන්", "வணக்கம்", "hi maya", "hello maya", "hi liya", "hello liya"];
+      if (greetings.includes(lowerText) && !attachedImage) {
+        let greetingResponse = "ආයුබෝවන්! මම ලියා, ඔබට අද කොහොමද උදව් කරන්නේ? 😊";
+        if (isMaya) greetingResponse = "ආයුබෝවන්! මම මායා, ඔබට අද කොහොමද උදව් කරන්නේ? 😊";
+        if (language === "en") greetingResponse = `Hello! I am ${agentName}, how can I help you today? 😊`;
+        if (language === "ta") greetingResponse = `வணக்கம்! நான் ${agentName}, இன்று நான் உங்களுக்கு எப்படி உதவ முடியும்? 😊`;
+
+        const aiMsg = {
+          id: Date.now() + 1,
+          role: "assistant",
+          content: greetingResponse,
+          agent_used: "liya_agent",
+          agent_emoji: isMaya ? "✨" : "🧠",
+          agent_label: agentName,
+        };
+        setChatMessages((prev) => [...prev, aiMsg]);
+        speakPro(greetingResponse);
+        setChatLoading(false);
+        return;
+      }
+      // --- END FAST PATH ---
+
       const payload = { message: text || "Please check this image.", session_id: sessionId, lang: language, is_admin: isAdmin };
       if (attachedImage) {
         payload.image_base64 = attachedImage.split(',')[1];
@@ -291,33 +381,39 @@ export default function LiyaProDashboard({
 
   const startListeningPro = () => {
     if (onInteraction) onInteraction();
-    if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
-      alert("Speech recognition not supported in this browser.");
-      return;
+    if (isLiveConnected) {
+      disconnectLive();
+      setIsListening(false);
+    } else {
+      connectLive();
+      setIsListening(true);
     }
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognition();
-    recognition.lang = language === "si" ? "si-LK" : language === "ta" ? "ta-LK" : "en-US";
-    recognition.interimResults = false;
-    
-    recognition.onstart = () => setIsListening(true);
-    recognition.onend = () => setIsListening(false);
-    recognition.onerror = () => setIsListening(false);
-    
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      sendChatPro(transcript);
-    };
-    recognition.start();
   };
+
+  // Sync isListening state with live connection state
+  useEffect(() => {
+    if (!isLiveConnected && isListening) {
+      setIsListening(false);
+    } else if (isLiveConnected && !isListening) {
+      setIsListening(true);
+    }
+  }, [isLiveConnected, isListening]);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => setAttachedImage(reader.result);
+      reader.onloadend = () => {
+        setAttachedImage(reader.result);
+        window.__attachedImage = reader.result; // Expose globally for useGeminiLiveAPI
+      };
       reader.readAsDataURL(file);
     }
+  };
+
+  const removeImage = () => {
+    setAttachedImage(null);
+    window.__attachedImage = null;
   };
 
   const handleManualChange = (key, value) => {
@@ -371,10 +467,10 @@ export default function LiyaProDashboard({
             key={modelPath}
             modelPath={modelPath}
             isAdmin={isAdmin}
-            isSpeaking={isSpeaking}
+            isSpeaking={isLiveConnected ? liveIsSpeaking : isSpeaking}
             isListening={isListening}
             isThinking={isThinking}
-            audioLevel={audioLevel}
+            audioLevel={isLiveConnected ? liveAudioLevel : audioLevel}
             manualOverride={controlMode === "manual"}
             overrideValues={manualValues}
           />
@@ -487,6 +583,38 @@ export default function LiyaProDashboard({
             <div className="cardHeader">
               <Volume2 size={16} className="cardHeaderIcon" />
               <h4>AI Swarm Voice Synthesizer</h4>
+            </div>
+
+            {/* New Gemini Live Voice Control */}
+            <div className="voicePresetSection" style={{ background: isLiveConnected ? 'rgba(0, 255, 100, 0.1)' : 'rgba(255, 255, 255, 0.05)', padding: '16px', borderRadius: '12px', marginBottom: '16px', border: isLiveConnected ? '1px solid rgba(0,255,100,0.3)' : '1px solid rgba(255,255,255,0.1)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <h4 style={{ margin: 0, color: isLiveConnected ? '#00ff88' : '#fff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Radio size={16} className={isLiveConnected ? "pulsingDot" : ""} />
+                    Gemini Multimodal Live
+                  </h4>
+                  <p style={{ margin: '4px 0 0 0', fontSize: '12px', opacity: 0.7 }}>Full-duplex low-latency natural voice stream (VAD enabled)</p>
+                </div>
+                <button
+                  onClick={isLiveConnected ? disconnectLive : connectLive}
+                  style={{
+                    background: isLiveConnected ? '#ff3b30' : '#007aff',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '8px 16px',
+                    borderRadius: '20px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  {isLiveConnected ? <MicOff size={14} /> : <Mic size={14} />}
+                  {isLiveConnected ? "Stop Live Stream" : "Connect Live"}
+                </button>
+              </div>
+              {liveError && <p style={{ color: '#ff3b30', fontSize: '12px', marginTop: '8px' }}>{liveError}</p>}
             </div>
 
             <div className="voicePresetSection">
@@ -681,7 +809,18 @@ export default function LiyaProDashboard({
            API_URL={API_URL}
            onClose={() => setShowCamera(false)}
            onGestureDetected={(gesture) => {
-               sendChatPro(gesture);
+               const mapping = {
+                 "[GESTURE: YES]": "මගේ බිල කීයද?",
+                 "[GESTURE: STOP]": "මගේ ඩේටා ඉවරද බලන්න",
+                 "[GESTURE: THANK YOU]": "මට අලුත් පැකේජ් එකක් ඕනේ",
+                 "[GESTURE: HELP]": "මගේ රවුටරේ වැඩ නෑ. කම්ප්ලේන් එකක් දාන්න.",
+                 "[GESTURE: CALL ME]": "මට නියෝජිතයෙක් සම්බන්ධ කරන්න",
+                 "[GESTURE: NO]": "එපා ස්තුතියි",
+               };
+               const translated = mapping[gesture];
+               if (translated) {
+                 sendChatPro(translated);
+               }
            }}
         />
       )}

@@ -1011,7 +1011,7 @@ async def get_admin_customer(phone: str):
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         
-        # We need data from customers, network_status, and data_usage
+        # Full customer profile with ALL technical data
         cursor.execute("SELECT * FROM customers WHERE phone_number = ?", (phone,))
         customer = cursor.fetchone()
         
@@ -1025,16 +1025,56 @@ async def get_admin_customer(phone: str):
         cursor.execute("SELECT * FROM data_usage WHERE phone_number = ?", (phone,))
         usage = cursor.fetchone()
         
+        cursor.execute("SELECT * FROM billing WHERE phone_number = ?", (phone,))
+        billing = cursor.fetchone()
+        
+        cursor.execute("SELECT month, year, amount_billed, amount_paid, arrears FROM billing_history WHERE phone_number = ? ORDER BY id ASC", (phone,))
+        history = cursor.fetchall()
+        
+        cursor.execute("SELECT ticket_id, technician, status, created_at FROM fault_tickets WHERE phone_number = ?", (phone,))
+        tickets = cursor.fetchall()
+        
         conn.close()
         
         return {
-            "user_id": customer['user_id'],
+            # Customer Identity
             "phone_number": customer['phone_number'],
             "name": customer['registered_name'],
+            "address": customer['address'],
+            "contact_number": customer['contact_number'],
+            "telephone_type": customer['telephone_type'],
+            "registered_date": customer['registered_date'],
+            "dp_loop": customer['dp_loop'],
+            "has_voice": customer['has_voice'],
+            "has_internet": customer['has_internet'],
+            "has_iptv": customer['has_iptv'],
+            "iptv_account_id": customer['iptv_account_id'],
+            # Network Technical Data
             "status": network['status'] if network else 'Unknown',
-            "speed_mbps": 200 if network and network['status'] == 'UP' else 0,
-            "data_used_gb": usage['used_data_gb'] if usage else 0,
-            "data_total_gb": usage['total_data_gb'] if usage else 0
+            "line_state": network['line_state'] if network else None,
+            "power_level": network['power_level'] if network else None,
+            "snr": network['snr'] if network else None,
+            "attenuation": network['attenuation'] if network else None,
+            "ont_type": network['ont_type'] if network else None,
+            "tid": network['tid'] if network else None,
+            "clarity_path": network['clarity_path'] if network else None,
+            # Data Usage
+            "package_name": usage['package_name'] if usage else None,
+            "total_data_gb": usage['total_data_gb'] if usage else 0,
+            "used_data_gb": usage['used_data_gb'] if usage else 0,
+            "remaining_data_gb": usage['remaining_data_gb'] if usage else 0,
+            "usage_status": usage['usage_status'] if usage else None,
+            # Billing
+            "total_due": billing['total_due'] if billing else 0,
+            "payment_status": billing['payment_status'] if billing else None,
+            "nxc_balance": billing['nxc_balance'] if billing else 0,
+            "monthly_rental": billing['monthly_rental'] if billing else 0,
+            "unpaid_bills": billing['unpaid_bills'] if billing else 0,
+            "last_payment_date": billing['last_payment_date'] if billing else None,
+            "credit_limit": 5000.00,
+            # History
+            "billing_history": [dict(r) for r in history],
+            "fault_tickets": [dict(r) for r in tickets],
         }
     except Exception as e:
         print(f"Customer search error: {e}")
