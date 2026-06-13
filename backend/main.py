@@ -736,6 +736,28 @@ async def text_to_speech(request: TTSRequest):
     print(f"[INFO] FALLING BACK TO FREE GOOGLE TTS (gTTS) FOR: {target_lang}...")
     return generate_gtts_fallback(clean_text, target_lang)
 
+@app.get("/api/account/{phone_number}")
+async def get_account_details(phone_number: str):
+    import sqlite3
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM customers WHERE phone_number = ?", (phone_number,))
+        customer = cursor.fetchone()
+        conn.close()
+        
+        if customer:
+            return {
+                "phone_number": customer["phone_number"],
+                "customer_name": customer["registered_name"]
+            }
+        return {"error": "Not Found"}
+    except Exception as e:
+        print(f"Error in /api/account: {e}")
+        return {"error": "Internal Server Error"}
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
