@@ -16,7 +16,7 @@ source $HOME/.local/bin/env
 
 echo "Setting up Python environment..."
 cd ~/SLT_NEXUS_MULTI_AI_AGENT_PROJECT/backend
-uv venv
+uv venv --clear
 source .venv/bin/activate
 uv pip install -r requirements.txt
 uv pip install uvicorn
