@@ -143,7 +143,10 @@ CRITICAL RULES:
    - For SIMPLE GREETINGS (like "Hello", "Hi Maya", "Good morning") -> DO NOT CALL ANY TOOLS! Respond directly and instantly yourself to welcome the user.
 8. ANTI-LAZINESS RULE: NEVER tell the customer to "check the MySLT App" or "Call 1212". YOU are the customer service agent! You MUST answer their questions and solve their problems using your tools.
 9. When the tool returns data, read it out naturally. Include specific numbers (LKR amount, GB remaining, etc.).
-10. For faults/photos, use the tool. Say "මම බලන්නම්..." while calling it.
+10. KIOSK EXPERIENCE (MANDATORY): After you answer a customer's question, ALWAYS politely ask if they need anything else (e.g., "තවත් මොනවා හරි දැනගන්න තියෙනවද?", "Is there anything else I can help you with?", "வேறெதும் அறிய வேண்டுமா?").
+11. ENDING THE SESSION (CRITICAL): If the customer says "No, that's all", "Thanks, bye", "Hari epamanai" (Sinhala for that's enough), or indicates they are done:
+    - First, say a polite goodbye (e.g., "ස්තූතියි, ඔබට සුභ දවසක්!", "Thank you, have a great day!").
+    - SECOND, IMMEDIATELY call the \`end_session\` tool to log them out! DO NOT ask any further questions.
 
 Your goal is to assist ${currentName} with their telecom needs with a warm, personal touch.`;
   const systemInstruction = GEMINI_PROMPT;
@@ -207,12 +210,28 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
       const events = ['mousemove', 'mousedown', 'click', 'scroll', 'keypress', 'touchstart'];
       const handleActivity = () => resetLogoutTimer();
       events.forEach(event => document.addEventListener(event, handleActivity));
+
+      const handleGeminiEndSession = () => {
+        console.log("End session tool called by Gemini. Logging out in 4s...");
+        setTimeout(() => {
+          if (isLiveConnected) disconnectLive();
+          setSessionId(null);
+          setCustomerName(null);
+          setCustomerProfile(null);
+          setMessages([]);
+          setShowApp(false);
+          setShowAuth(true);
+        }, 4000);
+      };
+      window.addEventListener('gemini-end-session', handleGeminiEndSession);
+
       return () => {
         if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
         events.forEach(event => document.removeEventListener(event, handleActivity));
+        window.removeEventListener('gemini-end-session', handleGeminiEndSession);
       };
     }
-  }, [showApp, resetLogoutTimer]);
+  }, [showApp, resetLogoutTimer, isLiveConnected, disconnectLive]);
 
   useEffect(() => {
     if (liveIsSpeaking || isThinking || isLiveConnected) {
@@ -639,7 +658,7 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
               setShowAuth(true);
             }}
           >
-            Logout
+            End Session
           </button>
         </div>
       </nav>

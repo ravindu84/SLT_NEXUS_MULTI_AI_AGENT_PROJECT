@@ -187,6 +187,15 @@ export function useGeminiLiveAPI({ systemInstruction, language = "si", voiceName
                     },
                     required: ["phone_number", "query_type"]
                   }
+                },
+                {
+                  name: "end_session",
+                  description: "Call this tool IMMEDIATELY when the customer says they don't need any more help, or says goodbye. This will log them out of the kiosk safely.",
+                  parameters: {
+                    type: "OBJECT",
+                    properties: {},
+                    required: []
+                  }
                 }
               ]
             }]
@@ -304,6 +313,22 @@ export function useGeminiLiveAPI({ systemInstruction, language = "si", voiceName
                       }
                     }));
                   }
+                }
+              } else if (call.name === "end_session") {
+                console.log("Gemini requested to end the session!");
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('gemini-end-session'));
+                }
+                if (wsRef.current?.readyState === WebSocket.OPEN) {
+                  wsRef.current.send(JSON.stringify({
+                    toolResponse: {
+                      functionResponses: [{
+                        id: call.id,
+                        name: call.name,
+                        response: { result: "Session ending triggered successfully." }
+                      }]
+                    }
+                  }));
                 }
               } else if (call.name === "check_account_details") {
                 try {
