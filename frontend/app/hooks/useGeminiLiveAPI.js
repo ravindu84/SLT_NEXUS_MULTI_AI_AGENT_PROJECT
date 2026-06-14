@@ -144,7 +144,7 @@ export function useGeminiLiveAPI({ systemInstruction, language = "si", voiceName
         setIsConnected(true);
         wsRef.current.send(JSON.stringify({
             setup: {
-              model: "models/gemini-2.0-flash-exp",
+              model: "models/gemini-3.1-flash-live-preview",
               generationConfig: {
                 responseModalities: ["AUDIO"],
                 speechConfig: {
