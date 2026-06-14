@@ -71,6 +71,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const [customerName, setCustomerName] = useState(null);
+  const [customerProfile, setCustomerProfile] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
   const [attachedImage, setAttachedImage] = useState(null);
@@ -114,13 +115,18 @@ export default function Home() {
 
   const currentPhone = sessionId || "0112895800";
   const currentName = customerName || "Customer";
+  
+  const profileContext = customerProfile 
+    ? `\n\nCUSTOMER DATA FOR AI CONTEXT:\n${JSON.stringify(customerProfile, null, 2)}\n\nIMPORTANT: Use the CUSTOMER DATA above to answer ANY questions about their usage, billing history, packages, or daily logs! If they ask about the highest usage day, look at daily_logs and calculate it!`
+    : "";
+
   const GEMINI_PROMPT = `You are Liya, a friendly, professional, and highly intelligent female AI customer service assistant for SLT-MOBITEL NEXUS. 
 Your personality is warm, welcoming, and helpful. You are embedded in an interactive kiosk.
 
 ## CURRENT SESSION DETAILS:
 - Name: **${currentName}**
 - Phone Number: **${currentPhone}**
-- Current UI Language: **${language === 'si' ? 'Sinhala' : language === 'ta' ? 'Tamil' : 'English'}**
+- Current UI Language: **${language === 'si' ? 'Sinhala' : language === 'ta' ? 'Tamil' : 'English'}**${profileContext}
 
 You ALREADY KNOW this customer. When you first greet them, use their name warmly. NEVER ask for their phone number.
 
@@ -174,6 +180,45 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
       return () => clearTimeout(timer);
     }
   }, [pendingReconnect, isLiveConnected, connectLive]);
+
+  // Auto-logout timer for Kiosk Mode
+  const logoutTimerRef = useRef(null);
+
+  const resetLogoutTimer = useCallback(() => {
+    if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
+    logoutTimerRef.current = setTimeout(() => {
+      // Auto logout after 60 seconds of inactivity
+      if (showApp) {
+        if (isLiveConnected) disconnectLive();
+        setSessionId(null);
+        setCustomerName(null);
+        setCustomerProfile(null);
+        setMessages([]);
+        setShowApp(false);
+        setShowAuth(true);
+        console.log("[AUTO-LOGOUT] Session expired due to inactivity");
+      }
+    }, 60000);
+  }, [showApp, isLiveConnected, disconnectLive]);
+
+  useEffect(() => {
+    if (showApp) {
+      resetLogoutTimer();
+      const events = ['mousemove', 'mousedown', 'click', 'scroll', 'keypress', 'touchstart'];
+      const handleActivity = () => resetLogoutTimer();
+      events.forEach(event => document.addEventListener(event, handleActivity));
+      return () => {
+        if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
+        events.forEach(event => document.removeEventListener(event, handleActivity));
+      };
+    }
+  }, [showApp, resetLogoutTimer]);
+
+  useEffect(() => {
+    if (liveIsSpeaking || isThinking || isLiveConnected) {
+      resetLogoutTimer(); // Keep resetting while AI is active or listening
+    }
+  }, [liveIsSpeaking, isThinking, isLiveConnected, resetLogoutTimer]);
 
   const handleLanguageChange = (ln) => {
     if (language === ln) return;
@@ -475,6 +520,9 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
             const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
             const res = await fetch(`${API_BASE}/api/account/${phoneNum}`);
             const data = await res.json();
+            if (data) {
+              setCustomerProfile(data);
+            }
             if (data.customer_name) {
               setCustomerName(data.customer_name);
               console.log(`[AUTH] Welcome ${data.customer_name} (${phoneNum})`);
@@ -585,6 +633,7 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
               if (isLiveConnected) disconnectLive();
               setSessionId(null);
               setCustomerName(null);
+              setCustomerProfile(null);
               setMessages([]);
               setShowApp(false);
               setShowAuth(true);
