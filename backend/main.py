@@ -765,10 +765,40 @@ async def get_account_details(phone_number: str):
         
         # 1. Customer Name
         cursor.execute("SELECT * FROM customers WHERE phone_number = ?", (phone_number,))
-        customer = cursor.fetchone()
-        if not customer:
+        customer_row = cursor.fetchone()
+        if not customer_row:
+            # Fallback to a full mock profile for demo purposes
+            customer = {
+                "phone_number": phone_number,
+                "registered_name": "Ravindu"
+            }
+            billing = {
+                "amount_due": 2450.00,
+                "due_date": "2026-06-25",
+                "credit_limit": 5000.00
+            }
+            data_usage = {
+                "standard_gb_total": 50.0,
+                "standard_gb_used": 32.5,
+                "free_gb_total": 20.0,
+                "free_gb_used": 18.0
+            }
+            billing_history = [
+                {"month": "May", "year": 2026, "amount_billed": 2300.0, "amount_paid": 2300.0, "arrears": 0.0},
+                {"month": "April", "year": 2026, "amount_billed": 2150.0, "amount_paid": 2150.0, "arrears": 0.0}
+            ]
+            daily_logs = []
             conn.close()
-            return {"error": "Not Found"}
+            return {
+                "phone_number": customer["phone_number"],
+                "customer_name": customer["registered_name"],
+                "billing": billing,
+                "data_usage": data_usage,
+                "billing_history": billing_history,
+                "daily_usage_logs": daily_logs
+            }
+        else:
+            customer = dict(customer_row)
             
         # 2. Billing (with credit limit mock)
         cursor.execute("SELECT * FROM billing WHERE phone_number = ?", (phone_number,))
