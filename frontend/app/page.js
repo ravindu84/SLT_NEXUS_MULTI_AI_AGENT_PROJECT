@@ -147,6 +147,8 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
   const handleThinkingChange = useCallback((v) => setIsThinking(v), []);
   const handleAudioLevelChange = useCallback((v) => setAudioLevel(v), []);
 
+  const [pendingReconnect, setPendingReconnect] = useState(false);
+
   useEffect(() => {
     if (isLiveConnected) {
       handleAudioLevelChange(liveAudioLevel);
@@ -162,6 +164,26 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
   useEffect(() => {
     setIsListening(isLiveConnected);
   }, [isLiveConnected]);
+
+  useEffect(() => {
+    if (pendingReconnect && !isLiveConnected) {
+      const timer = setTimeout(() => {
+        connectLive();
+        setPendingReconnect(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [pendingReconnect, isLiveConnected, connectLive]);
+
+  const handleLanguageChange = (ln) => {
+    if (language === ln) return;
+    setLanguage(ln);
+    stopBgMusic();
+    if (isLiveConnected) {
+      disconnectLive();
+      setPendingReconnect(true);
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -527,7 +549,7 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
             {['en', 'si', 'ta'].map((ln) => (
               <button
                 key={ln}
-                onClick={() => { setLanguage(ln); stopBgMusic(); }}
+                onClick={() => handleLanguageChange(ln)}
                 className={`${styles.langBtn} ${language === ln ? styles.langBtnActive : ""}`}
               >
                 {ln === 'en' ? 'EN' : ln === 'si' ? 'සිං' : 'த'}
@@ -538,6 +560,38 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
             <span className={styles.liveDot}></span>
             <span>AI Powered</span>
           </div>
+          <button 
+            style={{
+              marginLeft: '15px',
+              padding: '6px 16px',
+              backgroundColor: 'rgba(255, 50, 50, 0.2)',
+              border: '1px solid rgba(255, 50, 50, 0.5)',
+              borderRadius: '20px',
+              color: 'white',
+              cursor: 'pointer',
+              fontWeight: '500',
+              backdropFilter: 'blur(5px)',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 50, 50, 0.4)';
+              e.currentTarget.style.borderColor = 'rgba(255, 100, 100, 0.8)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(255, 50, 50, 0.2)';
+              e.currentTarget.style.borderColor = 'rgba(255, 50, 50, 0.5)';
+            }}
+            onClick={() => {
+              if (isLiveConnected) disconnectLive();
+              setSessionId(null);
+              setCustomerName(null);
+              setMessages([]);
+              setShowApp(false);
+              setShowAuth(true);
+            }}
+          >
+            Logout
+          </button>
         </div>
       </nav>
 
