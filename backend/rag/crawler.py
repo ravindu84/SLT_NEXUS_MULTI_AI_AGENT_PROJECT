@@ -14,20 +14,24 @@ from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 import chromadb
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_openai import OpenAIEmbeddings
+from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_core.messages import HumanMessage
+from pathlib import Path
+import base64
 import pypdf
 
 load_dotenv()
 
-CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", "./chroma_db")
-MAX_PAGES_TO_CRAWL = 200  # Extract comprehensive data from entire site
+CHROMA_DB_PATH = os.getenv("CHROMA_DB_PATH", str(Path(__file__).parent.parent / "chroma_db"))
+MAX_PAGES_TO_CRAWL = 1500  # Extract comprehensive data from entire site
 
 SEEDS = [
     "https://www.slt.lk/home",
     "https://www.slt.lk/en/broadband",
     "https://www.slt.lk/en/personal/telephone",
     "https://www.slt.lk/en/personal/peo-tv/peo-feature",
-    "https://www.sltmobitel.lk/"
+    "https://www.sltmobitel.lk/",
+    "https://lifestore.lk/"
 ]
 
 HIGH_VALUE_KEYWORDS = [
@@ -41,6 +45,7 @@ HIGH_VALUE_KEYWORDS = [
 chroma_client = chromadb.PersistentClient(path=CHROMA_DB_PATH)
 collection = chroma_client.get_or_create_collection("slt_knowledge", metadata={"hnsw:space": "cosine"})
 embeddings = OpenAIEmbeddings(api_key=os.getenv("OPENAI_API_KEY"))
+llm_vision = ChatOpenAI(model="gpt-4o-mini", max_tokens=300)
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
@@ -51,20 +56,15 @@ def is_valid_slt_url(url: str) -> bool:
     parsed = urllib.parse.urlparse(url)
     domain = parsed.netloc.lower()
     
-    if not any(d in domain for d in ["slt.lk", "sltmobitel.lk"]):
+    if not any(d in domain for d in ["slt.lk", "sltmobitel.lk", "lifestore.lk"]):
         return False
         
     path = parsed.path.lower()
-    
-    # Skip non-PDF binary files
-    if any(path.endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".mp4", ".zip", ".css", ".js"]):
+    # Skip binary files, PDFs, but ALLOW images
+    if any(path.endswith(ext) for ext in [".pdf", ".mp4", ".zip", ".css", ".js", ".woff", ".ttf", ".mp3", ".wav"]):
         return False
         
-    matches_keywords = any(kw in path for kw in HIGH_VALUE_KEYWORDS)
-    is_root_or_home = path in ["", "/", "/home", "/en/broadband", "/en/personal", "/en/business"]
-    
-    return matches_keywords or is_root_or_home
-
+    return True
 
 def clean_html_and_extract_text(html_content: str) -> tuple:
     soup = BeautifulSoup(html_content, "html.parser")
@@ -105,6 +105,25 @@ def extract_pdf_text(pdf_bytes: bytes) -> str:
         return ""
 
 
+def extract_image_text(image_bytes: bytes) -> str:
+    try:
+        base64_image = base64.b64encode(image_bytes).decode('utf-8')
+        prompt = "Extract all readable text, promotional details, numbers, and offers from this image. Format it clearly. If there is no text, reply 'NO_TEXT'."
+        message = HumanMessage(
+            content=[
+                {"type": "text", "text": prompt},
+                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"}}
+            ]
+        )
+        result = llm_vision.invoke([message]).content.strip()
+        if result == "NO_TEXT":
+            return ""
+        return result
+    except Exception as e:
+        print(f"Failed to extract image text: {e}")
+        return ""
+
+
 def crawl_slt_sites():
     print("=" * 60)
     print("START: SLT NEXUS - Master Web & PDF Crawler")
@@ -132,16 +151,19 @@ def crawl_slt_sites():
                 continue
 
             content_type = response.headers.get('Content-Type', '').lower()
-            
-            # Handle PDF
-            if "application/pdf" in content_type or current_url.lower().endswith(".pdf"):
-                print(f"  [PDF DETECTED] Extracting PDF text...")
-                text = extract_pdf_text(response.content)
+                
+            # Handle Images
+            if "image" in content_type or any(current_url.lower().endswith(ext) for ext in [".png", ".jpg", ".jpeg", ".webp"]):
+                # Skip tiny images
+                if len(response.content) < 10000:
+                    continue
+                print(f"  [IMAGE DETECTED] Extracting Image text...")
+                text = extract_image_text(response.content)
                 title = current_url.split("/")[-1]
-                if text and len(text) > 150:
-                    all_pages_data.append({"url": current_url, "title": f"PDF Document: {title}", "text": text})
+                if text and len(text) > 10:
+                    all_pages_data.append({"url": current_url, "title": f"Image/Banner: {title}", "text": text})
                     crawled_count += 1
-                    print(f"  [SUCCESS] Extracted PDF ({len(text)} chars)")
+                    print(f"  [SUCCESS] Extracted Image Text ({len(text)} chars)")
                 continue
 
             # Handle HTML
@@ -196,7 +218,7 @@ def crawl_slt_sites():
                 "source": "slt_website_crawler",
                 "url": page["url"],
                 "title": page["title"],
-                "category": "pdf_manual" if "PDF" in page["title"] else "web_information"
+                "category": "pdf_manual" if "PDF" in page["title"] else ("image_banner" if "Image" in page["title"] else "web_information")
             })
             ids.append(f"web_crawler_{i}_chunk_{j}")
 
