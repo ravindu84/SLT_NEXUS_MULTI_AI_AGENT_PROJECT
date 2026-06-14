@@ -15,6 +15,7 @@ tiktoken
 python-multipart
 langchain-google-genai
 chromadb
+azure-cognitiveservices-speech
 web3>=6.0.0
 twilio
 beautifulsoup4

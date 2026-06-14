@@ -22,6 +22,7 @@ uv pip install -r requirements.txt
 uv pip install uvicorn
 
 echo "Starting backend natively in screen session..."
-screen -S backend -d -m bash -c 'source .venv/bin/activate && uvicorn backend.main:app --host 0.0.0.0 --port 8000'
+cd ~/SLT_NEXUS_MULTI_AI_AGENT_PROJECT
+screen -S backend -d -m bash -c 'source backend/.venv/bin/activate && uvicorn backend.main:app --host 0.0.0.0 --port 8000'
 
 echo "Deployment successful!"
