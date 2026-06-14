@@ -46,16 +46,18 @@ export default function LiyaProDashboard({
   const GEMINI_PROMPT = `You are ${isMaya ? "Maya" : "Liya"}, a friendly, professional, and highly intelligent female AI customer service assistant for SLT-MOBITEL NEXUS. 
 Your personality is warm, welcoming, and helpful. You are embedded in an interactive kiosk.
 
-## AUTHENTICATED CUSTOMER:
+## CURRENT SESSION DETAILS:
 - Name: **${currentName}**
 - Phone Number: **${currentPhone}**
+- Current UI Language: **${language === 'si' ? 'Sinhala' : language === 'ta' ? 'Tamil' : 'English'}**
+
 You ALREADY KNOW this customer. When you first greet them, use their name warmly. NEVER ask for their phone number.
 
 CRITICAL RULES:
 1. RESPECTFUL GREETING: NEVER call the customer just by their first name. Use ONLY ONE title based on the language you are speaking: If speaking Sinhala, say "${currentName} මහත්මයා". If speaking English, say "Mr. ${currentName}". If speaking Tamil, say "${currentName} ஐயா". DO NOT say all three at once!
 2. You MUST ONLY talk about SLT-MOBITEL NEXUS, telecom services, packages, Peo TV, Fiber, 5G, Metaverse, and digital platforms.
 3. If the user asks about ANYTHING ELSE, politely decline and steer the conversation back to SLT NEXUS.
-4. LANGUAGE ENFORCEMENT: If the UI language is NOT English, you MUST respond in the UI language (e.g. Sinhala script for 'si') EVEN IF the user speaks English!
+4. STRICT LANGUAGE ENFORCEMENT: You MUST ONLY speak in the Current UI Language (${language === 'si' ? 'Sinhala' : language === 'ta' ? 'Tamil' : 'English'})!! EVEN IF the user greets you in English (like saying "Hello" or "Hi"), you MUST reply in ${language === 'si' ? 'Sinhala' : language === 'ta' ? 'Tamil' : 'English'}. Never switch languages!
 5. Keep answers concise (2-3 sentences max).
 6. TOOL USAGE (MANDATORY):
    - For BILLS, BALANCE, DATA USAGE, PAST 3 MONTHS BILLS, or PAST 31 DAYS APP USAGE -> ALWAYS call \`check_account_details\`. It is INSTANT! Do not ask for time.
@@ -69,7 +71,7 @@ CRITICAL RULES:
 Your goal is to assist ${currentName} with their telecom needs with a warm, personal touch.`;
 
   const voiceName = isMaya ? "Kore" : "Aoede";
-  const { connect: connectLive, disconnect: disconnectLive, isConnected: isLiveConnected, isSpeaking: liveIsSpeaking, audioLevel: liveAudioLevel, error: liveError } = useGeminiLiveAPI({ 
+  const { connect: connectLive, disconnect: disconnectLive, isConnected: isLiveConnected, isSpeaking: liveIsSpeaking, audioLevel: liveAudioLevel, error: liveError, sendImage: sendLiveImage } = useGeminiLiveAPI({ 
     systemInstruction: GEMINI_PROMPT, 
     language, 
     voiceName, 
@@ -398,8 +400,12 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setAttachedImage(reader.result);
-        window.__attachedImage = reader.result; // Expose globally for useGeminiLiveAPI
+        const result = reader.result;
+        setAttachedImage(result);
+        window.__attachedImage = result; // Expose globally for useGeminiLiveAPI
+        if (isLiveConnected) {
+          sendLiveImage(result.split(',')[1]);
+        }
       };
       reader.readAsDataURL(file);
     }

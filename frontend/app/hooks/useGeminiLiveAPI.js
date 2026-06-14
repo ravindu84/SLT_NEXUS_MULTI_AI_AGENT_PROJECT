@@ -17,6 +17,11 @@ export function useGeminiLiveAPI({ systemInstruction, language = "si", voiceName
   const analyserRef = useRef(null);
   const animFrameRef = useRef(null);
 
+  const systemInstructionRef = useRef(systemInstruction);
+  useEffect(() => {
+    systemInstructionRef.current = systemInstruction;
+  }, [systemInstruction]);
+
   const stopAllAudio = useCallback(() => {
     activeSourcesRef.current.forEach(source => {
       try { source.stop(); } catch(e) {}
@@ -156,7 +161,7 @@ export function useGeminiLiveAPI({ systemInstruction, language = "si", voiceName
                 }
               },
               systemInstruction: {
-                parts: [{ text: systemInstruction }]
+                parts: [{ text: systemInstructionRef.current }]
               },
               tools: [{
               functionDeclarations: [
@@ -395,5 +400,18 @@ export function useGeminiLiveAPI({ systemInstruction, language = "si", voiceName
     }
   }, [systemInstruction, disconnect, playAudioChunk, stopAllAudio]);
 
-  return { connect, disconnect, isConnected, isSpeaking, audioLevel, error };
+  const sendImage = useCallback((base64Data) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
+      wsRef.current.send(JSON.stringify({
+        realtimeInput: {
+          mediaChunks: [{
+            mimeType: "image/jpeg",
+            data: base64Data
+          }]
+        }
+      }));
+    }
+  }, []);
+
+  return { connect, disconnect, isConnected, isSpeaking, audioLevel, error, sendImage };
 }
