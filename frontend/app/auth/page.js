@@ -20,7 +20,7 @@ export default function AuthPage(props) {
     </svg>
   );
 
-  const { onAuthSuccess, onLanguageSelected, onBackToLanguageSelection } = props;
+  const { onAuthSuccess, onLanguageSelected, onBackToLanguageSelection, currentLang = "en" } = props;
   const router = useRouter();
   
   // Video Background Sync
@@ -31,7 +31,6 @@ export default function AuthPage(props) {
   const [tab, setTab] = useState("existing");
   const [step, setStep] = useState(1);
   const [isDesktop, setIsDesktop] = useState(true);
-  const [lang, setLang] = useState("en");
 
   useEffect(() => {
     const video = videoRef.current;
@@ -60,7 +59,6 @@ export default function AuthPage(props) {
   }, [showLanguageSelection]);
 
   const handleLanguageSelect = (selectedLang) => {
-    setLang(selectedLang);
     setShowLanguageSelection(false);
     
     if (audioRef.current) {
@@ -68,7 +66,7 @@ export default function AuthPage(props) {
     }
     
     if (onLanguageSelected) {
-      onLanguageSelected();
+      onLanguageSelected(selectedLang);
     }
   };
 
@@ -210,7 +208,7 @@ export default function AuthPage(props) {
     }
   };
 
-  const curr = t[lang];
+  const curr = t[currentLang];
 
   const handleExistingPhoneSubmit = async (e) => {
     e.preventDefault();

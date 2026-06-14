@@ -436,7 +436,11 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
   if (showAuth) {
     return (
       <AuthPage 
-        onLanguageSelected={playBgMusic}
+        currentLang={language}
+        onLanguageSelected={(selectedLang) => {
+          setLanguage(selectedLang);
+          playBgMusic();
+        }}
         onBackToLanguageSelection={stopBgMusic}
         onAuthSuccess={async (phoneNum) => {
         setShowAuth(false);
