@@ -190,7 +190,7 @@ export function useGeminiLiveAPI({ systemInstruction, language = "si", voiceName
                 },
                 {
                   name: "end_session",
-                  description: "Call this tool IMMEDIATELY when the customer says they don't need any more help, or says goodbye. This will log them out of the kiosk safely.",
+                  description: "Call this tool IMMEDIATELY when the customer says they don't need any more help, or says goodbye. This will trigger the end session UI.",
                   parameters: {
                     type: "OBJECT",
                     properties: {},
@@ -325,7 +325,7 @@ export function useGeminiLiveAPI({ systemInstruction, language = "si", voiceName
                       functionResponses: [{
                         id: call.id,
                         name: call.name,
-                        response: { result: "Session ending triggered successfully." }
+                        response: { result: "Session ending UI triggered successfully." }
                       }]
                     }
                   }));

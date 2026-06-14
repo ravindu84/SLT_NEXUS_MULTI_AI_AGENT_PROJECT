@@ -76,6 +76,7 @@ export default function Home() {
   const [showTranscript, setShowTranscript] = useState(false);
   const [attachedImage, setAttachedImage] = useState(null);
   const [showCamera, setShowCamera] = useState(false);
+  const [isSessionEnded, setIsSessionEnded] = useState(false);
   const videoRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -143,10 +144,11 @@ CRITICAL RULES:
    - For SIMPLE GREETINGS (like "Hello", "Hi Maya", "Good morning") -> DO NOT CALL ANY TOOLS! Respond directly and instantly yourself to welcome the user.
 8. ANTI-LAZINESS RULE: NEVER tell the customer to "check the MySLT App" or "Call 1212". YOU are the customer service agent! You MUST answer their questions and solve their problems using your tools.
 9. When the tool returns data, read it out naturally. Include specific numbers (LKR amount, GB remaining, etc.).
-10. KIOSK EXPERIENCE (MANDATORY): After you answer a customer's question, ALWAYS politely ask if they need anything else (e.g., "තවත් මොනවා හරි දැනගන්න තියෙනවද?", "Is there anything else I can help you with?", "வேறெதும் அறிய வேண்டுமா?").
-11. ENDING THE SESSION (CRITICAL): If the customer says "No, that's all", "Thanks, bye", "Hari epamanai" (Sinhala for that's enough), or indicates they are done:
+10. For faults/photos, use the tool. Say "මම බලන්නම්..." while calling it.
+11. KIOSK EXPERIENCE: After answering a customer's question, politely ask if they need anything else (e.g., "තවත් මොනවා හරි දැනගන්න තියෙනවද?", "Is there anything else I can help you with?").
+12. ENDING THE SESSION (CRITICAL): If the customer says "No, that's all", "Thanks, bye", "Hari epamanai" (Sinhala for that's enough), or indicates they are done:
     - First, say a polite goodbye (e.g., "ස්තූතියි, ඔබට සුභ දවසක්!", "Thank you, have a great day!").
-    - SECOND, IMMEDIATELY call the \`end_session\` tool to log them out! DO NOT ask any further questions.
+    - SECOND, IMMEDIATELY call the \`end_session\` tool! This will trigger the end session UI on the screen.
 
 Your goal is to assist ${currentName} with their telecom needs with a warm, personal touch.`;
   const systemInstruction = GEMINI_PROMPT;
@@ -184,60 +186,11 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
     }
   }, [pendingReconnect, isLiveConnected, connectLive]);
 
-  // Auto-logout timer for Kiosk Mode
-  const logoutTimerRef = useRef(null);
-
-  const resetLogoutTimer = useCallback(() => {
-    if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
-    logoutTimerRef.current = setTimeout(() => {
-      // Auto logout after 60 seconds of inactivity
-      if (showApp) {
-        if (isLiveConnected) disconnectLive();
-        setSessionId(null);
-        setCustomerName(null);
-        setCustomerProfile(null);
-        setMessages([]);
-        setShowApp(false);
-        setShowAuth(true);
-        console.log("[AUTO-LOGOUT] Session expired due to inactivity");
-      }
-    }, 60000);
-  }, [showApp, isLiveConnected, disconnectLive]);
-
   useEffect(() => {
-    if (showApp) {
-      resetLogoutTimer();
-      const events = ['mousemove', 'mousedown', 'click', 'scroll', 'keypress', 'touchstart'];
-      const handleActivity = () => resetLogoutTimer();
-      events.forEach(event => document.addEventListener(event, handleActivity));
-
-      const handleGeminiEndSession = () => {
-        console.log("End session tool called by Gemini. Logging out in 4s...");
-        setTimeout(() => {
-          if (isLiveConnected) disconnectLive();
-          setSessionId(null);
-          setCustomerName(null);
-          setCustomerProfile(null);
-          setMessages([]);
-          setShowApp(false);
-          setShowAuth(true);
-        }, 4000);
-      };
-      window.addEventListener('gemini-end-session', handleGeminiEndSession);
-
-      return () => {
-        if (logoutTimerRef.current) clearTimeout(logoutTimerRef.current);
-        events.forEach(event => document.removeEventListener(event, handleActivity));
-        window.removeEventListener('gemini-end-session', handleGeminiEndSession);
-      };
-    }
-  }, [showApp, resetLogoutTimer, isLiveConnected, disconnectLive]);
-
-  useEffect(() => {
-    if (liveIsSpeaking || isThinking || isLiveConnected) {
-      resetLogoutTimer(); // Keep resetting while AI is active or listening
-    }
-  }, [liveIsSpeaking, isThinking, isLiveConnected, resetLogoutTimer]);
+    const handleEndSession = () => setIsSessionEnded(true);
+    window.addEventListener('gemini-end-session', handleEndSession);
+    return () => window.removeEventListener('gemini-end-session', handleEndSession);
+  }, []);
 
   const handleLanguageChange = (ln) => {
     if (language === ln) return;
@@ -556,6 +509,73 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
 
   return (
     <div className={`${styles.app} ${theme === 'dark' ? styles.dark : styles.light}`}>
+      {isSessionEnded && (
+        <div style={{
+          position: 'fixed',
+          top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(10, 15, 30, 0.95)',
+          zIndex: 9999,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          backdropFilter: 'blur(20px)',
+          animation: 'fadeIn 0.5s ease-out'
+        }}>
+          <img src="/assets/logo.png" alt="SLT NEXUS" style={{ height: '80px', marginBottom: '30px' }} />
+          <h1 style={{ color: '#00ffff', fontSize: '3rem', marginBottom: '10px', textShadow: '0 0 20px rgba(0, 255, 255, 0.5)' }}>
+            {language === 'en' ? 'Thank You!' : language === 'si' ? 'ස්තූතියි!' : 'நன்றி!'}
+          </h1>
+          <p style={{ color: '#ffffff', fontSize: '1.5rem', marginBottom: '40px', opacity: 0.8 }}>
+            {language === 'en' ? 'Have a great day!' : language === 'si' ? 'සුභ දවසක්!' : 'இனிய நாளாக அமையட்டும்!'}
+          </p>
+          <div style={{ display: 'flex', gap: '20px' }}>
+            <button
+              onClick={() => {
+                setIsSessionEnded(false);
+                if (isLiveConnected) disconnectLive();
+                setSessionId(null);
+                setCustomerName(null);
+                setCustomerProfile(null);
+                setMessages([]);
+                setShowApp(false);
+                setShowAuth(true);
+              }}
+              style={{
+                padding: '15px 40px',
+                fontSize: '1.2rem',
+                backgroundColor: '#00ffff',
+                color: '#000',
+                border: 'none',
+                borderRadius: '30px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                boxShadow: '0 0 20px rgba(0, 255, 255, 0.4)'
+              }}
+            >
+              Finish & Logout
+            </button>
+            <button
+              onClick={() => setIsSessionEnded(false)}
+              style={{
+                padding: '15px 40px',
+                fontSize: '1.2rem',
+                backgroundColor: 'transparent',
+                color: '#00ffff',
+                border: '2px solid rgba(0, 255, 255, 0.5)',
+                borderRadius: '30px',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                transition: 'all 0.3s'
+              }}
+              onMouseOver={(e) => e.target.style.backgroundColor = 'rgba(0, 255, 255, 0.1)'}
+              onMouseOut={(e) => e.target.style.backgroundColor = 'transparent'}
+            >
+              Continue Session
+            </button>
+          </div>
+        </div>
+      )}
       {/* PWA Install Button when logged in */}
       {showApp && installPrompt && (
         <button 

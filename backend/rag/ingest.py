@@ -165,6 +165,26 @@ def prepare_faq_documents() -> list[dict]:
     return documents
 
 
+def prepare_navigation_documents() -> list[dict]:
+    """Convert website navigation data into text documents."""
+    data = load_json("website_navigation.json")
+    documents = []
+
+    for menu in data["navigation_menus"]:
+        for category in menu["categories"]:
+            text = f"SLT Website Navigation - Menu: {menu['menu_name']}\nCategory: {category['name']}\nItems available in this menu: {', '.join(category['items'])}"
+            documents.append({
+                "text": text,
+                "metadata": {
+                    "source": "website_navigation",
+                    "category": menu["menu_name"],
+                    "sub_category": category["name"]
+                }
+            })
+
+    return documents
+
+
 def prepare_usage_documents() -> list[dict]:
     """Convert usage profile data into text documents."""
     data = load_json("usage_profiles.json")
@@ -277,6 +297,9 @@ def run_ingestion():
 
     print("  INFO: Loading usage profiles...")
     all_documents.extend(prepare_usage_documents())
+
+    print("  INFO: Loading website navigation menus...")
+    all_documents.extend(prepare_navigation_documents())
 
     print(f"\nINFO: Total documents: {len(all_documents)}")
 
