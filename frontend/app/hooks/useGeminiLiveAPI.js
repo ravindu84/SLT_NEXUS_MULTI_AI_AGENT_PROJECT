@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 
 export function useGeminiLiveAPI({ systemInstruction, language = "si", voiceName = "Aoede", isAdmin = false, sessionId = "0712345678", onTextResponse }) {
   const [isConnected, setIsConnected] = useState(false);
