@@ -158,12 +158,8 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
   }, [liveIsSpeaking, isLiveConnected, handleSpeakingChange]);
 
   useEffect(() => {
-    if (!isLiveConnected && isListening) {
-      setIsListening(false);
-    } else if (isLiveConnected && !isListening) {
-      setIsListening(true);
-    }
-  }, [isLiveConnected, isListening]);
+    setIsListening(isLiveConnected);
+  }, [isLiveConnected]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -403,10 +399,8 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
     stopBgMusic();
     if (isLiveConnected) {
       disconnectLive();
-      setIsListening(false);
     } else {
       connectLive();
-      setIsListening(true);
     }
   };
 

@@ -383,21 +383,15 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
     if (onInteraction) onInteraction();
     if (isLiveConnected) {
       disconnectLive();
-      setIsListening(false);
     } else {
       connectLive();
-      setIsListening(true);
     }
   };
 
   // Sync isListening state with live connection state
   useEffect(() => {
-    if (!isLiveConnected && isListening) {
-      setIsListening(false);
-    } else if (isLiveConnected && !isListening) {
-      setIsListening(true);
-    }
-  }, [isLiveConnected, isListening]);
+    setIsListening(isLiveConnected);
+  }, [isLiveConnected]);
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
