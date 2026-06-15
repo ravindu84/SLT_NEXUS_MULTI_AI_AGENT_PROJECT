@@ -28,10 +28,10 @@ def package_advisor(query: str) -> str:
     """
     retriever = SLTRetriever()
     # Search the newly scraped website database
-    context = retriever.get_context_string(query, n_results=5, source_filter="slt_website")
+    context = retriever.get_context_string(query, n_results=10, source_filter="slt_website")
     
     # Also get usage profile context if relevant
-    usage_context = retriever.get_context_string(query, n_results=2, source_filter="usage_profiles")
+    usage_context = retriever.get_context_string(query, n_results=4, source_filter="usage_profiles")
     
     return f"""
 PACKAGE INFORMATION:

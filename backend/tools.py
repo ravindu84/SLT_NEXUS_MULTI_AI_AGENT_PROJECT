@@ -133,7 +133,7 @@ def query_knowledge_base(query: str) -> str:
     """Search SLT internal knowledge base for troubleshooting and info."""
     if retriever:
         try:
-            return retriever.get_context_string(query, n_results=3)
+            return retriever.get_context_string(query, n_results=8)
         except Exception as e:
             return f"Error querying internal knowledge base: {str(e)}. Fallback: Restart your fiber router and verify if the LOS LED is red."
     return "RAG Placeholder: SLT fiber troubleshooting suggests restarting the router and checking for the Red LOS light."

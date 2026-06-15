@@ -301,10 +301,10 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
         const lowerText = messageText.toLowerCase();
         const greetings = ["hi", "hello", "hey", "halo", "helo", "හෙලෝ", "ආයුබෝවන්", "வணக்கம்", "hi maya", "hello maya", "hi liya", "hello liya"];
         if (greetings.includes(lowerText) && !attachedImage) {
-          const agentName = "මායා";
-          let greetingResponse = "ආයුබෝවන්! මම මායා, ඔබට අද කොහොමද උදව් කරන්නේ? 😊";
-          if (language === "en") greetingResponse = "Hello! I am MAYA, how can I help you today? 😊";
-          if (language === "ta") greetingResponse = "வணக்கம்! நான் மாயா, இன்று நான் உங்களுக்கு எப்படி உதவ முடியும்? 😊";
+          const agentName = "ලියා";
+          let greetingResponse = "ආයුබෝවන්! මම ලියා, ඔබට අද කොහොමද උදව් කරන්නේ? 😊";
+          if (language === "en") greetingResponse = "Hello! I am LIYA, how can I help you today? 😊";
+          if (language === "ta") greetingResponse = "வணக்கம்! நான் லியா, இன்று நான் உங்களுக்கு எப்படி உதவ முடியும்? 😊";
 
           const aiMsg = { 
             id: Date.now() + 1, 
