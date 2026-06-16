@@ -929,7 +929,7 @@ export default function App({ onBack }: { onBack?: () => void }) {
         }).catch(e => console.warn(e));
         if (audioAlertEnabled) playAlertSound();
       }
-    }, 15000); // 15s for demo
+    }, 60000); // 60s for demo
 
     return () => {
       clearInterval(alarmInterval);
