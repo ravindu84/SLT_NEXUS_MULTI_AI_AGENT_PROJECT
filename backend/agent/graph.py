@@ -53,10 +53,11 @@ from backend.agent.tools.mcp_tools import (
     send_whatsapp_notification,
     check_area_outages,
     register_customer_agreement,
-    search_slt_knowledgebase,
     get_full_customer_profile,
     dispatch_technician_admin,
-    finalize_admin_approval
+    finalize_admin_approval,
+    generate_predictive_faults,
+    clear_predictive_faults
 )
 
 from backend.agent.tools.package_advisor import package_advisor
@@ -144,7 +145,9 @@ tools = [
     get_full_customer_profile,
     # Admin tools
     dispatch_technician_admin,
-    finalize_admin_approval
+    finalize_admin_approval,
+    generate_predictive_faults,
+    clear_predictive_faults
 ]
 tool_node = ToolNode(tools)
 

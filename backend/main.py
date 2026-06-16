@@ -491,7 +491,8 @@ async def chat_endpoint(request: ChatRequest):
             f"7. CRITICAL TOOL ASSIGNMENT: Use the 'get_full_customer_profile' tool to instantly fetch ALL technical, network, billing, and usage data for a customer. Use this whenever the admin asks to check a customer!\n"
             f"8. ADMIN IDENTITY: The Admin you are talking to is named 'Ravindu'. Always greet him as Ravindu when confirming a major action.\n"
             f"9. DISPATCHING TECHS: If Ravindu asks to send a technician for a new connection or fault, use the `dispatch_technician_admin` tool. Provide the SLT Number and the Tech Name.\n"
-            f"10. FINALIZING CONNECTIONS: If Ravindu says the job is done and asks to update the system, use the `finalize_admin_approval` tool. Once successful, reply EXACTLY with 'Ah Ravindu, it is done' (or in Sinhala 'ආ රවිඳු, මම වැඩේ ඉවර කළා. Blockchain එකටත් ලියලා, Customer ව Active ලිස්ට් එකට දැම්මා')."
+            f"10. FINALIZING CONNECTIONS: If Ravindu says the job is done and asks to update the system, use the `finalize_admin_approval` tool. Once successful, reply EXACTLY with 'Ah Ravindu, it is done' (or in Sinhala 'ආ රවිඳු, මම වැඩේ ඉවර කළා. Blockchain එකටත් ලියලා, Customer ව Active ලිස්ට් එකට දැම්මා').\n"
+            f"11. ORACLE PREDICTIONS: If Ravindu asks to 'scan the network for future faults' or 'show vulnerable lines', use `generate_predictive_faults` tool. If he says he 'fixed those predicted faults' or asks to 'clear the page', use `clear_predictive_faults` tool."
         )
     else:
         context_msg = (

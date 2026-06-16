@@ -251,34 +251,8 @@ async def get_predictive_degradation():
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
-        
-        # Query for Copper with Bad SNR (< 20) or Bad Attenuation (> 20)
-        # OR Fiber with bad Power Level (< -25)
-        # Exclude already DOWN/Fault lines to only get pre-emptive degradation
-        
-        query = """
-            SELECT * FROM (
-                SELECT c.phone_number, c.registered_name, c.address, c.contact_number, 
-                       n.line_state, n.power_level, n.snr, n.attenuation, n.clarity_path, c.telephone_type
-                FROM customers c
-                JOIN network_status n ON c.phone_number = n.phone_number
-                WHERE n.status = 'UP' AND n.line_state != 'Fault' AND c.telephone_type = 'Copper' 
-                AND (CAST(n.snr AS REAL) < 20.0 OR CAST(n.attenuation AS REAL) > 20.0)
-                ORDER BY RANDOM()
-                LIMIT 5
-            )
-            UNION ALL
-            SELECT * FROM (
-                SELECT c.phone_number, c.registered_name, c.address, c.contact_number, 
-                       n.line_state, n.power_level, n.snr, n.attenuation, n.clarity_path, c.telephone_type
-                FROM customers c
-                JOIN network_status n ON c.phone_number = n.phone_number
-                WHERE n.status = 'UP' AND n.line_state != 'Fault' AND c.telephone_type = 'Fiber' 
-                AND CAST(n.power_level AS REAL) < -25.0
-                ORDER BY RANDOM()
-                LIMIT 5
-            )
-        """
+        # Read from the oracle_predictions table which is populated by the AI
+        query = "SELECT * FROM oracle_predictions"
         cursor.execute(query)
         rows = cursor.fetchall()
         conn.close()

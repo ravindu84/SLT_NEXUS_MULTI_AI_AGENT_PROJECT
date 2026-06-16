@@ -500,3 +500,64 @@ async def finalize_admin_approval(slt_number: str) -> str:
             return "Connection not found."
     except Exception as e:
         return f"Error finalizing connection: {str(e)}"
+
+@tool
+async def generate_predictive_faults() -> str:
+    """Scans the network for pre-emptive faults (Oracle Predictor) and makes them visible to the Admin dashboard. Run this when Admin asks to scan for future faults."""
+    import os
+    import sqlite3
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Clear existing predictions first
+        cursor.execute("DELETE FROM oracle_predictions")
+        
+        # Insert 5 Copper and 5 Fiber randomly
+        query = """
+            INSERT INTO oracle_predictions
+            SELECT * FROM (
+                SELECT c.phone_number, c.registered_name, c.address, c.contact_number, 
+                       n.line_state, n.power_level, n.snr, n.attenuation, n.clarity_path, c.telephone_type
+                FROM customers c
+                JOIN network_status n ON c.phone_number = n.phone_number
+                WHERE n.status = 'UP' AND n.line_state != 'Fault' AND c.telephone_type = 'Copper' 
+                AND (CAST(n.snr AS REAL) < 20.0 OR CAST(n.attenuation AS REAL) > 20.0)
+                ORDER BY RANDOM()
+                LIMIT 5
+            )
+            UNION ALL
+            SELECT * FROM (
+                SELECT c.phone_number, c.registered_name, c.address, c.contact_number, 
+                       n.line_state, n.power_level, n.snr, n.attenuation, n.clarity_path, c.telephone_type
+                FROM customers c
+                JOIN network_status n ON c.phone_number = n.phone_number
+                WHERE n.status = 'UP' AND n.line_state != 'Fault' AND c.telephone_type = 'Fiber' 
+                AND CAST(n.power_level AS REAL) < -25.0
+                ORDER BY RANDOM()
+                LIMIT 5
+            )
+        """
+        cursor.execute(query)
+        conn.commit()
+        conn.close()
+        return "Network scan complete! 10 highly vulnerable lines (5 PSTN, 5 FTTH) have been identified and sent to the Oracle Predictor dashboard."
+    except Exception as e:
+        return f"Error scanning network: {str(e)}"
+
+@tool
+async def clear_predictive_faults() -> str:
+    """Clears the Oracle Predictor dashboard. Run this when Admin says the predicted faults have been fixed or handled."""
+    import os
+    import sqlite3
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM oracle_predictions")
+        conn.commit()
+        conn.close()
+        return "Oracle Predictor dashboard cleared successfully."
+    except Exception as e:
+        return f"Error clearing predictive faults: {str(e)}"
