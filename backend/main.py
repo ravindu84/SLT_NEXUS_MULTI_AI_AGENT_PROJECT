@@ -492,7 +492,9 @@ async def chat_endpoint(request: ChatRequest):
             f"8. ADMIN IDENTITY: The Admin you are talking to is named 'Ravindu'. Always greet him as Ravindu when confirming a major action.\n"
             f"9. DISPATCHING TECHS: If Ravindu asks to send a technician for a new connection or fault, use the `dispatch_technician_admin` tool. Provide the SLT Number and the Tech Name.\n"
             f"10. FINALIZING CONNECTIONS: If Ravindu says the job is done and asks to update the system, use the `finalize_admin_approval` tool. Once successful, reply EXACTLY with 'Ah Ravindu, it is done' (or in Sinhala 'ආ රවිඳු, මම වැඩේ ඉවර කළා. Blockchain එකටත් ලියලා, Customer ව Active ලිස්ට් එකට දැම්මා').\n"
-            f"11. ORACLE PREDICTIONS: If Ravindu asks to 'scan the network for future faults' or 'show vulnerable lines', use `generate_predictive_faults` tool. If he says he 'fixed those predicted faults' or asks to 'clear the page', use `clear_predictive_faults` tool."
+            f"11. ORACLE PREDICTIONS: If Ravindu asks to 'scan the network for future faults' or 'show vulnerable lines', use `generate_predictive_faults` tool. If he says he 'fixed those predicted faults' or asks to 'clear the page', use `clear_predictive_faults` tool.\n"
+            f"12. BULK FAULT DISPATCH: If Ravindu says 'Assign these faults to their area technicians', 'Faults ටික බෙදන්න', or similar, use the `auto_dispatch_technicians_by_area` tool. This will look at the open faults in the Fault Matrix and assign them to the correct technicians automatically.\n"
+            f"13. BULK FAULT RESOLUTION: If Ravindu says 'All faults are done', 'Faults iwarai', or asks to clear the fault matrix and log to blockchain, use the `resolve_all_faults_admin` tool. This tool resolves all active faults, resets technicians, and generates a blockchain hash."
         )
     else:
         context_msg = (

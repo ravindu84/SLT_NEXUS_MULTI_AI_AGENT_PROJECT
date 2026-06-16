@@ -155,7 +155,7 @@ async def create_fault_ticket(request: TicketRequest):
     ticket_id = f"SLT-FT-{random.randint(100000, 999999)}"
     technicians = ["KOSALA", "JANITH", "SANJEEWA", "NALAKA", "LAHIRU", "ASELA", "THARINDU", "PRASAD", "KAMAL", "SOMASIRI"]
     
-    assigned_tech = request.assigned_technician if request.assigned_technician else random.choice(technicians)
+    assigned_tech = request.assigned_technician if request.assigned_technician else None
     
     try:
         conn = sqlite3.connect(DB_PATH)
@@ -163,7 +163,7 @@ async def create_fault_ticket(request: TicketRequest):
         cursor.execute('''
             INSERT INTO fault_tickets (ticket_id, phone_number, technician, status, created_at)
             VALUES (?, ?, ?, ?, ?)
-        ''', (ticket_id, request.phone_number, assigned_tech, "Assigned", datetime.now().isoformat()))
+        ''', (ticket_id, request.phone_number, assigned_tech, "Open", datetime.now().isoformat()))
         conn.commit()
         conn.close()
     except Exception as e:

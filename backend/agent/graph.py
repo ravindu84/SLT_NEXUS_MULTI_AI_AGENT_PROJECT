@@ -57,7 +57,9 @@ from backend.agent.tools.mcp_tools import (
     dispatch_technician_admin,
     finalize_admin_approval,
     generate_predictive_faults,
-    clear_predictive_faults
+    clear_predictive_faults,
+    auto_dispatch_technicians_by_area,
+    resolve_all_faults_admin
 )
 
 from backend.agent.tools.package_advisor import package_advisor
@@ -147,7 +149,9 @@ tools = [
     dispatch_technician_admin,
     finalize_admin_approval,
     generate_predictive_faults,
-    clear_predictive_faults
+    clear_predictive_faults,
+    auto_dispatch_technicians_by_area,
+    resolve_all_faults_admin
 ]
 tool_node = ToolNode(tools)
 
