@@ -964,10 +964,10 @@ async def resolve_major_outage() -> str:
         # 3. Random Damage Reports
         loss = f"Rs. {random.randint(50, 500)},000.00"
         reports = [
-            f"Copper DP Pole completely broken due to an accident. Splicing team replaced the DP. Estimated Financial Loss: {loss}.",
-            f"MSAN Cabinet down due to commercial power failure and backup battery drain. Power restored. Estimated Financial Loss: {loss}.",
-            f"FTTH Main Distribution Cable deliberately cut (Suspected Theft). 96-core fiber spliced and restored. Estimated Financial Loss: {loss}.",
-            f"Lightning strike damaged the MSAN distribution cards. Cards replaced by technical team. Estimated Financial Loss: {loss}.",
+            f"Copper DP Pole damaged due to severe flooding in the area. DP box replaced. Estimated Financial Loss: {loss}.",
+            f"MSAN Cabinet down due to a major commercial power failure and backup battery drain. Power restored. Estimated Financial Loss: {loss}.",
+            f"FTTH Main Distribution Cable deliberately cut by thieves. 96-core fiber spliced and restored. Estimated Financial Loss: {loss}.",
+            f"Underground MSAN distribution cables severely damaged by floods. Cables replaced by technical team. Estimated Financial Loss: {loss}.",
             f"Construction vehicle accidentally severed the underground FTTH fiber path. Conduit repaired and fiber blown. Estimated Financial Loss: {loss}."
         ]
         chosen_report = random.choice(reports)
