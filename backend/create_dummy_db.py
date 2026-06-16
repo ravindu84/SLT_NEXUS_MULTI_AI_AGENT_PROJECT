@@ -38,7 +38,7 @@ def create_db():
     cursor.execute('''CREATE TABLE historical_faults (id INTEGER PRIMARY KEY AUTOINCREMENT, phone_number TEXT, fault_date TEXT, issue_type TEXT, resolution_time_hrs INTEGER, snr_at_fault TEXT, power_at_fault TEXT, FOREIGN KEY(phone_number) REFERENCES customers(phone_number))''')
     cursor.execute('''CREATE TABLE data_usage (phone_number TEXT PRIMARY KEY, total_data_gb REAL, used_data_gb REAL, remaining_data_gb REAL, usage_status TEXT, package_name TEXT, FOREIGN KEY(phone_number) REFERENCES customers(phone_number))''')
     cursor.execute('''CREATE TABLE daily_usage_logs (phone_number TEXT, log_date TEXT, google_gb REAL, facebook_gb REAL, youtube_gb REAL, amazon_gb REAL, tiktok_gb REAL, total_gb REAL, PRIMARY KEY (phone_number, log_date), FOREIGN KEY(phone_number) REFERENCES customers(phone_number))''')
-    cursor.execute('''CREATE TABLE fault_tickets (ticket_id TEXT PRIMARY KEY, phone_number TEXT, technician TEXT, status TEXT, created_at TEXT, FOREIGN KEY(phone_number) REFERENCES customers(phone_number))''')
+    cursor.execute('''CREATE TABLE fault_tickets (ticket_id TEXT PRIMARY KEY, phone_number TEXT, technician TEXT, status TEXT, created_at TEXT, description TEXT, image_data TEXT, FOREIGN KEY(phone_number) REFERENCES customers(phone_number))''')
     cursor.execute('''CREATE TABLE technicians (name TEXT PRIMARY KEY, zone TEXT, status TEXT, active_tickets INTEGER)''')
     cursor.execute('''CREATE TABLE fiber_dp (dp_id TEXT PRIMARY KEY, location_lat REAL, location_lon REAL, status TEXT, total_capacity INTEGER, available_capacity INTEGER, created_at TEXT)''')
     cursor.execute('''CREATE TABLE fiber_dp_loops (loop_id TEXT PRIMARY KEY, dp_id TEXT, allocated_to TEXT, allocated_at TEXT, FOREIGN KEY(dp_id) REFERENCES fiber_dp(dp_id))''')
@@ -267,8 +267,8 @@ def create_db():
             tech = random.choice(technicians)
             status = random.choice(["Dispatched", "In Progress", "Assigned"])
         cursor.execute('''
-            INSERT INTO fault_tickets (ticket_id, phone_number, technician, status, created_at)
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO fault_tickets (ticket_id, phone_number, technician, status, created_at, description, image_data)
+            VALUES (?, ?, ?, ?, ?, NULL, NULL)
         ''', (t_id, f_phone, tech, status, ticket_time.strftime("%Y-%m-%d %H:%M:%S")))
 
     # --- Populate the new tables ---

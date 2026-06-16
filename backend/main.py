@@ -645,6 +645,8 @@ async def chat_endpoint(request: ChatRequest):
             
     # Current message with optional Vision Support
     if request.image_base64:
+        import backend.agent.tools.mcp_tools as mcp_tools
+        mcp_tools.latest_image_cache[session_id] = f"data:image/jpeg;base64,{request.image_base64}"
         # LangChain Multimodal Format
         multimodal_content = [
             {"type": "text", "text": request.message},

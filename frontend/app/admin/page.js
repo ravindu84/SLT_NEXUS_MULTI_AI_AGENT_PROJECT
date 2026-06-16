@@ -485,6 +485,7 @@ export default function AdminDashboard() {
               <th className="p-4 font-semibold">Ticket ID</th>
               <th className="p-4 font-semibold">Customer</th>
               <th className="p-4 font-semibold">Issue</th>
+              <th className="p-4 font-semibold">Attachment</th>
               <th className="p-4 font-semibold">Technician</th>
               <th className="p-4 font-semibold text-right">Status</th>
             </tr>
@@ -494,7 +495,25 @@ export default function AdminDashboard() {
               <tr key={i} className="hover:bg-slate-800/30 transition-colors">
                 <td className="p-4 text-sm text-slate-400">#{t.ticket_id.split('-').pop()}</td>
                 <td className="p-4 text-sm text-slate-200">{t.phone_number}</td>
-                <td className="p-4 text-sm text-slate-400">{t.issue_type}</td>
+                <td className="p-4 text-sm text-slate-400">
+                  <div className="flex flex-col">
+                    <span>{t.issue_type}</span>
+                    {t.description && <span className="text-xs text-slate-500 mt-1">{t.description}</span>}
+                  </div>
+                </td>
+                <td className="p-4 text-sm text-slate-400">
+                  {t.image_data ? (
+                    <button 
+                      onClick={() => {
+                        const newTab = window.open();
+                        newTab.document.body.innerHTML = `<img src="${t.image_data}" style="max-width:100%; height:auto;" />`;
+                      }}
+                      className="text-xs bg-cyan-500/20 text-cyan-400 px-2 py-1 rounded hover:bg-cyan-500/40 transition-colors"
+                    >
+                      View Photo
+                    </button>
+                  ) : <span className="text-xs text-slate-600">None</span>}
+                </td>
                 <td className="p-4 text-sm text-slate-400">
                   {t.assigned_technician ? t.assigned_technician : <span className="italic">Unassigned</span>}
                 </td>

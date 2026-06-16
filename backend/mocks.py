@@ -23,6 +23,7 @@ class TicketRequest(BaseModel):
     issue_type: str
     description: str
     assigned_technician: Optional[str] = None
+    image_data: Optional[str] = None
 
 class TicketResponse(BaseModel):
     ticket_id: str
@@ -161,9 +162,9 @@ async def create_fault_ticket(request: TicketRequest):
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO fault_tickets (ticket_id, phone_number, technician, status, created_at)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (ticket_id, request.phone_number, assigned_tech, "Open", datetime.now().isoformat()))
+            INSERT INTO fault_tickets (ticket_id, phone_number, technician, status, created_at, description, image_data)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (ticket_id, request.phone_number, assigned_tech, "Open", datetime.now().isoformat(), request.description, request.image_data))
         conn.commit()
         conn.close()
     except Exception as e:

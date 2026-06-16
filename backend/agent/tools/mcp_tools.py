@@ -12,12 +12,16 @@ async def check_router_health(device_id: str):
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{MOCK_BASE_URL}/imaster/diagnostics/{device_id}")
         return response.json()
+latest_image_cache = {}
 
 @tool
 async def create_fault_ticket(phone_number: str, issue_type: str, description: str, assigned_technician: str = None):
     """Creates a fault ticket in the WFM system and dispatches a technician."""
     async with httpx.AsyncClient() as client:
         payload = {"phone_number": phone_number, "issue_type": issue_type, "description": description}
+        if phone_number in latest_image_cache:
+            payload["image_data"] = latest_image_cache[phone_number]
+            
         if assigned_technician:
             payload["assigned_technician"] = assigned_technician
             

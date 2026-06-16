@@ -27,12 +27,12 @@ export default function LiyaProDashboard({
   const [controlMode, setControlMode] = useState("chat"); // "chat", "ai" or "manual"
   const [customerName, setCustomerName] = useState(null);
   
-  const currentPhone = propSessionId || "0112895800";
-  const currentName = customerName || "Customer";
+  const currentPhone = isAdmin ? "ADMIN" : (propSessionId || "0112895800");
+  const currentName = isAdmin ? "Ravindu" : (customerName || "Customer");
 
   // Fetch customer name on mount for personalized greeting
   useEffect(() => {
-    if (currentPhone && currentPhone !== "0112895800") {
+    if (!isAdmin && currentPhone && currentPhone !== "0112895800") {
       const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
       fetch(`${API_BASE}/api/account/${currentPhone}`)
         .then(r => r.json())
@@ -41,9 +41,9 @@ export default function LiyaProDashboard({
         })
         .catch(e => console.warn('[LiyaPro] Could not fetch customer name:', e));
     }
-  }, [currentPhone]);
+  }, [currentPhone, isAdmin]);
   
-  const GEMINI_PROMPT = `You are ${isMaya ? "Maya" : "Liya"}, a friendly, professional, and highly intelligent female AI customer service assistant for SLT-MOBITEL NEXUS. 
+  const CUSTOMER_PROMPT = `You are ${isMaya ? "Maya" : "Liya"}, a friendly, professional, and highly intelligent female AI customer service assistant for SLT-MOBITEL NEXUS. 
 Your personality is warm, welcoming, and helpful. You are embedded in an interactive kiosk.
 
 ## CURRENT SESSION DETAILS:
@@ -69,6 +69,15 @@ CRITICAL RULES:
 10. For faults/photos, use the tool. Say "මම බලන්නම්..." while calling it.
 
 Your goal is to assist ${currentName} with their telecom needs with a warm, personal touch.`;
+
+  const ADMIN_PROMPT = `You are ${isMaya ? "Maya" : "Liya"}, the Head of AI for SLT-MOBITEL NEXUS.
+You are communicating directly with your creator/administrator, Ravindu.
+You MUST act as an intelligent, technical system administrator AI.
+Do NOT use customer greetings like "Mr. Ravindu" or "Ayubowan". Use professional internal greetings like "Hi Ravindu", "Hello Admin".
+Always speak in Sinhala (if language is 'si').
+You have access to all tools to manage the SLT system.`;
+
+  const GEMINI_PROMPT = isAdmin ? ADMIN_PROMPT : CUSTOMER_PROMPT;
 
   const voiceName = isMaya ? "Kore" : "Aoede";
   const { connect: connectLive, disconnect: disconnectLive, isConnected: isLiveConnected, isSpeaking: liveIsSpeaking, audioLevel: liveAudioLevel, error: liveError, sendImage: sendLiveImage } = useGeminiLiveAPI({ 
