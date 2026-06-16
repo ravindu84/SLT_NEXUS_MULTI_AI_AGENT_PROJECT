@@ -308,6 +308,50 @@ app.add_middleware(
 # Key: session_id, Value: List of messages
 sessions = {}
 
+class RegisterRequest(BaseModel):
+    name: str
+    nic: str
+    mobile: str
+    email: Optional[str] = None
+    address: Optional[str] = "Unknown"
+
+@app.post("/api/register")
+async def register_new_customer(req: RegisterRequest):
+    import sqlite3
+    import uuid
+    import os
+    from datetime import datetime
+    
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Check if already registered
+        cursor.execute("SELECT slt_number FROM new_connections WHERE mobile_number=?", (req.mobile,))
+        existing = cursor.fetchone()
+        if existing:
+            conn.close()
+            return {"status": "success", "slt_number": existing[0], "message": "Already registered"}
+            
+        cursor.execute("SELECT COUNT(*) FROM new_connections")
+        count = cursor.fetchone()[0]
+        
+        new_slt_number = f"0112896{str(count + 1).zfill(3)}"
+        connection_id = f"SLT-NC-{str(uuid.uuid4())[:8].upper()}"
+        
+        cursor.execute('''
+            INSERT INTO new_connections (connection_id, mobile_number, slt_number, name, address, id_number, package, payment_status, kyc_status, status, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (connection_id, req.mobile, new_slt_number, req.name, req.address, req.nic, "Not Selected", "Pending", "Pending", "Lead", datetime.now().isoformat()))
+        
+        conn.commit()
+        conn.close()
+        
+        return {"status": "success", "slt_number": new_slt_number, "message": "Registered successfully"}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 class ChatRequest(BaseModel):
     message: str
     session_id: Optional[str] = None
@@ -349,12 +393,17 @@ async def health_check():
 # --- /api/admin/* proxy routes (frontend calls /api/admin/* but mocks router is at /mocks/admin/*) ---
 from backend.mocks import (
     get_admin_tickets, get_admin_technicians, get_admin_dps,
-    get_admin_ledger, get_all_customers, get_admin_customer, get_admin_usage, get_admin_billing, resolve_admin_ticket, get_predictive_degradation
+    get_admin_ledger, get_all_customers, get_admin_customer, get_admin_usage, get_admin_billing, resolve_admin_ticket, get_predictive_degradation,
+    get_new_connections
 )
 
 @app.get("/api/admin/tickets")
 async def proxy_admin_tickets():
     return await get_admin_tickets()
+
+@app.get("/api/admin/new-connections")
+async def proxy_new_connections():
+    return await get_new_connections()
 
 @app.post("/api/admin/resolve_ticket/{ticket_id}")
 async def proxy_resolve_ticket(ticket_id: str):

@@ -10,12 +10,13 @@ export default function AdminCRM() {
   const fetchConnections = async () => {
     setLoading(true);
     try {
-      // Use the correct API URL or fallback to empty string (relative path)
-      const res = await fetch("/admin/new-connections");
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      const res = await fetch(`${apiUrl}/api/admin/new-connections`);
       const data = await res.json();
       if (data.status === "success") {
         setConnections(data.new_connections);
       }
+
     } catch (err) {
       console.error("Error fetching connections:", err);
     } finally {

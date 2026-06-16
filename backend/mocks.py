@@ -306,6 +306,8 @@ async def get_predictive_degradation():
 async def approve_connection(conn_id: str):
     import sys
     import os
+    import sqlite3
+    from datetime import datetime
     parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     if parent_dir not in sys.path:
         sys.path.append(parent_dir)
@@ -317,7 +319,41 @@ async def approve_connection(conn_id: str):
             "status": "Installed",
             "message": "Physical line active and provisioned."
         })
-        return {"status": "success", "tx": vault_res}
+        
+        DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT mobile_number, slt_number, name, address, id_number FROM new_connections WHERE connection_id = ?", (conn_id,))
+        row = cursor.fetchone()
+        
+        if row:
+            mobile_number, slt_number, name, address, id_number = row
+            
+            # Transition to active customers
+            cursor.execute('''
+                INSERT OR REPLACE INTO customers (phone_number, contact_number, registered_name, address, id_number, telephone_type, active_status)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (slt_number, mobile_number, name, address, id_number, "Fibre", "Active"))
+            
+            # Add to billing
+            cursor.execute('''
+                INSERT OR REPLACE INTO billing (phone_number, total_due, due_date, payment_status, current_plan, nxc_balance)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (slt_number, 0, "2025-01-20", "Paid", "New", 0))
+            
+            # Add to network_status
+            cursor.execute('''
+                INSERT OR REPLACE INTO network_status (phone_number, port_status, optical_power_level, attenuation, snr, ip_address, dp_loop)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (slt_number, "Active", "-18.5 dBm", "10 dB", "35 dB", "192.168.1.100", "DP12/L4"))
+            
+            # Delete from new_connections
+            cursor.execute("DELETE FROM new_connections WHERE connection_id = ?", (conn_id,))
+            conn.commit()
+            
+        conn.close()
+        return {"status": "success", "tx": vault_res, "message": "Customer transitioned to active pool successfully"}
     except Exception as e:
         return {"error": str(e)}
 
@@ -508,6 +544,25 @@ async def get_daily_usage(phone_number: str):
 @router.post("/payhere/checkout")
 async def mock_payment(request: PaymentRequest):
     """Simulates PayHere payment gateway."""
+    import sqlite3
+    import os
+    
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Check if it's a new connection payment
+        cursor.execute("SELECT * FROM new_connections WHERE slt_number = ? OR mobile_number = ?", (request.phone_number, request.phone_number))
+        if cursor.fetchone():
+            cursor.execute("UPDATE new_connections SET payment_status = 'Paid', status = 'Paid & Verified', package = ? WHERE slt_number = ? OR mobile_number = ?", 
+                           (request.package_name, request.phone_number, request.phone_number))
+            conn.commit()
+            
+        conn.close()
+    except Exception as e:
+        print(f"Error updating new connection payment: {e}")
+        
     # Simulate a successful payment
     return {
         "status": "success",

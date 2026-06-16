@@ -268,16 +268,42 @@ export default function AuthPage(props) {
     e.preventDefault();
     if (otp.length < 6) return setError(curr.enter6Digit);
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      if (onAuthSuccess) {
-        onAuthSuccess(mobile);
+    
+    try {
+      // Use full URL if NEXT_PUBLIC_API_URL is defined, else assume relative proxy or same port
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+      
+      const res = await fetch(`${apiUrl}/api/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          nic,
+          mobile,
+          email,
+          address: "Fetched via GPS"
+        })
+      });
+      
+      const data = await res.json();
+      
+      if (data.status === "success" && data.slt_number) {
+        setLoading(false);
+        if (onAuthSuccess) {
+          // Log them in using their newly assigned dummy SLT number!
+          onAuthSuccess(data.slt_number);
+        } else {
+          router.push('/admin');
+        }
       } else {
-        router.push('/admin');
+        setLoading(false);
+        setError(data.message || "Registration failed");
       }
-    }, 800);
+    } catch (err) {
+      setLoading(false);
+      setError("Network error. Please try again.");
+    }
   };
-
   const containerVariants = {
     hidden: { opacity: 0, y: 30 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut", staggerChildren: 0.1 } }
