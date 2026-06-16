@@ -61,7 +61,8 @@ from backend.agent.tools.mcp_tools import (
     auto_dispatch_technicians_by_area,
     resolve_all_faults_admin,
     resolve_major_outage,
-    get_churn_predictions
+    get_churn_predictions,
+    search_slt_knowledgebase
 )
 
 from backend.agent.tools.package_advisor import package_advisor
