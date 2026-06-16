@@ -60,7 +60,8 @@ from backend.agent.tools.mcp_tools import (
     clear_predictive_faults,
     auto_dispatch_technicians_by_area,
     resolve_all_faults_admin,
-    resolve_major_outage
+    resolve_major_outage,
+    get_churn_predictions
 )
 
 from backend.agent.tools.package_advisor import package_advisor
@@ -153,7 +154,8 @@ tools = [
     clear_predictive_faults,
     auto_dispatch_technicians_by_area,
     resolve_all_faults_admin,
-    resolve_major_outage
+    resolve_major_outage,
+    get_churn_predictions
 ]
 tool_node = ToolNode(tools)
 

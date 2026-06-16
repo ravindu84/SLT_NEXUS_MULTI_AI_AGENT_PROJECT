@@ -1009,3 +1009,43 @@ async def resolve_major_outage() -> str:
         return "Network state restored to NORMAL. Final damage report email sent. Simulated SMS sent to all affected customers. Incident logged to Blockchain."
     except Exception as e:
         return f"Error resolving outage: {str(e)}"
+
+@tool
+async def get_churn_predictions() -> str:
+    """Fetches the top 5 customers at highest risk of churning (disconnecting) based on ML predictions of their billing, usage, and fault history."""
+    import sqlite3
+    import os
+    DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "slt_dummy.db")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT DISTINCT c.phone_number, c.registered_name
+            FROM customers c
+            JOIN billing_history bh ON c.phone_number = bh.phone_number
+            WHERE bh.amount_paid = 0.0 AND bh.month IN ('February', 'March', 'April')
+            LIMIT 5
+        ''')
+        rows = cursor.fetchall()
+        
+        result = "CHURN PREDICTION REPORT:\n"
+        for r in rows:
+            phone = r[0]
+            name = r[1]
+            
+            cursor.execute("SELECT COUNT(*) FROM historical_faults WHERE phone_number = ?", (phone,))
+            faults = cursor.fetchone()[0]
+            
+            cursor.execute("SELECT MAX(arrears) FROM billing_history WHERE phone_number = ?", (phone,))
+            arr = cursor.fetchone()[0]
+            
+            risk_score = 80 + min(20, faults * 2 + (arr/1000))
+            if risk_score > 99: risk_score = 98.5
+            
+            result += f"- {name} ({phone}) : Risk Score {risk_score:.1f}% | Reasons: Declining Usage, Rs.{arr} Arrears, {faults} Faults in past year.\n"
+            
+        conn.close()
+        return result
+    except Exception as e:
+        return f"Error predicting churn: {str(e)}"

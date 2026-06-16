@@ -58,6 +58,9 @@ const networkData = [
 export default function AdminDashboard() {
   const [lastUpdated, setLastUpdated] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [oracleSubTab, setOracleSubTab] = useState('faults');
+  const [churnProfile, setChurnProfile] = useState(null);
+  const [showChurnModal, setShowChurnModal] = useState(false);
   const [aiChatTab, setAiChatTab] = useState('liya');
   const [isLoading, setIsLoading] = useState(true);
   
@@ -91,13 +94,16 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     try {
-      const [resTickets, resTechs, resDps, resLedger, resCustomers, resPredictions] = await Promise.all([
+      const [resTickets, resTechs, resDps, resLedger, resCustomers, resPredictions, resChurn] = await Promise.all([
         fetch(`${API_URL}/api/admin/tickets`).then(r => r.json()).catch(e => ({ tickets: [] })),
         fetch(`${API_URL}/api/admin/technicians`).then(r => r.json()).catch(e => ({ technicians: [] })),
         fetch(`${API_URL}/api/admin/dps`).then(r => r.json()).catch(e => ({ dps: [], loops: [] })),
         fetch(`${API_URL}/api/admin/ledger`).then(r => r.json()).catch(e => ({ ledger: [] })),
         fetch(`${API_URL}/api/admin/customers`).then(r => r.json()).catch(e => ({ customers: [] })),
-        fetch(`${API_URL}/api/admin/predictions`).then(r => r.json()).catch(e => ([]))
+        fetch(`${API_URL}/api/admin/predictions`).then(r => r.json()).catch(e => ([])),
+        fetch(`${API_URL}/api/admin/churn-predictions`).then(r => r.json()).catch(e => ({ data: [] }))
+      ,
+        fetch(`${API_URL}/api/admin/churn-predictions`).then(r => r.json()).catch(e => ({ data: [] }))
       ]);
 
       setData({
@@ -107,7 +113,8 @@ export default function AdminDashboard() {
         loops: resDps.loops || [],
         ledger: resLedger.ledger || [],
         customers: resCustomers.customers || [],
-        predictions: Array.isArray(resPredictions) ? resPredictions : []
+        predictions: Array.isArray(resPredictions) ? resPredictions : [],
+        churnPredictions: resChurn?.data || []
       });
       setLastUpdated(new Date());
     } catch (error) {
@@ -664,67 +671,217 @@ export default function AdminDashboard() {
     </div>
   );
 
+  const fetchChurnProfile = async (phone) => {
+    try {
+      const res = await fetch(`${API_URL}/api/admin/customer/${phone}/churn_profile`);
+      const profile = await res.json();
+      if (profile.status === 'success') {
+        setChurnProfile(profile);
+        setShowChurnModal(true);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const renderChurnModal = () => {
+    if (!showChurnModal || !churnProfile) return null;
+    const { profile, billing_history, usage_history, faults_history, churn_analysis } = churnProfile;
+    
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
+        <div className="bg-[#13141a] border border-slate-700 w-full max-w-4xl rounded-xl shadow-2xl flex flex-col max-h-[90vh]">
+          <div className="p-5 flex justify-between items-center border-b border-slate-800">
+            <div>
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <User className="w-5 h-5 text-cyan-500" /> {profile.registered_name} ({profile.phone_number})
+              </h3>
+              <p className={`text-xs mt-1 ${churn_analysis.risk_level === 'High' ? 'text-rose-400' : 'text-emerald-400'}`}>
+                {churn_analysis.comment}
+              </p>
+            </div>
+            <button onClick={() => setShowChurnModal(false)} className="text-slate-400 hover:text-white bg-slate-800 rounded p-1">
+               <span className="sr-only">Close</span> ✕
+            </button>
+          </div>
+          <div className="p-5 overflow-y-auto space-y-6">
+            
+            {/* Risk Score */}
+            <div className="bg-[#1c1d25] rounded-lg p-4 border border-slate-800 flex justify-between items-center">
+              <div>
+                <p className="text-slate-400 text-xs">AI Churn Prediction Score</p>
+                <p className={`text-3xl font-bold ${churn_analysis.risk_level === 'High' ? 'text-rose-500' : 'text-emerald-500'}`}>
+                   {churn_analysis.score}%
+                </p>
+              </div>
+              <div className={`px-4 py-1.5 rounded-full text-sm font-bold border ${churn_analysis.risk_level === 'High' ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'}`}>
+                 {churn_analysis.risk_level} Risk
+              </div>
+            </div>
+
+            {/* 12-Month Billing */}
+            <div>
+              <h4 className="text-sm font-bold text-slate-300 mb-3 border-b border-slate-800 pb-2">12-Month Billing History</h4>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs text-left">
+                  <thead><tr className="text-slate-500 border-b border-slate-800/50">
+                    <th className="p-2">Month</th><th className="p-2">Year</th><th className="p-2">Billed</th><th className="p-2">Paid</th><th className="p-2">Arrears</th>
+                  </tr></thead>
+                  <tbody>
+                    {billing_history.map((b, i) => (
+                      <tr key={i} className="border-b border-slate-800/30">
+                        <td className="p-2 font-bold text-cyan-400">{b.month}</td>
+                        <td className="p-2 text-slate-400">{b.year}</td>
+                        <td className="p-2 text-slate-300">Rs. {b.amount_billed}</td>
+                        <td className={`p-2 font-bold ${b.amount_paid == 0 ? 'text-rose-400' : 'text-emerald-400'}`}>Rs. {b.amount_paid}</td>
+                        <td className={`p-2 ${b.arrears > 0 ? 'text-amber-400' : 'text-slate-500'}`}>Rs. {b.arrears}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* 3-Month Usage */}
+            <div>
+              <h4 className="text-sm font-bold text-slate-300 mb-3 border-b border-slate-800 pb-2">3-Month Data Usage Trend</h4>
+              <div className="flex gap-4">
+                {usage_history.map((u, i) => (
+                  <div key={i} className="flex-1 bg-[#1c1d25] border border-slate-800 rounded p-4 text-center">
+                    <p className="text-cyan-500 font-bold mb-1">{u.month}</p>
+                    <p className="text-xl text-white">{u.used_data_gb} <span className="text-xs text-slate-400">GB</span></p>
+                    <p className="text-[10px] text-slate-500 mt-1">Quota: {u.total_data_gb} GB</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Historical Faults */}
+            <div>
+              <h4 className="text-sm font-bold text-slate-300 mb-3 border-b border-slate-800 pb-2">Historical Network Faults (Past Year)</h4>
+              {faults_history.length > 0 ? (
+                <div className="space-y-2">
+                  {faults_history.map((f, i) => (
+                    <div key={i} className="bg-[#1c1d25] border border-slate-800 p-3 rounded flex justify-between items-center text-xs">
+                      <div>
+                        <p className="text-white font-bold">{f.issue_type}</p>
+                        <p className="text-slate-500 mt-1">Reported: {f.fault_date} | Res: {f.resolution_time_hrs}hrs</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-amber-400 font-mono">SNR: {f.snr_at_fault} dB</p>
+                        <p className="text-cyan-400 font-mono">Power: {f.power_at_fault} dBm</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500 italic">No faults reported in the past year.</p>
+              )}
+            </div>
+            
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderOraclePredictor = () => (
-    <div className="bg-[#1c1d25] border border-slate-800/50 rounded-xl overflow-hidden flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500 shadow-lg">
+    <div className="bg-[#1c1d25] border border-slate-800/50 rounded-xl overflow-hidden flex flex-col h-full animate-in fade-in slide-in-from-bottom-4 duration-500 shadow-lg relative">
+      {renderChurnModal()}
       <div className="p-5 flex justify-between items-center shrink-0 border-b border-slate-800/50">
         <div>
           <h3 className="text-xl font-bold text-white flex items-center gap-2">
             <Zap className="w-5 h-5 text-amber-500" /> Oracle AI Predictor
           </h3>
           <p className="text-xs text-slate-400 mt-1">
-            Real-time proactive degradation scanning. Showing {data.predictions?.length || 0} vulnerable lines.
+            Real-time proactive network & customer retention scanning.
           </p>
         </div>
-        <button 
-          onClick={fetchData}
-          className="bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500/20 px-3 py-1.5 rounded text-xs font-bold transition-colors"
-        >
-          Rescan Network
-        </button>
+        <div className="flex gap-2">
+           <button 
+             onClick={() => setOracleSubTab('faults')}
+             className={`px-4 py-1.5 rounded text-xs font-bold transition-all ${oracleSubTab === 'faults' ? 'bg-amber-500 text-[#13141a]' : 'bg-[#13141a] text-slate-400 border border-slate-700 hover:text-white'}`}
+           >
+             Network Degradation
+           </button>
+           <button 
+             onClick={() => setOracleSubTab('churn')}
+             className={`px-4 py-1.5 rounded text-xs font-bold transition-all ${oracleSubTab === 'churn' ? 'bg-cyan-500 text-[#13141a]' : 'bg-[#13141a] text-slate-400 border border-slate-700 hover:text-white'}`}
+           >
+             Customer Churn Risk
+           </button>
+        </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
-        {data.predictions && data.predictions.length > 0 ? (
-          data.predictions.map((p, i) => (
-            <div key={i} className="bg-[#13141a] border border-slate-800 rounded-lg p-4 flex items-center justify-between hover:border-amber-500/30 transition-colors">
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-cyan-500/10 flex items-center justify-center border border-cyan-500/20">
-                  <AlertTriangle className="w-5 h-5 text-cyan-500" />
-                </div>
-                <div>
-                  <p className="text-sm font-bold text-white">{p.phone_number} <span className="text-xs font-normal text-slate-400 ml-2">({p.customer_name})</span></p>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    {p.line_type} • {p.address}
-                  </p>
-                  <div className="flex items-center gap-3 mt-2 text-xs">
-                    {p.line_type === 'Fiber' ? (
-                      <span className="text-cyan-400 font-mono">RX Power: {p.power_level} dBm (Low)</span>
-                    ) : (
-                      <>
-                        <span className="text-amber-400 font-mono">SNR: {p.snr} dB</span>
-                        <span className="text-cyan-400 font-mono">Attn: {p.attenuation} dB</span>
-                      </>
-                    )}
+      
+      {oracleSubTab === 'faults' ? (
+        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {data.predictions && data.predictions.length > 0 ? (
+            data.predictions.map((p, i) => (
+              <div key={i} className="bg-[#13141a] border border-slate-800 rounded-lg p-4 flex items-center justify-between hover:border-amber-500/30 transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/20">
+                    <AlertTriangle className="w-5 h-5 text-amber-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-white">{p.phone_number} <span className="text-xs font-normal text-slate-400 ml-2">({p.customer_name})</span></p>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      {p.line_type} • {p.address}
+                    </p>
+                    <div className="flex items-center gap-3 mt-2 text-xs">
+                      {p.line_type === 'Fiber' ? (
+                        <span className="text-cyan-400 font-mono">RX Power: {p.power_level} dBm (Low)</span>
+                      ) : (
+                        <>
+                          <span className="text-amber-400 font-mono">SNR: {p.snr} dB</span>
+                          <span className="text-cyan-400 font-mono">Attn: {p.attenuation} dB</span>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
+                <button 
+                  onClick={() => alert(`Proactive dispatch ticket created for ${p.phone_number}!`)}
+                  className="bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 px-3 py-1.5 rounded text-xs font-bold transition-colors"
+                >
+                  Dispatch Proactively
+                </button>
               </div>
-              <button 
-                onClick={async () => {
-                  alert(`Proactive dispatch ticket created for ${p.phone_number}!`);
-                  // In a real scenario, this would call an API to create a ticket.
-                }}
-                className="bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-500 border border-cyan-500/30 px-3 py-1.5 rounded text-xs font-bold transition-colors"
-              >
-                Dispatch Proactively
-              </button>
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center h-40 text-slate-500">
+              <CheckCircle className="w-10 h-10 mb-2 text-emerald-500/50" />
+              <p>No degrading lines detected. Network is optimal.</p>
             </div>
-          ))
-        ) : (
-          <div className="flex flex-col items-center justify-center h-40 text-slate-500">
-            <CheckCircle className="w-10 h-10 mb-2 text-emerald-500/50" />
-            <p>No degrading lines detected. Network is optimal.</p>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#13141a]">
+           <div className="flex items-center gap-2 mb-4 p-3 bg-rose-500/10 border border-rose-500/20 rounded-lg">
+              <AlertTriangle className="w-5 h-5 text-rose-500" />
+              <p className="text-xs text-rose-400 font-bold">Top 5 Customers at highest risk of disconnection based on ML predictions.</p>
+           </div>
+           
+           {data.churnPredictions && data.churnPredictions.map((c, i) => (
+             <div key={i} onClick={() => fetchChurnProfile(c.phone)} className="bg-[#1c1d25] border border-slate-800 rounded-lg p-4 cursor-pointer hover:border-cyan-500/50 transition-colors flex justify-between items-center">
+                <div>
+                   <p className="text-cyan-400 font-bold">{c.name} <span className="text-slate-400 text-xs ml-2">({c.phone})</span></p>
+                   <div className="mt-2 space-y-1">
+                      {c.reasons.map((r, ri) => (
+                         <div key={ri} className="flex items-center gap-2 text-xs text-slate-400">
+                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span> {r}
+                         </div>
+                      ))}
+                   </div>
+                </div>
+                <div className="text-right">
+                   <div className="text-2xl font-black text-rose-500">{c.risk_score}%</div>
+                   <div className="text-[10px] uppercase tracking-wider text-slate-500 mt-1">Risk Score</div>
+                   <button className="mt-3 text-[10px] uppercase font-bold text-cyan-500 hover:text-cyan-400">View Full Profile →</button>
+                </div>
+             </div>
+           ))}
+        </div>
+      )}
     </div>
   );
 

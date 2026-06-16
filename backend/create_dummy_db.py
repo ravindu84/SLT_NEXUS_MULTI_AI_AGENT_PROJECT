@@ -15,6 +15,8 @@ def create_db():
     cursor.execute("DROP TABLE IF EXISTS data_usage")
     cursor.execute("DROP TABLE IF EXISTS daily_usage_logs")
     cursor.execute("DROP TABLE IF EXISTS billing_history")
+    cursor.execute("DROP TABLE IF EXISTS monthly_usage_history")
+    cursor.execute("DROP TABLE IF EXISTS historical_faults")
     cursor.execute("DROP TABLE IF EXISTS fault_tickets")
     cursor.execute("DROP TABLE IF EXISTS prospects")
     cursor.execute("DROP TABLE IF EXISTS new_connections")
@@ -32,6 +34,8 @@ def create_db():
     cursor.execute('''CREATE TABLE network_status (phone_number TEXT PRIMARY KEY, status TEXT, line_state TEXT, power_level TEXT, snr TEXT, attenuation TEXT, ont_type TEXT, tid TEXT, clarity_path TEXT, FOREIGN KEY(phone_number) REFERENCES customers(phone_number))''')
     cursor.execute('''CREATE TABLE billing (phone_number TEXT PRIMARY KEY, monthly_rental REAL, extra_gb_charges REAL, total_due REAL, unpaid_bills INTEGER, last_payment_date TEXT, payment_status TEXT, nxc_balance INTEGER, FOREIGN KEY(phone_number) REFERENCES customers(phone_number))''')
     cursor.execute('''CREATE TABLE billing_history (id INTEGER PRIMARY KEY AUTOINCREMENT, phone_number TEXT, month TEXT, year INTEGER, amount_billed REAL, amount_paid REAL, arrears REAL, FOREIGN KEY(phone_number) REFERENCES customers(phone_number))''')
+    cursor.execute('''CREATE TABLE monthly_usage_history (id INTEGER PRIMARY KEY AUTOINCREMENT, phone_number TEXT, month TEXT, year INTEGER, used_data_gb REAL, total_data_gb REAL, FOREIGN KEY(phone_number) REFERENCES customers(phone_number))''')
+    cursor.execute('''CREATE TABLE historical_faults (id INTEGER PRIMARY KEY AUTOINCREMENT, phone_number TEXT, fault_date TEXT, issue_type TEXT, resolution_time_hrs INTEGER, snr_at_fault TEXT, power_at_fault TEXT, FOREIGN KEY(phone_number) REFERENCES customers(phone_number))''')
     cursor.execute('''CREATE TABLE data_usage (phone_number TEXT PRIMARY KEY, total_data_gb REAL, used_data_gb REAL, remaining_data_gb REAL, usage_status TEXT, package_name TEXT, FOREIGN KEY(phone_number) REFERENCES customers(phone_number))''')
     cursor.execute('''CREATE TABLE daily_usage_logs (phone_number TEXT, log_date TEXT, google_gb REAL, facebook_gb REAL, youtube_gb REAL, amazon_gb REAL, tiktok_gb REAL, total_gb REAL, PRIMARY KEY (phone_number, log_date), FOREIGN KEY(phone_number) REFERENCES customers(phone_number))''')
     cursor.execute('''CREATE TABLE fault_tickets (ticket_id TEXT PRIMARY KEY, phone_number TEXT, technician TEXT, status TEXT, created_at TEXT, FOREIGN KEY(phone_number) REFERENCES customers(phone_number))''')
@@ -146,19 +150,55 @@ def create_db():
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)''', 
             (phone, 2990.0, 0.0, total_due, 2 if is_suspended else 0, "2026-04-01", payment_status, nxc_balance))
 
-        # Billing History
-        months = ["February", "March", "April"]
+        # Billing, Usage, and Faults History (Churn Prediction Data)
+        is_high_churn_risk = False
+        if not is_suspended and random.random() < 0.1:  # About 10% of active users are at risk
+            is_high_churn_risk = True
+
+        months_12 = ["May", "June", "July", "August", "September", "October", "November", "December", "January", "February", "March", "April"]
+        years_12 = [2025, 2025, 2025, 2025, 2025, 2025, 2025, 2025, 2026, 2026, 2026, 2026]
+        
         current_arrears = 0.0
-        for m in months:
-            amt_billed = 2990.0 + round(random.uniform(0, 1000), 2)
+        for i, m in enumerate(months_12):
+            yr = years_12[i]
+            amt_billed = 2990.0 + round(random.uniform(0, 500), 2)
             if is_suspended:
+                amt_paid = 0.0
+            elif is_high_churn_risk and i > 8: # Last 3 months stopped paying
                 amt_paid = 0.0
             else:
                 amt_paid = amt_billed + current_arrears if random.random() < 0.9 else amt_billed / 2
+            
             current_arrears = round(current_arrears + amt_billed - amt_paid, 2)
             if current_arrears < 0: current_arrears = 0.0
             cursor.execute('''INSERT INTO billing_history (phone_number, month, year, amount_billed, amount_paid, arrears) VALUES (?, ?, ?, ?, ?, ?)''', 
-                (phone, m, 2026, amt_billed, amt_paid, current_arrears))
+                (phone, m, yr, amt_billed, amt_paid, current_arrears))
+
+        # 3-Month Usage History
+        usage_months = ["February", "March", "April"]
+        base_usage = random.uniform(50, 150)
+        for i, m in enumerate(usage_months):
+            if is_suspended:
+                used = 0.0
+            elif is_high_churn_risk:
+                used = max(5.0, base_usage - (i * 30)) # Declining usage
+            else:
+                used = base_usage + random.uniform(-10, 10) # Stable usage
+            
+            cursor.execute('''INSERT INTO monthly_usage_history (phone_number, month, year, used_data_gb, total_data_gb) VALUES (?, ?, ?, ?, ?)''', 
+                (phone, m, 2026, round(used, 2), 200.0))
+
+        # 12-Month Historical Faults
+        fault_count = random.randint(3, 7) if is_high_churn_risk else random.randint(0, 2)
+        issue_types = ["Slow Internet", "Frequent Disconnections", "No Service", "Voice Quality Issue"]
+        for _ in range(fault_count):
+            f_month = random.choice(months_12)
+            f_issue = random.choice(issue_types)
+            res_time = random.randint(24, 72) if is_high_churn_risk else random.randint(2, 12)
+            f_snr = f"{random.uniform(5.0, 12.0):.1f}" if is_high_churn_risk else f"{random.uniform(20.0, 30.0):.1f}"
+            f_pow = f"{random.uniform(-28.0, -35.0):.2f}" if is_high_churn_risk else f"{random.uniform(-15.0, -22.0):.2f}"
+            cursor.execute('''INSERT INTO historical_faults (phone_number, fault_date, issue_type, resolution_time_hrs, snr_at_fault, power_at_fault) VALUES (?, ?, ?, ?, ?, ?)''', 
+                (phone, f"{f_month} 2025/26", f_issue, res_time, f_snr, f_pow))
 
     # Pick exactly 15 active users to have 0 GB (Quota Exceeded)
     quota_exceeded_numbers = set(random.sample(active_numbers, 15))
