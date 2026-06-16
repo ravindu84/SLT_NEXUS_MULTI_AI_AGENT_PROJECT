@@ -8,6 +8,8 @@ export default function UsageMeter({ API_URL }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [selectedDay, setSelectedDay] = useState(null);
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const [availableMonths, setAvailableMonths] = useState([]);
 
   const handleSearch = async () => {
     if (!phone) return;
@@ -15,6 +17,8 @@ export default function UsageMeter({ API_URL }) {
     setError('');
     setData(null);
     setSelectedDay(null);
+    setSelectedMonth('');
+    setAvailableMonths([]);
     try {
       const res = await fetch(`${API_URL}/api/admin/usage/${phone}`);
       if (!res.ok) throw new Error("Failed to fetch");
@@ -22,7 +26,11 @@ export default function UsageMeter({ API_URL }) {
       if (json.error) throw new Error(json.error);
       setData(json);
       if (json.logs && json.logs.length > 0) {
-        setSelectedDay(json.logs[0]);
+        const months = [...new Set(json.logs.map(l => l.log_date.substring(0, 7)))].sort((a,b) => b.localeCompare(a));
+        setAvailableMonths(months);
+        setSelectedMonth(months[0]);
+        const currentMonthLogs = json.logs.filter(l => l.log_date.startsWith(months[0]));
+        setSelectedDay(currentMonthLogs[0]);
       }
     } catch (err) {
       setError(err.message);
@@ -84,9 +92,25 @@ export default function UsageMeter({ API_URL }) {
 
             <div className="flex flex-col md:flex-row gap-6">
               <div className="w-full md:w-1/3 bg-[#13141a] border border-slate-800 rounded-xl overflow-hidden flex flex-col h-96">
-                <div className="p-3 bg-slate-800/30 border-b border-slate-800 text-xs font-bold text-slate-400 uppercase shrink-0">31 Day History</div>
+                <div className="p-3 bg-slate-800/30 border-b border-slate-800 flex justify-between items-center shrink-0">
+                  <span className="text-xs font-bold text-slate-400 uppercase">Daily History</span>
+                  <select 
+                    value={selectedMonth} 
+                    onChange={e => {
+                      setSelectedMonth(e.target.value);
+                      const newLogs = data.logs.filter(l => l.log_date.startsWith(e.target.value));
+                      setSelectedDay(newLogs.length > 0 ? newLogs[0] : null);
+                    }}
+                    className="bg-[#1c1d25] border border-slate-700 text-white rounded px-2 py-1 text-xs focus:outline-none focus:border-cyan-500 font-bold"
+                  >
+                    {availableMonths.map(m => {
+                      const dateObj = new Date(m + "-01");
+                      return <option key={m} value={m}>{dateObj.toLocaleString('default', { month: 'short' })} {dateObj.getFullYear()}</option>
+                    })}
+                  </select>
+                </div>
                 <div className="flex-1 overflow-y-auto p-2 custom-scrollbar space-y-1">
-                  {data.logs.map((log, i) => (
+                  {data.logs.filter(l => l.log_date.startsWith(selectedMonth)).map((log, i) => (
                     <button 
                       key={i} 
                       onClick={() => setSelectedDay(log)}

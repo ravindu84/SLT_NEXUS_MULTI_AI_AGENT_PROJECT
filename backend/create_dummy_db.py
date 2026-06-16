@@ -232,7 +232,7 @@ def create_db():
 
         # 31 Day Daily Logs
         end_dt = datetime.now()
-        for d in range(31):
+        for d in range(90):
             log_date = (end_dt - timedelta(days=d)).strftime("%Y-%m-%d")
             
             if is_suspended:

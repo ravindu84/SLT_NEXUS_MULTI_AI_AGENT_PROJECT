@@ -436,7 +436,11 @@ export default function AdminDashboard() {
           </thead>
           <tbody className="divide-y divide-slate-800/50">
             {filtered.map((c, i) => (
-              <tr key={i} className="hover:bg-slate-800/30 transition-colors text-sm">
+              <tr 
+                key={c.phone_number} 
+                className="hover:bg-slate-800/30 transition-colors text-sm cursor-pointer"
+                onClick={() => fetchChurnProfile(c.phone_number)}
+              >
                 <td className="p-4 font-bold text-cyan-400">{c.phone_number}</td>
                 <td className="p-4 text-slate-300">{c.name}</td>
                 <td className="p-4 text-slate-400">
