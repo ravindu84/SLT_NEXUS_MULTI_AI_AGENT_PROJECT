@@ -855,6 +855,26 @@ export default function App({ onBack }: { onBack?: () => void }) {
 
   useEffect(() => {
     if (!isTheftActive) return;
+    
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/admin/outage-status');
+        const data = await res.json();
+        if (data.status === 'NORMAL') {
+          setIsTheftActive(false);
+          addLog('[SYSTEM] Network state reverted to NORMAL by Admin Override. Alarms cleared.');
+          setNodes(prev => prev.map(n => n.status === 'fault' ? { ...n, status: 'normal', faultDetectedAt: undefined } : n));
+        }
+      } catch (e) {}
+    }, 3000);
+    
+    return () => clearInterval(pollInterval);
+  }, [isTheftActive]);
+
+  useEffect(() => {
+    if (!isTheftActive) return;
+    
+    fetch('/api/admin/outage-trigger', { method: 'POST' }).catch(() => {});
 
     addLog('[SECURITY] CRITICAL: Simultaneous fiber optic cuts detected in Homagama, Kottawa, and Pitipana sectors!');
     

@@ -238,6 +238,31 @@ app = FastAPI(
 
 app.include_router(mocks_router)
 
+@app.get("/api/admin/outage-status")
+async def get_outage_status():
+    import sqlite3
+    import os
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("SELECT value FROM system_state WHERE key = 'outage_status'")
+    row = cursor.fetchone()
+    conn.close()
+    return {"status": row[0] if row else "NORMAL"}
+
+@app.post("/api/admin/outage-trigger")
+async def trigger_outage():
+    import sqlite3
+    import os
+    DB_PATH = os.path.join(os.path.dirname(__file__), "slt_dummy.db")
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("UPDATE system_state SET value = 'ACTIVE' WHERE key = 'outage_status'")
+    conn.commit()
+    conn.close()
+    return {"status": "ACTIVE"}
+
+
 # Import our new Gesture Tracker
 try:
     from backend.agent.tools.gesture_tracker import detect_sign_language
@@ -494,8 +519,8 @@ async def chat_endpoint(request: ChatRequest):
             f"10. FINALIZING CONNECTIONS: If Ravindu says the job is done and asks to update the system, use the `finalize_admin_approval` tool. Once successful, reply EXACTLY with 'Ah Ravindu, it is done' (or in Sinhala 'ආ රවිඳු, මම වැඩේ ඉවර කළා. Blockchain එකටත් ලියලා, Customer ව Active ලිස්ට් එකට දැම්මා').\n"
             f"11. ORACLE PREDICTIONS: If Ravindu asks to 'scan the network for future faults' or 'show vulnerable lines', use `generate_predictive_faults` tool. If he says he 'fixed those predicted faults' or asks to 'clear the page', use `clear_predictive_faults` tool.\n"
             f"12. BULK FAULT DISPATCH: If Ravindu says 'Assign these faults to their area technicians', 'Faults ටික බෙදන්න', or similar, use the `auto_dispatch_technicians_by_area` tool. This will look at the open faults in the Fault Matrix and assign them to the correct technicians automatically.\n"
-            f"13. BULK FAULT RESOLUTION: If Ravindu says 'All faults are done', 'Faults iwarai', or asks to clear the fault matrix and log to blockchain, use the `resolve_all_faults_admin` tool. This tool resolves all active faults, resets technicians, and generates a blockchain hash."
-        )
+            f"13. BULK FAULT RESOLUTION: If Ravindu says 'All faults are done', 'Faults iwarai', or asks to clear the fault matrix and log to blockchain, use the `resolve_all_faults_admin` tool. This tool resolves all active faults, resets technicians, and generates a blockchain hash.\n"
+            f"14. CABLE CUT / MAJOR OUTAGE RESOLUTION: If Ravindu says 'The cut cable is fixed', 'eka hari', 'Network eka samanya karanna' while referring to a Pathfinder alarm or cable cut, use the `resolve_major_outage` tool. This stops the UI alarm loop, simulates sending SMS to customers, emails a detailed damage report with financial loss to aravindaslt@gmail.com, and logs it to blockchain. IMPORTANT: After running the tool, reply in Sinhala to Ravindu saying: 'ආ රවිඳු, මම අදාළ පාරිභෝගිකයින්ට SMS එක යැව්වා. අලුත්වැඩියා අලාභ වාර්තාව (Damage Report) ඔයාගේ Email එකට දැම්මා. Network එක සාමාන්‍ය තත්ත්වයට පත් කරලා Blockchain එකටත් Update කළා!'\n"        )
     else:
         context_msg = (
             f"IMPORTANT SECURITY CONTEXT: You are communicating with a CUSTOMER (B2C). "

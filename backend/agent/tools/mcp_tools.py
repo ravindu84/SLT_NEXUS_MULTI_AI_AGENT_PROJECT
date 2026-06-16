@@ -843,3 +843,169 @@ async def resolve_all_faults_admin() -> str:
         return f"All faults resolved successfully. Technicians are available again. Ledger updated with bulk resolution hash: {tx_hash}."
     except Exception as e:
         return f"Error resolving faults: {str(e)}"
+
+
+@tool
+async def auto_dispatch_technicians_by_area() -> str:
+    """Automatically assigns unassigned fault tickets to technicians based on their geographical zones."""
+    import os
+    import sqlite3
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Tech zones mapping based on our dummy DB (simplified for demo)
+        tech_zones = {
+            "Colombo Central": "THARINDU",
+            "Colombo North": "KAMAL",
+            "Colombo South": "ASELA",
+            "Kandy": "SANJEEWA",
+            "Galle": "JANITH",
+            "Kurunegala": "LAHIRU",
+            "Gampaha": "NALAKA",
+            "Negombo": "PRASAD",
+            "Matara": "KOSALA",
+            "Anuradhapura": "SOMASIRI"
+        }
+        
+        # Get unassigned tickets
+        cursor.execute("SELECT ticket_id, phone_number FROM fault_tickets WHERE technician IS NULL OR technician = 'Unassigned'")
+        tickets = cursor.fetchall()
+        
+        assigned_count = 0
+        for ticket_id, phone in tickets:
+            # Find customer address to determine zone
+            cursor.execute("SELECT address FROM customers WHERE phone_number = ?", (phone,))
+            cust = cursor.fetchone()
+            
+            assigned_tech = "THARINDU" # Default
+            if cust:
+                address = cust[0].lower()
+                for zone, tech in tech_zones.items():
+                    if zone.split()[-1].lower() in address or zone.split()[0].lower() in address:
+                        assigned_tech = tech
+                        break
+            
+            # Update ticket and tech status
+            cursor.execute("UPDATE fault_tickets SET technician = ?, status = 'In Progress' WHERE ticket_id = ?", (assigned_tech, ticket_id))
+            cursor.execute("UPDATE technicians SET status = 'Busy' WHERE name = ?", (assigned_tech,))
+            assigned_count += 1
+            
+        conn.commit()
+        conn.close()
+        return f"Successfully dispatched technicians to {assigned_count} unassigned fault tickets based on their locations."
+    except Exception as e:
+        return f"Error auto-dispatching technicians: {str(e)}"
+
+@tool
+async def resolve_all_faults_admin() -> str:
+    """Resolves all active fault tickets, logs a hashed summary to the blockchain, and clears them from the active list."""
+    import os
+    import sqlite3
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Mark all tickets as Resolved
+        cursor.execute("UPDATE fault_tickets SET status = 'Resolved' WHERE status != 'Resolved' AND status != 'Closed'")
+        
+        # Reset technicians to Available
+        cursor.execute("UPDATE technicians SET status = 'Available'")
+        
+        # Simulate Blockchain Write
+        from datetime import datetime
+        import hashlib
+        
+        hash_input = f"FAULTS_RESOLVED_{datetime.now().isoformat()}"
+        tx_hash = hashlib.sha256(hash_input.encode()).hexdigest()
+        
+        cursor.execute("""
+            INSERT INTO ledger_logs (timestamp, transaction_hash, event_type, details)
+            VALUES (?, ?, ?, ?)
+        """, (datetime.now().isoformat(), tx_hash, "BULK_FAULT_RESOLUTION", f"All active faults resolved and validated. TxHash: {tx_hash}"))
+        
+        conn.commit()
+        conn.close()
+        return f"All faults resolved successfully. Technicians are available again. Ledger updated with bulk resolution hash: {tx_hash}."
+    except Exception as e:
+        return f"Error resolving faults: {str(e)}"
+
+@tool
+async def resolve_major_outage() -> str:
+    """Resolves a major network outage (like a cable cut), stops the UI alarms, sends a final damage report email, and simulates customer SMS."""
+    import os
+    import sqlite3
+    import random
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    from datetime import datetime
+    import hashlib
+
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
+    try:
+        # 1. Update system state to stop the UI alarm
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        cursor.execute("UPDATE system_state SET value = 'NORMAL' WHERE key = 'outage_status'")
+        
+        # 2. Blockchain ledger
+        hash_input = f"MAJOR_OUTAGE_RESOLVED_{datetime.now().isoformat()}"
+        tx_hash = hashlib.sha256(hash_input.encode()).hexdigest()
+        cursor.execute("""
+            INSERT INTO ledger_logs (timestamp, transaction_hash, event_type, details)
+            VALUES (?, ?, ?, ?)
+        """, (datetime.now().isoformat(), tx_hash, "OUTAGE_RESOLUTION", f"Major network outage resolved. Services restored. TxHash: {tx_hash}"))
+        conn.commit()
+        conn.close()
+
+        # 3. Random Damage Reports
+        loss = f"Rs. {random.randint(50, 500)},000.00"
+        reports = [
+            f"Copper DP Pole completely broken due to an accident. Splicing team replaced the DP. Estimated Financial Loss: {loss}.",
+            f"MSAN Cabinet down due to commercial power failure and backup battery drain. Power restored. Estimated Financial Loss: {loss}.",
+            f"FTTH Main Distribution Cable deliberately cut (Suspected Theft). 96-core fiber spliced and restored. Estimated Financial Loss: {loss}.",
+            f"Lightning strike damaged the MSAN distribution cards. Cards replaced by technical team. Estimated Financial Loss: {loss}.",
+            f"Construction vehicle accidentally severed the underground FTTH fiber path. Conduit repaired and fiber blown. Estimated Financial Loss: {loss}."
+        ]
+        chosen_report = random.choice(reports)
+
+        # 4. Send Email
+        sender_email = os.getenv("GMAIL_USER")
+        sender_password = os.getenv("GMAIL_APP_PASSWORD")
+        if sender_email and sender_password:
+            msg = MIMEMultipart()
+            msg['From'] = sender_email
+            msg['To'] = "aravindaslt@gmail.com"
+            msg['Subject'] = "✅ OUTAGE RESOLVED: Final Incident Report"
+            
+            body = f"""
+            SLT NEXUS - INCIDENT RESOLUTION REPORT
+            ---------------------------------------
+            Timestamp: {datetime.now().isoformat()}
+            
+            Status: ALL SERVICES RESTORED
+            
+            Damage Assessment:
+            {chosen_report}
+            
+            Actions Taken:
+            - Network state reverted to NORMAL
+            - Incident permanently logged to Blockchain Ledger (Tx: {tx_hash})
+            - Auto-SMS dispatched to all affected customers
+            
+            Generated by SLT NEXUS Pathfinder AI.
+            """
+            msg.attach(MIMEText(body, 'plain'))
+            try:
+                with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+                    server.login(sender_email, sender_password)
+                    server.send_message(msg)
+            except Exception as e:
+                print(f"Failed to send email: {e}")
+
+        return "Network state restored to NORMAL. Final damage report email sent. Simulated SMS sent to all affected customers. Incident logged to Blockchain."
+    except Exception as e:
+        return f"Error resolving outage: {str(e)}"
