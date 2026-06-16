@@ -54,7 +54,9 @@ from backend.agent.tools.mcp_tools import (
     check_area_outages,
     register_customer_agreement,
     search_slt_knowledgebase,
-    get_full_customer_profile
+    get_full_customer_profile,
+    dispatch_technician_admin,
+    finalize_admin_approval
 )
 
 from backend.agent.tools.package_advisor import package_advisor
@@ -139,7 +141,10 @@ tools = [
     allocate_fiber_dp_loop,
     dispatch_installation_job,
     check_area_outages,
-    get_full_customer_profile
+    get_full_customer_profile,
+    # Admin tools
+    dispatch_technician_admin,
+    finalize_admin_approval
 ]
 tool_node = ToolNode(tools)
 

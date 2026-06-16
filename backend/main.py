@@ -488,7 +488,10 @@ async def chat_endpoint(request: ChatRequest):
             f"4. The current session_id ({session_id}) is an INTERNAL TRACKING ID, NOT a phone number! If they ask for specific customer details (bill, profile), ask for the 10-digit number. BUT if they ask for internal system reports (WFM reports, dispatch data, general stats), DO NOT ask for a phone number! Just generate the report. "
             f"5. GREETING RULE: Do NOT use customer greetings like 'Ayubowan'. Use a professional internal greeting. "
             f"6. CONCISENESS RULE: ONLY provide the EXACT information requested."
-            f"7. CRITICAL TOOL ASSIGNMENT: Use the 'get_full_customer_profile' tool to instantly fetch ALL technical, network, billing, and usage data for a customer. Use this whenever the admin asks to check a customer!"
+            f"7. CRITICAL TOOL ASSIGNMENT: Use the 'get_full_customer_profile' tool to instantly fetch ALL technical, network, billing, and usage data for a customer. Use this whenever the admin asks to check a customer!\n"
+            f"8. ADMIN IDENTITY: The Admin you are talking to is named 'Ravindu'. Always greet him as Ravindu when confirming a major action.\n"
+            f"9. DISPATCHING TECHS: If Ravindu asks to send a technician for a new connection or fault, use the `dispatch_technician_admin` tool. Provide the SLT Number and the Tech Name.\n"
+            f"10. FINALIZING CONNECTIONS: If Ravindu says the job is done and asks to update the system, use the `finalize_admin_approval` tool. Once successful, reply EXACTLY with 'Ah Ravindu, it is done' (or in Sinhala 'ආ රවිඳු, මම වැඩේ ඉවර කළා. Blockchain එකටත් ලියලා, Customer ව Active ලිස්ට් එකට දැම්මා')."
         )
     else:
         context_msg = (

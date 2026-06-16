@@ -119,7 +119,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     fetchData();
-    const interval = setInterval(fetchData, 15000);
+    const interval = setInterval(fetchData, 3000);
     return () => clearInterval(interval);
   }, []);
 
@@ -528,7 +528,8 @@ export default function AdminDashboard() {
       </div>
       <div className="flex-1 overflow-y-auto p-5 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
         {data.technicians.map((tech, i) => (
-          <div key={i} className="bg-[#13141a] rounded-xl p-5 border border-slate-800 hover:border-cyan-500/30 transition-colors">
+          <div key={i} className={`bg-[#13141a] rounded-xl p-5 border transition-all duration-500 relative overflow-hidden ${tech.status !== 'Available' ? 'border-cyan-500 animate-pulse shadow-[0_0_15px_rgba(6,182,212,0.3)] bg-cyan-950/20' : 'border-slate-800 hover:border-cyan-500/30'}`}>
+             {tech.status !== 'Available' && <div className="absolute top-0 left-0 right-0 h-1 bg-cyan-500"></div>}
              <div className="flex items-center gap-4 mb-5">
                 <div className="relative">
                   <div className="w-12 h-12 rounded-full bg-slate-800 flex items-center justify-center text-white text-lg font-bold">

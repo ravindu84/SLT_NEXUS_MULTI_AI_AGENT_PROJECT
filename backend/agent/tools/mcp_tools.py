@@ -451,3 +451,52 @@ def get_full_customer_profile(phone_number: str) -> str:
     except Exception as e:
         return json.dumps({"error": str(e)})
 
+@tool
+async def dispatch_technician_admin(slt_number: str, technician_name: str) -> str:
+    """Dispatches a technician for a specific new connection or fault. (Admin use only)"""
+    # Simply simulate updating the ticket or connection
+    import os
+    import sqlite3
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Update connection
+        cursor.execute("UPDATE new_connections SET status = 'Dispatched' WHERE slt_number = ? OR mobile_number = ?", (slt_number, slt_number))
+        # Update tech
+        cursor.execute("UPDATE technicians SET status = 'Busy' WHERE name = ?", (technician_name.upper(),))
+        
+        conn.commit()
+        conn.close()
+        return f"Successfully dispatched technician {technician_name} for connection {slt_number}."
+    except Exception as e:
+        return f"Error dispatching technician: {str(e)}"
+
+@tool
+async def finalize_admin_approval(slt_number: str) -> str:
+    """Finalizes and activates a new connection, logs it to blockchain, and adds to active DB. (Admin use only)"""
+    import os
+    import sqlite3
+    import httpx
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Get connection ID
+        cursor.execute("SELECT connection_id FROM new_connections WHERE slt_number = ? OR mobile_number = ?", (slt_number, slt_number))
+        row = cursor.fetchone()
+        
+        if row:
+            conn_id = row[0]
+            conn.close()
+            # Call the proxy
+            async with httpx.AsyncClient() as client:
+                resp = await client.post(f"{MOCK_BASE_URL}/wfm/approve-connection/{conn_id}")
+            return "Connection approved, logged to Blockchain, and transitioned to Active DB."
+        else:
+            conn.close()
+            return "Connection not found."
+    except Exception as e:
+        return f"Error finalizing connection: {str(e)}"
