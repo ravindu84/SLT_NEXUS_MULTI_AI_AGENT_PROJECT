@@ -61,6 +61,11 @@ export default function AdminDashboard() {
   const [oracleSubTab, setOracleSubTab] = useState('faults');
   const [churnProfile, setChurnProfile] = useState(null);
   const [showChurnModal, setShowChurnModal] = useState(false);
+  const [provisionedLoops, setProvisionedLoops] = useState([
+    { name: "Kamal Perera", id: "982342345V", contact: "0712345678", pkg: "Web Starter", loop: "DP-LOOP-42-FDC-2", status: "Allocated", tech: "Pending" },
+    { name: "Nimali Silva", id: "199512345678", contact: "0778899000", pkg: "Fibre Unlimited", loop: "DP-LOOP-12-FDC-1", status: "Installed", tech: "Janith (OK)" },
+    { name: "Saman Kumara", id: "853456789V", contact: "0785566777", pkg: "Gaming Pro", loop: "DP-LOOP-88-FDC-5", status: "Dispatched", tech: "Kosala" }
+  ]);
   const [aiChatTab, setAiChatTab] = useState('liya');
   const [isLoading, setIsLoading] = useState(true);
   
@@ -636,12 +641,7 @@ export default function AdminDashboard() {
         </span>
       </div>
       <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 bg-[#060913]">
-        {/* Mock Data for Provisioned DP Loops */}
-        {[
-          { name: "Kamal Perera", id: "982342345V", contact: "0712345678", pkg: "Web Starter", loop: "DP-LOOP-42-FDC-2", status: "Allocated", tech: "Pending" },
-          { name: "Nimali Silva", id: "199512345678", contact: "0778899000", pkg: "Fibre Unlimited", loop: "DP-LOOP-12-FDC-1", status: "Installed", tech: "Janith (OK)" },
-          { name: "Saman Kumara", id: "853456789V", contact: "0785566777", pkg: "Gaming Pro", loop: "DP-LOOP-88-FDC-5", status: "Dispatched", tech: "Kosala" }
-        ].map((conn, i) => (
+        {provisionedLoops.map((conn, i) => (
           <div key={i} className="bg-[#1c1d25] rounded-xl p-5 border border-emerald-500/30 hover:border-emerald-500 transition-colors shadow-lg relative overflow-hidden">
              <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/10 rounded-bl-full -mr-2 -mt-2"></div>
              
@@ -683,7 +683,7 @@ export default function AdminDashboard() {
                       try {
                         await fetch(`${API_URL}/api/admin/approve_connection/${conn.id}`, { method: 'POST' });
                         alert(`Connection for ${conn.id} approved and logged to Blockchain!`);
-                        // In a real app we'd update state here, but for this mock we just show an alert
+                        setProvisionedLoops(prev => prev.filter(p => p.id !== conn.id));
                       } catch(e) {
                         console.error(e);
                       }

@@ -424,7 +424,7 @@ Naturally weave this information into your response — do not copy-paste it raw
     elif user_language == "ta":
         lang_instructions = "CRITICAL RULE: You MUST reply ONLY in Tamil script (தமிழ்) with English technical terms mixed in. Regardless of the language the user typed in, reply in Tamil!"
     else:
-        lang_instructions = 'CRITICAL RULE: You MUST write your response in the Sinhala script (සිංහල) with English technical terms naturally mixed in. Example: "ඔබේ internet connection එක check කරන්නම් 😊". DO NOT reply in Singlish or pure English. Even if the user types in English, you MUST translate your response and reply in Sinhala!'
+        lang_instructions = 'CRITICAL RULE: You MUST write your response in the Sinhala script (සිංහල) with English technical terms naturally mixed in. Example: "ඔබේ internet connection එක check කරන්නම් 😊". DO NOT reply in Singlish or pure English. Even if the user types in English, you MUST translate your response and reply in Sinhala!\nALWAYS refer to technicians as "තාක්ෂණ ශිල්පියා" (Thakshana shilpiya). DO NOT USE "තාක්ෂණිකයා" or "කාර්මිකයා"!'
 
     base_prompt += f"""
 ## MANDATORY RESPONSE LANGUAGE:
@@ -453,7 +453,34 @@ When the user asks for their data usage, YOU MUST CALL the `get_data_usage` tool
 When the user asks for their bill, package details, or account balance, YOU MUST CALL the `get_billing_info` tool to fetch their real data! Do NOT just tell them to use the MySLT app. Do NOT rely on RAG text to answer this. ACTUALLY CALL THE TOOL!
 """
     
-    llm = get_llm().bind_tools(tools)
+        # Dynamic Tool Binding to Reduce Latency and Token Overhead
+    agent_tools = []
+    if agent_name == "spark_agent":
+        agent_tools = [package_advisor, record_new_connection, process_package_payment]
+    elif agent_name == "pulse_agent":
+        agent_tools = [check_router_health, create_fault_ticket, self_fix_internet, simulate_customer_app_fault]
+    elif agent_name == "insight_agent":
+        agent_tools = [get_data_usage, get_billing_info, get_daily_usage_logs, pay_slt_bill]
+    elif agent_name == "guardian_agent":
+        agent_tools = [scam_shield]
+    elif agent_name == "pathfinder_agent":
+        agent_tools = [request_report_email, request_report_whatsapp, get_technician_diagnostics, get_active_fault_tickets, get_predictive_degradation_report, get_technician_status]
+    elif agent_name == "provisioner_agent":
+        agent_tools = [allocate_fiber_dp_loop, dispatch_installation_job, check_area_outages, get_full_customer_profile, check_kyc_status, finalize_new_connection]
+    elif agent_name == "vault_agent":
+        agent_tools = [commit_sla_to_ledger, commit_visit_handshake_to_ledger, verify_ledger_security, commit_payment_to_ledger, commit_usage_snapshot_to_ledger, commit_equipment_transfer_to_ledger]
+    elif agent_name == "oracle_agent":
+        agent_tools = [generate_predictive_faults, clear_predictive_faults, auto_dispatch_technicians_by_area, generate_daily_faults, resolve_all_faults_admin, resolve_major_outage, generate_churn_predictions, resolve_churn_risk, dispatch_technician_admin, finalize_admin_approval, resolve_fault_admin]
+    elif agent_name == "messenger_agent":
+        agent_tools = [send_sms_notification, send_whatsapp_notification]
+    elif agent_name == "analyzer_agent":
+        agent_tools = [search_slt_knowledgebase]
+    
+    if len(agent_tools) > 0:
+        llm = get_llm().bind_tools(agent_tools)
+    else:
+        llm = get_llm() # Fast path without tools for liya_agent or unknown agents
+
     
     messages = [SystemMessage(content=base_prompt)] + state["messages"]
     response = await llm.ainvoke(messages)
