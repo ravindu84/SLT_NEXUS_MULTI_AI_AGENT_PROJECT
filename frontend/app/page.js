@@ -174,6 +174,10 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
 
   useEffect(() => {
     setIsListening(isLiveConnected);
+    // If we have an image and we just connected to Live API, send it
+    if (isLiveConnected && attachedImage) {
+      sendLiveImage(attachedImage.split(',')[1]);
+    }
   }, [isLiveConnected]);
 
   useEffect(() => {
@@ -478,13 +482,13 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
         currentLang={language}
         onLanguageSelected={(selectedLang) => {
           setLanguage(selectedLang);
-          playBgMusic();
+          stopBgMusic();
         }}
         onBackToLanguageSelection={stopBgMusic}
         onAuthSuccess={async (phoneNum) => {
         setShowAuth(false);
         setShowApp(true);
-        playBgMusic();
+        stopBgMusic();
         if (phoneNum) {
           setSessionId(phoneNum);
           // Fetch customer name from backend for personalized AI greeting
@@ -534,6 +538,10 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
               onClick={() => {
                 setIsSessionEnded(false);
                 if (isLiveConnected) disconnectLive();
+                if (audioRef.current) {
+                  audioRef.current.pause();
+                  audioRef.current.src = "";
+                }
                 setSessionId(null);
                 setCustomerName(null);
                 setCustomerProfile(null);
