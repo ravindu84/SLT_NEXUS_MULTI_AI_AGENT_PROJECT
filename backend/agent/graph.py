@@ -66,7 +66,9 @@ from backend.agent.tools.mcp_tools import (
     generate_churn_predictions,
     resolve_churn_risk,
     search_slt_knowledgebase,
-    resolve_fault_admin
+    resolve_fault_admin,
+    get_churn_reasons,
+    resolve_all_churn_risk
 )
 
 from backend.agent.tools.package_advisor import package_advisor
@@ -470,7 +472,7 @@ When the user asks for their bill, package details, or account balance, YOU MUST
     elif agent_name == "vault_agent":
         agent_tools = [commit_sla_to_ledger, commit_visit_handshake_to_ledger, verify_ledger_security, commit_payment_to_ledger, commit_usage_snapshot_to_ledger, commit_equipment_transfer_to_ledger]
     elif agent_name == "oracle_agent":
-        agent_tools = [generate_predictive_faults, clear_predictive_faults, auto_dispatch_technicians_by_area, generate_daily_faults, resolve_all_faults_admin, resolve_major_outage, generate_churn_predictions, resolve_churn_risk, dispatch_technician_admin, finalize_admin_approval, resolve_fault_admin]
+        agent_tools = [generate_predictive_faults, clear_predictive_faults, auto_dispatch_technicians_by_area, generate_daily_faults, resolve_all_faults_admin, resolve_major_outage, generate_churn_predictions, resolve_churn_risk, dispatch_technician_admin, finalize_admin_approval, resolve_fault_admin, get_churn_reasons, resolve_all_churn_risk]
     elif agent_name == "messenger_agent":
         agent_tools = [send_sms_notification, send_whatsapp_notification]
     elif agent_name == "analyzer_agent":
