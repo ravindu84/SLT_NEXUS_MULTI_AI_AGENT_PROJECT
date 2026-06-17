@@ -604,23 +604,48 @@ async def clear_predictive_faults() -> str:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         
-        # Write to blockchain ledger
-        tx_hash = hashlib.sha256(f"ORACLE_CLEAR_{datetime.now().isoformat()}".encode()).hexdigest()
-        cursor.execute("""
-            INSERT INTO ledger (transaction_type, details, created_at)
-            VALUES (?, ?, ?)
-        """, ("ORACLE_PREDICTIONS_CLEARED", f"Admin cleared predictive faults from Oracle. TxHash: {tx_hash}", datetime.now().isoformat()))
-        
-        # BEFORE deleting, update their network_status so they don't get selected again!
+        # Step 1: Fix the current predictions in network_status
         cursor.execute("SELECT phone_number FROM oracle_predictions")
         phones = cursor.fetchall()
         for p in phones:
             cursor.execute("UPDATE network_status SET snr = '25.5', power_level = '-15.0', attenuation = '15.0' WHERE phone_number = ?", (p[0],))
             
+        # Step 2: Clear dashboard
         cursor.execute("DELETE FROM oracle_predictions")
+        
+        # Step 3: INFINITE PROTOTYPE REPLENISHMENT LOOP
+        # Break 5 new Copper lines
+        cursor.execute("""
+            SELECT c.phone_number FROM customers c 
+            JOIN network_status n ON c.phone_number = n.phone_number 
+            WHERE c.telephone_type = 'Copper' AND CAST(n.snr AS REAL) >= 20.0 
+            ORDER BY RANDOM() LIMIT 5
+        """)
+        new_copper = cursor.fetchall()
+        for p in new_copper:
+            cursor.execute("UPDATE network_status SET snr = '12.4', attenuation = '28.5' WHERE phone_number = ?", (p[0],))
+            
+        # Break 5 new Fiber lines
+        cursor.execute("""
+            SELECT c.phone_number FROM customers c 
+            JOIN network_status n ON c.phone_number = n.phone_number 
+            WHERE c.telephone_type = 'Fiber' AND CAST(n.power_level AS REAL) >= -25.0 
+            ORDER BY RANDOM() LIMIT 5
+        """)
+        new_fiber = cursor.fetchall()
+        for p in new_fiber:
+            cursor.execute("UPDATE network_status SET power_level = '-29.8', attenuation = '26.4' WHERE phone_number = ?", (p[0],))
+        
+        # Step 4: Write to blockchain ledger
+        tx_hash = hashlib.sha256(f"ORACLE_CLEAR_{datetime.now().isoformat()}".encode()).hexdigest()
+        cursor.execute("""
+            INSERT INTO ledger (transaction_type, details, created_at)
+            VALUES (?, ?, ?)
+        """, ("ORACLE_PREDICTIONS_CLEARED", f"Admin cleared predictive faults. Re-seeded next batch. TxHash: {tx_hash}", datetime.now().isoformat()))
+        
         conn.commit()
         conn.close()
-        return f"Oracle Predictor dashboard cleared successfully and logged to Blockchain with TX: {tx_hash}"
+        return f"Oracle Predictor dashboard cleared and system refreshed successfully! Logged to Blockchain with TX: {tx_hash}"
     except Exception as e:
         return f"Error clearing predictive faults: {str(e)}"
 
@@ -1029,22 +1054,34 @@ async def resolve_all_churn_risk() -> str:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         
-        cursor.execute("UPDATE churn_predictions SET status = 'Retained' WHERE status != 'Retained'")
-        count = cursor.rowcount
+        # Count before clearing
+        cursor.execute("SELECT COUNT(*) FROM churn_predictions")
+        count = cursor.fetchone()[0]
         
-        # Write to blockchain ledger
+        # Step 1 & 2: Clear Dashboard
+        cursor.execute("DELETE FROM churn_predictions")
+        
+        # Step 3: INFINITE PROTOTYPE REPLENISHMENT LOOP
+        # Pick 5 fresh users who have paid their bills and "break" their billing history
+        cursor.execute("""
+            SELECT c.phone_number FROM customers c
+            JOIN billing_history bh ON c.phone_number = bh.phone_number
+            WHERE bh.amount_paid > 0
+            ORDER BY RANDOM() LIMIT 5
+        """)
+        new_churners = cursor.fetchall()
+        for p in new_churners:
+            cursor.execute("UPDATE billing_history SET amount_paid = 0.0, month = 'March', arrears = 4500.0 WHERE phone_number = ?", (p[0],))
+        
+        # Step 4: Write to blockchain ledger
         tx_hash = hashlib.sha256(f"CHURN_BULK_RETAIN_{datetime.now().isoformat()}".encode()).hexdigest()
         cursor.execute("""
             INSERT INTO ledger (transaction_type, details, created_at)
             VALUES (?, ?, ?)
-        """, ("BULK_CUSTOMER_RETAINED", f"{count} customers retained via broadcast message. TxHash: {tx_hash}", datetime.now().isoformat()))
-        
-        # Clear the dashboard visually by deleting them or they will be ignored by frontend if status is retained?
-        # Actually frontend fetches all from churn_predictions. Let's delete them to clear the board!
-        cursor.execute("DELETE FROM churn_predictions")
+        """, ("BULK_CUSTOMER_RETAINED", f"{count} customers retained via broadcast message. Re-seeded next batch. TxHash: {tx_hash}", datetime.now().isoformat()))
         
         conn.commit()
         conn.close()
-        return f"Successfully cleared all churning customers from the dashboard and logged bulk retention to Blockchain with TX: {tx_hash}"
+        return f"Successfully cleared all churning customers from the dashboard and re-seeded the ML algorithm. Logged bulk retention to Blockchain with TX: {tx_hash}"
     except Exception as e:
         return f"Error bulk resolving churn risk: {str(e)}"
