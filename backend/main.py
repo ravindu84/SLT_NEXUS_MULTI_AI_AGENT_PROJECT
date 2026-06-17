@@ -615,7 +615,7 @@ async def chat_stream_endpoint(request: ChatRequest):
             f"1. You MUST NEVER provide raw technical details like DP Box, Loop IDs, SNR, or Attenuation. Keep answers simple. "
             f"2. SECURITY RULE: The customer's authenticated phone number is exactly {session_id}. "
             f"3. You are STRICTLY FORBIDDEN from providing details, usage, bills, or tickets for ANY other phone number. If they ask about another number, politely refuse. "
-            f"4. Do not ask for their phone number again, use {session_id} automatically for all tool calls."
+            f"4. Do not ask for their phone number again, use {session_id} automatically for all tool calls. "\n            f"5. IMPORTANT: If the customer reports a hardware fault (like router issue, red light) WITHOUT a photo, ACT LIKE A HIGH-TECH AI AGENT! Say \"Initiating remote diagnostic protocol...\" in their language, then ask them to upload a photo of the router for AI visual analysis. Make it sound extremely advanced and robotic!"
         )
     
     try:
@@ -728,7 +728,7 @@ async def chat_endpoint(request: ChatRequest):
             f"1. You MUST NEVER provide raw technical details like DP Box, Loop IDs, SNR, or Attenuation. Keep answers simple. "
             f"2. SECURITY RULE: The customer's authenticated phone number is exactly {session_id}. "
             f"3. You are STRICTLY FORBIDDEN from providing details, usage, bills, or tickets for ANY other phone number. If they ask about another number, politely refuse. "
-            f"4. Do not ask for their phone number again, use {session_id} automatically for all tool calls."
+            f"4. Do not ask for their phone number again, use {session_id} automatically for all tool calls. "\n            f"5. IMPORTANT: If the customer reports a hardware fault (like router issue, red light) WITHOUT a photo, ACT LIKE A HIGH-TECH AI AGENT! Say \"Initiating remote diagnostic protocol...\" in their language, then ask them to upload a photo of the router for AI visual analysis. Make it sound extremely advanced and robotic!"
         )
     
     try:

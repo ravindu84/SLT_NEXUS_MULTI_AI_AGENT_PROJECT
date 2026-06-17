@@ -61,10 +61,6 @@ export default function AuthPage(props) {
   const handleLanguageSelect = (selectedLang) => {
     setShowLanguageSelection(false);
     
-    if (audioRef.current) {
-      audioRef.current.pause();
-    }
-    
     if (onLanguageSelected) {
       onLanguageSelected(selectedLang);
     }
@@ -287,10 +283,9 @@ export default function AuthPage(props) {
       
       const data = await res.json();
       
-      if (data.status === "success" && data.slt_number) {
+      if (data.status === "success") {
         setLoading(false);
         if (onAuthSuccess) {
-          // Log them in using their newly assigned dummy SLT number!
           onAuthSuccess(data.slt_number);
         } else {
           router.push('/admin');

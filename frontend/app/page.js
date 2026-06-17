@@ -229,7 +229,7 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
         if (!response.ok) return;
         const audioBlob = await response.blob();
         const audioUrl = URL.createObjectURL(audioBlob);
-        if (audioRef.current) audioRef.current.pause();
+        stopBgMusic();
         if (audioRef.current) audioRef.current.pause();
         const audio = new Audio(audioUrl);
         audioRef.current = audio;
@@ -482,13 +482,12 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
         currentLang={language}
         onLanguageSelected={(selectedLang) => {
           setLanguage(selectedLang);
-          stopBgMusic();
         }}
         onBackToLanguageSelection={stopBgMusic}
         onAuthSuccess={async (phoneNum) => {
         setShowAuth(false);
         setShowApp(true);
-        stopBgMusic();
+        playBgMusic();
         if (phoneNum) {
           setSessionId(phoneNum);
           // Fetch customer name from backend for personalized AI greeting
