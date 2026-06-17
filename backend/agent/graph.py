@@ -59,10 +59,14 @@ from backend.agent.tools.mcp_tools import (
     generate_predictive_faults,
     clear_predictive_faults,
     auto_dispatch_technicians_by_area,
+    generate_daily_faults,
+    simulate_customer_app_fault,
     resolve_all_faults_admin,
     resolve_major_outage,
-    get_churn_predictions,
-    search_slt_knowledgebase
+    generate_churn_predictions,
+    resolve_churn_risk,
+    search_slt_knowledgebase,
+    resolve_fault_admin
 )
 
 from backend.agent.tools.package_advisor import package_advisor
@@ -143,6 +147,9 @@ tools = [
     commit_sla_to_ledger,
     commit_visit_handshake_to_ledger,
     verify_ledger_security,
+    commit_payment_to_ledger,
+    commit_usage_snapshot_to_ledger,
+    commit_equipment_transfer_to_ledger,
     # Provisioner tools
     allocate_fiber_dp_loop,
     dispatch_installation_job,
@@ -154,9 +161,15 @@ tools = [
     generate_predictive_faults,
     clear_predictive_faults,
     auto_dispatch_technicians_by_area,
+    generate_daily_faults,
+    simulate_customer_app_fault,
     resolve_all_faults_admin,
     resolve_major_outage,
-    get_churn_predictions
+    generate_churn_predictions,
+    resolve_churn_risk,
+    check_kyc_status,
+    finalize_new_connection,
+    resolve_fault_admin
 ]
 tool_node = ToolNode(tools)
 

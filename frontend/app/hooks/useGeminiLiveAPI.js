@@ -166,6 +166,30 @@ export function useGeminiLiveAPI({ systemInstruction, language = "si", voiceName
               tools: [{
               functionDeclarations: [
                 {
+                  
+                {
+                  name: "search_slt_knowledgebase",
+                  description: "Search the internal SLT knowledgebase for instant answers. Much faster than consult_slt_expert_system. Use this for general questions.",
+                  parameters: {
+                    type: "OBJECT",
+                    properties: {
+                      query: { type: "STRING" }
+                    },
+                    required: ["query"]
+                  }
+                },
+                {
+                  name: "get_full_customer_profile",
+                  description: "For Admin ONLY. Get the full technical profile (DP, Loop, SNR, etc) for a customer.",
+                  parameters: {
+                    type: "OBJECT",
+                    properties: {
+                      phone_number: { type: "STRING" }
+                    },
+                    required: ["phone_number"]
+                  }
+                },
+                {
                   name: "consult_slt_expert_system",
                   description: "Query the SLT-MOBITEL LangGraph AI Agent. Use this for questions about Peo TV, Packages, Bill Payment, NXC Coins, Blockchain, Technical Faults, Tickets, Scam detection, and ANY general SLT knowledgebase info.",
                   parameters: {
@@ -314,7 +338,44 @@ export function useGeminiLiveAPI({ systemInstruction, language = "si", voiceName
                     }));
                   }
                 }
-              } else if (call.name === "end_session") {
+              
+              } else if (call.name === "search_slt_knowledgebase") {
+                try {
+                  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+                  const res = await fetch(`${API_BASE}/api/knowledgebase/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: call.args.query })
+                  });
+                  const resData = await res.json();
+                  
+                  if (wsRef.current?.readyState === WebSocket.OPEN) {
+                    wsRef.current.send(JSON.stringify({
+                      toolResponse: {
+                        functionResponses: [{ id: call.id, name: call.name, response: { result: resData.response } }]
+                      }
+                    }));
+                  }
+                } catch (e) {
+                  console.error(e);
+                }
+              } else if (call.name === "get_full_customer_profile") {
+                try {
+                  const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+                  const res = await fetch(`${API_BASE}/api/admin/profile/${call.args.phone_number}`);
+                  const resData = await res.json();
+                  
+                  if (wsRef.current?.readyState === WebSocket.OPEN) {
+                    wsRef.current.send(JSON.stringify({
+                      toolResponse: {
+                        functionResponses: [{ id: call.id, name: call.name, response: { result: resData.response } }]
+                      }
+                    }));
+                  }
+                } catch (e) {
+                  console.error(e);
+                }
+} else if (call.name === "end_session") {
                 console.log("Gemini requested to end the session!");
                 if (typeof window !== 'undefined') {
                   window.dispatchEvent(new CustomEvent('gemini-end-session'));

@@ -14,6 +14,7 @@ async def check_router_health(device_id: str):
         return response.json()
 latest_image_cache = {}
 
+
 @tool
 async def create_fault_ticket(phone_number: str, issue_type: str, description: str, assigned_technician: str = None):
     """Creates a fault ticket in the WFM system and dispatches a technician."""
@@ -30,6 +31,7 @@ async def create_fault_ticket(phone_number: str, issue_type: str, description: s
             json=payload
         )
         return response.json()
+
 
 @tool
 async def register_customer_agreement(name: str, address: str, contact_number: str, id_number: str, package_name: str) -> str:
@@ -57,6 +59,7 @@ async def register_customer_agreement(name: str, address: str, contact_number: s
     # Calling the Vault Agent tool directly inside this tool to chain the blockchain hook
     vault_res = commit_sla_to_ledger.func(name, package_name, 1500.0, "Fiber", 100)
     return f"{crm_msg} [VAULT AGREEMENT: {vault_res}]"
+
 
 @tool
 def get_data_usage(phone_number: str) -> str:
@@ -86,6 +89,7 @@ def get_data_usage(phone_number: str) -> str:
         })
     except Exception as e:
         return json.dumps({"error": str(e)})
+
 
 @tool
 def get_billing_info(phone_number: str) -> str:
@@ -123,12 +127,14 @@ def get_billing_info(phone_number: str) -> str:
     except Exception as e:
         return json.dumps({"error": str(e)})
 
+
 @tool
 async def get_daily_usage_logs(phone_number: str):
     """Fetches the daily data consumption logs for the last 30 days, including GB and percentage breakdown per site (Facebook, YouTube, Google, etc.). Use this to answer questions about specific dates (e.g. usage on the 21st) or to find their maximum usage day."""
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{MOCK_BASE_URL}/billing/daily-usage/{phone_number}")
         return response.json()
+
 
 @tool
 async def process_package_payment(phone_number: str, package_name: str, amount: float):
@@ -144,6 +150,7 @@ async def process_package_payment(phone_number: str, package_name: str, amount: 
             }
         )
         return response.json()
+
 
 @tool
 async def pay_slt_bill(phone_number: str, amount: float, use_nxc_coins: bool):
@@ -171,6 +178,7 @@ async def pay_slt_bill(phone_number: str, amount: float, use_nxc_coins: bool):
             
         return data
 
+
 @tool
 async def record_new_connection(customer_name: str, phone_number: str, address: str, connection_type: str):
     """Records a new connection request in the SLT Provisioning system."""
@@ -186,6 +194,7 @@ async def record_new_connection(customer_name: str, phone_number: str, address: 
         )
         return response.json()
 
+
 @tool
 async def request_report_email(emails: List[str], report_type: str):
     """Sends the designated corporate report to the specified list of email addresses.
@@ -198,6 +207,7 @@ async def request_report_email(emails: List[str], report_type: str):
             json={"emails": emails, "report_type": report_type}
         )
         return response.json()
+
 
 @tool
 async def request_report_whatsapp(phone_number: str, report_type: str):
@@ -228,12 +238,14 @@ async def request_report_whatsapp(phone_number: str, report_type: str):
         else:
             return {"status": "error", "message": f"Failed to send WhatsApp: {wa_response.text}"}
 
+
 @tool
 async def get_active_fault_tickets():
     """Retrieves the list of all active fault tickets (including assigned technician and status) from the WFM/Clarity system."""
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{MOCK_BASE_URL}/wfm/active-faults")
         return response.json()
+
 
 @tool
 async def get_technician_diagnostics(phone_number: str):
@@ -242,12 +254,14 @@ async def get_technician_diagnostics(phone_number: str):
         response = await client.get(f"{MOCK_BASE_URL}/technician/diagnostics/{phone_number}")
         return response.json()
 
+
 @tool
 async def get_predictive_degradation_report():
     """Scans the entire NMS database and returns a predictive report of all lines (Copper/Fiber) that have degrading signals but haven't completely failed yet. Includes DP Loop, Power Level, SNR, and Contact Info."""
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{MOCK_BASE_URL}/wfm/predictive-degradation")
         return response.json()
+
 
 @tool
 async def get_technician_status():
@@ -256,12 +270,14 @@ async def get_technician_status():
         response = await client.get(f"{MOCK_BASE_URL}/wfm/technician-status")
         return response.json()
 
+
 @tool
 async def check_kyc_status(mobile_number: str):
     """Checks if the user has uploaded their Selfie and NIC for KYC verification."""
     async with httpx.AsyncClient() as client:
         response = await client.get(f"{MOCK_BASE_URL}/auth/kyc-status/{mobile_number}")
         return response.json()
+
 
 @tool
 async def provision_new_connection(slt_number: str):
@@ -272,6 +288,7 @@ async def provision_new_connection(slt_number: str):
             json={"slt_number": slt_number}
         )
         return response.json()
+
 
 @tool
 async def finalize_new_connection(mobile_number: str, package_name: str):
@@ -285,6 +302,7 @@ async def finalize_new_connection(mobile_number: str, package_name: str):
             }
         )
         return response.json()
+
 
 @tool
 async def send_sms_notification(phone_number: str, message: str) -> str:
@@ -302,6 +320,7 @@ async def send_sms_notification(phone_number: str, message: str) -> str:
             return f"Failed to send SMS: {response.text}"
     except Exception as e:
         return f"Error sending SMS: {str(e)}"
+
 
 @tool
 async def send_whatsapp_notification(phone_number: str, message: str, media_url: str = None) -> str:
@@ -322,6 +341,7 @@ async def send_whatsapp_notification(phone_number: str, message: str, media_url:
             return f"Failed to send WhatsApp: {response.text}"
     except Exception as e:
         return f"Error sending WhatsApp: {str(e)}"
+
 
 @tool
 async def check_area_outages(phone_number: str) -> str:
@@ -359,6 +379,7 @@ async def check_area_outages(phone_number: str) -> str:
     except Exception as e:
         return f"Error checking area outages: {str(e)}"
 
+
 @tool
 def search_slt_knowledgebase(query: str) -> str:
     """Queries the SLT Vector Database (ChromaDB) to retrieve exact website data, terms, conditions, packages, or instructions. Use this tool whenever the customer asks about SLT products, peo tv, broadbands, manuals, or general knowledge."""
@@ -379,200 +400,6 @@ def search_slt_knowledgebase(query: str) -> str:
     except Exception as e:
         return f"Error searching knowledge base: {str(e)}"
 
-@tool
-def get_full_customer_profile(phone_number: str) -> str:
-    """[ADMIN ONLY] Fetches the COMPLETE technical profile for a customer: dp/loop, TID, SNR, attenuation, power level, ONT type, line state, billing, packages, fault tickets — everything in one call. Use this when the admin/tech staff needs full diagnostics for a customer."""
-    import sqlite3
-    import os
-    import json
-    db_path = os.path.join(os.path.dirname(__file__), "..", "..", "slt_dummy.db")
-    if not os.path.exists(db_path):
-        return json.dumps({"error": "Database not found."})
-    try:
-        conn = sqlite3.connect(db_path)
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-        
-        cursor.execute("SELECT * FROM customers WHERE phone_number = ?", (phone_number,))
-        customer = cursor.fetchone()
-        if not customer:
-            conn.close()
-            return json.dumps({"error": f"Customer {phone_number} not found in database."})
-        
-        cursor.execute("SELECT * FROM network_status WHERE phone_number = ?", (phone_number,))
-        network = cursor.fetchone()
-        
-        cursor.execute("SELECT * FROM billing WHERE phone_number = ?", (phone_number,))
-        billing = cursor.fetchone()
-        
-        cursor.execute("SELECT * FROM data_usage WHERE phone_number = ?", (phone_number,))
-        usage = cursor.fetchone()
-        
-        cursor.execute("SELECT ticket_id, technician, status, created_at FROM fault_tickets WHERE phone_number = ?", (phone_number,))
-        tickets = cursor.fetchall()
-        
-        conn.close()
-        
-        result = {
-            "customer": {
-                "phone_number": customer["phone_number"],
-                "name": customer["registered_name"],
-                "address": customer["address"],
-                "contact_number": customer["contact_number"],
-                "type": customer["telephone_type"],
-                "dp_loop": customer["dp_loop"],
-                "has_voice": customer["has_voice"],
-                "has_internet": customer["has_internet"],
-                "has_iptv": customer["has_iptv"],
-            },
-            "network": {
-                "status": network["status"] if network else "Unknown",
-                "line_state": network["line_state"] if network else None,
-                "power_level": network["power_level"] if network else None,
-                "snr": network["snr"] if network else None,
-                "attenuation": network["attenuation"] if network else None,
-                "ont_type": network["ont_type"] if network else None,
-                "tid": network["tid"] if network else None,
-            } if network else {},
-            "billing": {
-                "total_due": billing["total_due"] if billing else 0,
-                "payment_status": billing["payment_status"] if billing else None,
-                "nxc_balance": billing["nxc_balance"] if billing else 0,
-                "monthly_rental": billing["monthly_rental"] if billing else 0,
-                "unpaid_bills": billing["unpaid_bills"] if billing else 0,
-                "credit_limit": 5000.00,
-            } if billing else {},
-            "data_usage": {
-                "package": usage["package_name"] if usage else None,
-                "total_gb": usage["total_data_gb"] if usage else 0,
-                "used_gb": usage["used_data_gb"] if usage else 0,
-                "remaining_gb": usage["remaining_data_gb"] if usage else 0,
-                "status": usage["usage_status"] if usage else None,
-            } if usage else {},
-            "fault_tickets": [dict(t) for t in tickets],
-        }
-        return json.dumps(result, ensure_ascii=False)
-    except Exception as e:
-        return json.dumps({"error": str(e)})
-
-@tool
-async def dispatch_technician_admin(slt_number: str, technician_name: str) -> str:
-    """Dispatches a technician for a specific new connection or fault. (Admin use only)"""
-    # Simply simulate updating the ticket or connection
-    import os
-    import sqlite3
-    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        # Update connection
-        cursor.execute("UPDATE new_connections SET status = 'Dispatched' WHERE slt_number = ? OR mobile_number = ?", (slt_number, slt_number))
-        # Update tech
-        cursor.execute("UPDATE technicians SET status = 'Busy' WHERE name = ?", (technician_name.upper(),))
-        
-        conn.commit()
-        conn.close()
-        return f"Successfully dispatched technician {technician_name} for connection {slt_number}."
-    except Exception as e:
-        return f"Error dispatching technician: {str(e)}"
-
-@tool
-async def finalize_admin_approval(slt_number: str) -> str:
-    """Finalizes and activates a new connection, logs it to blockchain, and adds to active DB. (Admin use only)"""
-    import os
-    import sqlite3
-    import httpx
-    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        # Get connection ID
-        cursor.execute("SELECT connection_id FROM new_connections WHERE slt_number = ? OR mobile_number = ?", (slt_number, slt_number))
-        row = cursor.fetchone()
-        
-        if row:
-            conn_id = row[0]
-            conn.close()
-            # Call the proxy
-            async with httpx.AsyncClient() as client:
-                resp = await client.post(f"{MOCK_BASE_URL}/wfm/approve-connection/{conn_id}")
-            return "Connection approved, logged to Blockchain, and transitioned to Active DB."
-        else:
-            conn.close()
-            return "Connection not found."
-    except Exception as e:
-        return f"Error finalizing connection: {str(e)}"
-
-@tool
-async def generate_predictive_faults() -> str:
-    """Scans the network for pre-emptive faults (Oracle Predictor) and makes them visible to the Admin dashboard. Run this when Admin asks to scan for future faults."""
-    import os
-    import sqlite3
-    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        # Clear existing predictions first
-        cursor.execute("DELETE FROM oracle_predictions")
-        
-        # Insert 5 Copper and 5 Fiber randomly
-        query = """
-            INSERT INTO oracle_predictions
-            SELECT * FROM (
-                SELECT c.phone_number, c.registered_name, c.address, c.contact_number, 
-                       n.line_state, n.power_level, n.snr, n.attenuation, n.clarity_path, c.telephone_type
-                FROM customers c
-                JOIN network_status n ON c.phone_number = n.phone_number
-                WHERE n.status = 'UP' AND n.line_state != 'Fault' AND c.telephone_type = 'Copper' 
-                AND (CAST(n.snr AS REAL) < 20.0 OR CAST(n.attenuation AS REAL) > 20.0)
-                ORDER BY RANDOM()
-                LIMIT 5
-            )
-            UNION ALL
-            SELECT * FROM (
-                SELECT c.phone_number, c.registered_name, c.address, c.contact_number, 
-                       n.line_state, n.power_level, n.snr, n.attenuation, n.clarity_path, c.telephone_type
-                FROM customers c
-                JOIN network_status n ON c.phone_number = n.phone_number
-                WHERE n.status = 'UP' AND n.line_state != 'Fault' AND c.telephone_type = 'Fiber' 
-                AND CAST(n.power_level AS REAL) < -25.0
-                ORDER BY RANDOM()
-                LIMIT 5
-            )
-        """
-        cursor.execute(query)
-        conn.commit()
-        conn.close()
-        return "Network scan complete! 10 highly vulnerable lines (5 PSTN, 5 FTTH) have been identified and sent to the Oracle Predictor dashboard."
-    except Exception as e:
-        return f"Error scanning network: {str(e)}"
-
-@tool
-async def clear_predictive_faults() -> str:
-    """Clears the Oracle Predictor dashboard. Run this when Admin says the predicted faults have been fixed or handled."""
-    import os
-    import sqlite3
-    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        from dotenv import load_dotenv
-        load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
-        from backend.rag.retriever import SLTRetriever
-        retriever = SLTRetriever()
-        results = retriever.query(query, n_results=3)
-        if not results:
-            return "No matching data found in the SLT knowledge base."
-        
-        output = "Here is the exact data retrieved from the official SLT websites and PDFs:\n\n"
-        for i, res in enumerate(results):
-            source = res.get('metadata', {}).get('source', 'Unknown')
-            output += f"--- Result {i+1} (Source: {source}) ---\n{res['text']}\n\n"
-        return output
-    except Exception as e:
-        return f"Error searching knowledge base: {str(e)}"
 
 @tool
 def get_full_customer_profile(phone_number: str) -> str:
@@ -650,6 +477,7 @@ def get_full_customer_profile(phone_number: str) -> str:
     except Exception as e:
         return json.dumps({"error": str(e)})
 
+
 @tool
 async def dispatch_technician_admin(slt_number: str, technician_name: str) -> str:
     """Dispatches a technician for a specific new connection or fault. (Admin use only)"""
@@ -663,14 +491,17 @@ async def dispatch_technician_admin(slt_number: str, technician_name: str) -> st
         
         # Update connection
         cursor.execute("UPDATE new_connections SET status = 'Dispatched' WHERE slt_number = ? OR mobile_number = ?", (slt_number, slt_number))
+        # Update fault tickets
+        cursor.execute("UPDATE fault_tickets SET status = 'Dispatched', assigned_technician = ? WHERE id = ? OR phone_number = ?", (technician_name.upper(), slt_number, slt_number))
         # Update tech
         cursor.execute("UPDATE technicians SET status = 'Busy' WHERE name = ?", (technician_name.upper(),))
         
         conn.commit()
         conn.close()
-        return f"Successfully dispatched technician {technician_name} for connection {slt_number}."
+        return f"Successfully dispatched technician {technician_name} for ticket/connection {slt_number}."
     except Exception as e:
         return f"Error dispatching technician: {str(e)}"
+
 
 @tool
 async def finalize_admin_approval(slt_number: str) -> str:
@@ -699,6 +530,7 @@ async def finalize_admin_approval(slt_number: str) -> str:
             return "Connection not found."
     except Exception as e:
         return f"Error finalizing connection: {str(e)}"
+
 
 @tool
 async def generate_predictive_faults() -> str:
@@ -740,26 +572,109 @@ async def generate_predictive_faults() -> str:
         """
         cursor.execute(query)
         conn.commit()
+        
+        # Fetch the results to return as string
+        cursor.execute("SELECT phone_number, registered_name, telephone_type, power_level, snr FROM oracle_predictions")
+        rows = cursor.fetchall()
         conn.close()
-        return "Network scan complete! 10 highly vulnerable lines (5 PSTN, 5 FTTH) have been identified and sent to the Oracle Predictor dashboard."
+        
+        result = "PREDICTIVE FAULTS GENERATED:\n"
+        for r in rows:
+            result += f"- {r[1]} ({r[0]}) [{r[2]}]: Power: {r[3]}, SNR: {r[4]}\n"
+            
+        return result + "\nThe Oracle Predictor dashboard has been populated with these numbers."
     except Exception as e:
-        return f"Error scanning network: {str(e)}"
+        return f"Error predicting faults: {str(e)}"
 
 @tool
 async def clear_predictive_faults() -> str:
     """Clears the Oracle Predictor dashboard. Run this when Admin says the predicted faults have been fixed or handled."""
     import os
     import sqlite3
+    import hashlib
+    from datetime import datetime
     DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
+        
+        # Write to blockchain ledger
+        tx_hash = hashlib.sha256(f"ORACLE_CLEAR_{datetime.now().isoformat()}".encode()).hexdigest()
+        cursor.execute("""
+            INSERT INTO ledger (timestamp, transaction_hash, event_type, details)
+            VALUES (?, ?, ?, ?)
+        """, (datetime.now().isoformat(), tx_hash, "ORACLE_PREDICTIONS_CLEARED", f"Admin cleared predictive faults from Oracle. TxHash: {tx_hash}"))
+        
         cursor.execute("DELETE FROM oracle_predictions")
         conn.commit()
         conn.close()
-        return "Oracle Predictor dashboard cleared successfully."
+        return f"Oracle Predictor dashboard cleared successfully and logged to Blockchain with TX: {tx_hash}"
     except Exception as e:
         return f"Error clearing predictive faults: {str(e)}"
+
+
+@tool
+async def generate_daily_faults(count: int = 50) -> str:
+    """Generates daily dummy faults for the Admin Fault Matrix board. Run this when the Admin says 'pull today's faults' or similar."""
+    import os
+    import sqlite3
+    import random
+    from datetime import datetime
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Get active customers without open faults
+        cursor.execute('''
+            SELECT c.phone_number FROM customers c
+            WHERE c.phone_number NOT IN (SELECT phone_number FROM fault_tickets WHERE status != 'Resolved')
+            ORDER BY RANDOM() LIMIT ?
+        ''', (count,))
+        customers = cursor.fetchall()
+        
+        issues = ["No Dial Tone", "Slow Internet", "LOS Red Light", "Frequent Drops", "Voice Distorted"]
+        
+        inserted = 0
+        for cust in customers:
+            phone = cust[0]
+            ticket_id = f"SYS-{random.randint(100000, 999999)}"
+            issue = random.choice(issues)
+            cursor.execute('''
+                INSERT INTO fault_tickets (ticket_id, phone_number, technician, status, created_at, description)
+                VALUES (?, ?, 'Unassigned', 'Pending', ?, ?)
+            ''', (ticket_id, phone, datetime.now().isoformat(), issue))
+            inserted += 1
+            
+        conn.commit()
+        conn.close()
+        return f"Successfully generated {inserted} daily faults. They are now visible on the Fault Matrix board as Unassigned."
+    except Exception as e:
+        return f"Error generating daily faults: {str(e)}"
+
+@tool
+async def simulate_customer_app_fault(phone_number: str, issue: str, description: str = "") -> str:
+    """Simulates a customer submitting a fault via the Customer App (Pulse) after troubleshooting fails. Run this to push a customer-submitted ticket to the Fault Matrix."""
+    import os
+    import sqlite3
+    import random
+    from datetime import datetime
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        ticket_id = f"CUS-{random.randint(100000, 999999)}"
+        cursor.execute('''
+            INSERT INTO fault_tickets (ticket_id, phone_number, technician, status, created_at, description)
+            VALUES (?, ?, 'Unassigned', 'Pending', ?, ?)
+        ''', (ticket_id, phone_number, datetime.now().isoformat(), f"{issue} - {description}"))
+        
+        conn.commit()
+        conn.close()
+        return f"Customer App fault submitted successfully. Ticket ID {ticket_id} is now on the Admin Fault Matrix."
+    except Exception as e:
+        return f"Error submitting customer app fault: {str(e)}"
 
 @tool
 async def auto_dispatch_technicians_by_area() -> str:
@@ -803,9 +718,9 @@ async def auto_dispatch_technicians_by_area() -> str:
                         assigned_tech = tech
                         break
             
-            # Update ticket and tech status
-            cursor.execute("UPDATE fault_tickets SET technician = ?, status = 'In Progress' WHERE ticket_id = ?", (assigned_tech, ticket_id))
-            cursor.execute("UPDATE technicians SET status = 'Busy' WHERE name = ?", (assigned_tech,))
+            # Update ticket and tech status, and increment active_tickets
+            cursor.execute("UPDATE fault_tickets SET technician = ?, status = 'Assigned' WHERE ticket_id = ?", (assigned_tech, ticket_id))
+            cursor.execute("UPDATE technicians SET status = 'Busy', active_tickets = active_tickets + 1 WHERE name = ?", (assigned_tech,))
             assigned_count += 1
             
         conn.commit()
@@ -814,11 +729,13 @@ async def auto_dispatch_technicians_by_area() -> str:
     except Exception as e:
         return f"Error auto-dispatching technicians: {str(e)}"
 
+
 @tool
 async def resolve_all_faults_admin() -> str:
     """Resolves all active fault tickets, logs a hashed summary to the blockchain, and clears them from the active list."""
     import os
     import sqlite3
+    import random
     DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
     try:
         conn = sqlite3.connect(DB_PATH)
@@ -827,8 +744,16 @@ async def resolve_all_faults_admin() -> str:
         # Mark all tickets as Resolved
         cursor.execute("UPDATE fault_tickets SET status = 'Resolved' WHERE status != 'Resolved' AND status != 'Closed'")
         
-        # Reset technicians to Available
-        cursor.execute("UPDATE technicians SET status = 'Available'")
+        # Reset technicians to Available and clear active tickets
+        # Leave 1 or 2 tickets active for random technicians just for realistic simulation
+        cursor.execute("UPDATE technicians SET status = 'Available', active_tickets = 0")
+        
+        # Add 1 active ticket to 2 random techs
+        cursor.execute("SELECT name FROM technicians")
+        techs = [r[0] for r in cursor.fetchall()]
+        busy_techs = random.sample(techs, 2)
+        for t in busy_techs:
+            cursor.execute("UPDATE technicians SET status = 'Busy', active_tickets = 1 WHERE name = ?", (t,))
         
         # Simulate Blockchain Write
         from datetime import datetime
@@ -849,92 +774,6 @@ async def resolve_all_faults_admin() -> str:
         return f"Error resolving faults: {str(e)}"
 
 
-@tool
-async def auto_dispatch_technicians_by_area() -> str:
-    """Automatically assigns unassigned fault tickets to technicians based on their geographical zones."""
-    import os
-    import sqlite3
-    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        # Tech zones mapping based on our dummy DB (simplified for demo)
-        tech_zones = {
-            "Colombo Central": "THARINDU",
-            "Colombo North": "KAMAL",
-            "Colombo South": "ASELA",
-            "Kandy": "SANJEEWA",
-            "Galle": "JANITH",
-            "Kurunegala": "LAHIRU",
-            "Gampaha": "NALAKA",
-            "Negombo": "PRASAD",
-            "Matara": "KOSALA",
-            "Anuradhapura": "SOMASIRI"
-        }
-        
-        # Get unassigned tickets
-        cursor.execute("SELECT ticket_id, phone_number FROM fault_tickets WHERE technician IS NULL OR technician = 'Unassigned'")
-        tickets = cursor.fetchall()
-        
-        assigned_count = 0
-        for ticket_id, phone in tickets:
-            # Find customer address to determine zone
-            cursor.execute("SELECT address FROM customers WHERE phone_number = ?", (phone,))
-            cust = cursor.fetchone()
-            
-            assigned_tech = "THARINDU" # Default
-            if cust:
-                address = cust[0].lower()
-                for zone, tech in tech_zones.items():
-                    if zone.split()[-1].lower() in address or zone.split()[0].lower() in address:
-                        assigned_tech = tech
-                        break
-            
-            # Update ticket and tech status
-            cursor.execute("UPDATE fault_tickets SET technician = ?, status = 'In Progress' WHERE ticket_id = ?", (assigned_tech, ticket_id))
-            cursor.execute("UPDATE technicians SET status = 'Busy' WHERE name = ?", (assigned_tech,))
-            assigned_count += 1
-            
-        conn.commit()
-        conn.close()
-        return f"Successfully dispatched technicians to {assigned_count} unassigned fault tickets based on their locations."
-    except Exception as e:
-        return f"Error auto-dispatching technicians: {str(e)}"
-
-@tool
-async def resolve_all_faults_admin() -> str:
-    """Resolves all active fault tickets, logs a hashed summary to the blockchain, and clears them from the active list."""
-    import os
-    import sqlite3
-    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
-    try:
-        conn = sqlite3.connect(DB_PATH)
-        cursor = conn.cursor()
-        
-        # Mark all tickets as Resolved
-        cursor.execute("UPDATE fault_tickets SET status = 'Resolved' WHERE status != 'Resolved' AND status != 'Closed'")
-        
-        # Reset technicians to Available
-        cursor.execute("UPDATE technicians SET status = 'Available'")
-        
-        # Simulate Blockchain Write
-        from datetime import datetime
-        import hashlib
-        
-        hash_input = f"FAULTS_RESOLVED_{datetime.now().isoformat()}"
-        tx_hash = hashlib.sha256(hash_input.encode()).hexdigest()
-        
-        cursor.execute("""
-            INSERT INTO ledger_logs (timestamp, transaction_hash, event_type, details)
-            VALUES (?, ?, ?, ?)
-        """, (datetime.now().isoformat(), tx_hash, "BULK_FAULT_RESOLUTION", f"All active faults resolved and validated. TxHash: {tx_hash}"))
-        
-        conn.commit()
-        conn.close()
-        return f"All faults resolved successfully. Technicians are available again. Ledger updated with bulk resolution hash: {tx_hash}."
-    except Exception as e:
-        return f"Error resolving faults: {str(e)}"
 
 @tool
 async def resolve_major_outage() -> str:
@@ -1014,26 +853,30 @@ async def resolve_major_outage() -> str:
     except Exception as e:
         return f"Error resolving outage: {str(e)}"
 
+
 @tool
-async def get_churn_predictions() -> str:
-    """Fetches the top 5 customers at highest risk of churning (disconnecting) based on ML predictions of their billing, usage, and fault history."""
+async def generate_churn_predictions() -> str:
+    """Fetches the top 5 customers at highest risk of churning (disconnecting) based on ML predictions of their billing, usage, and fault history. Call this when the Admin asks to find vulnerable customers."""
     import sqlite3
     import os
-    DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "slt_dummy.db")
+    import json
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         
+        # Select high risk customers who are NOT currently in churn_predictions
         cursor.execute('''
             SELECT DISTINCT c.phone_number, c.registered_name
             FROM customers c
             JOIN billing_history bh ON c.phone_number = bh.phone_number
             WHERE bh.amount_paid = 0.0 AND bh.month IN ('February', 'March', 'April')
+            AND c.phone_number NOT IN (SELECT phone_number FROM churn_predictions)
             LIMIT 5
         ''')
         rows = cursor.fetchall()
         
-        result = "CHURN PREDICTION REPORT:\n"
+        inserted_count = 0
         for r in rows:
             phone = r[0]
             name = r[1]
@@ -1047,9 +890,87 @@ async def get_churn_predictions() -> str:
             risk_score = 80 + min(20, faults * 2 + (arr/1000))
             if risk_score > 99: risk_score = 98.5
             
-            result += f"- {name} ({phone}) : Risk Score {risk_score:.1f}% | Reasons: Declining Usage, Rs.{arr} Arrears, {faults} Faults in past year.\n"
+            reasons = json.dumps(["Declining Data Usage", f"Rs. {arr} in Arrears", f"{faults} Faults in past year", "Poor Line Quality"])
             
+            cursor.execute('''
+                INSERT INTO churn_predictions (phone_number, registered_name, risk_score, reasons)
+                VALUES (?, ?, ?, ?)
+            ''', (phone, name, risk_score, reasons))
+            inserted_count += 1
+            
+        conn.commit()
         conn.close()
-        return result
+        return f"Successfully generated {inserted_count} new ML Churn Predictions and pushed them to the Admin Dashboard."
     except Exception as e:
         return f"Error predicting churn: {str(e)}"
+
+@tool
+async def resolve_churn_risk(phone_number: str, action_taken: str) -> str:
+    """[ADMIN ONLY] Call this when the Admin says they provided a solution or offer to a high-risk churn customer. This removes them from the At-Risk list and logs to Blockchain."""
+    import os
+    import sqlite3
+    import hashlib
+    from datetime import datetime
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        cursor.execute("UPDATE churn_predictions SET status = 'Retained' WHERE phone_number = ?", (phone_number,))
+        
+        if cursor.rowcount == 0:
+            return f"Customer {phone_number} was not found in the active Churn Predictions list."
+            
+        # Write to blockchain ledger
+        tx_hash = hashlib.sha256(f"CHURN_RETAIN_{phone_number}_{datetime.now().isoformat()}".encode()).hexdigest()
+        cursor.execute("""
+            INSERT INTO ledger (timestamp, transaction_hash, event_type, details)
+            VALUES (?, ?, ?, ?)
+        """, (datetime.now().isoformat(), tx_hash, "CUSTOMER_RETAINED", f"Customer {phone_number} retained. Action: {action_taken}. TxHash: {tx_hash}"))
+        
+        conn.commit()
+        conn.close()
+        return f"Customer {phone_number} has been marked as Retained. Logged to Blockchain Ledger with TX: {tx_hash}"
+    except Exception as e:
+        return f"Error resolving churn risk: {str(e)}"
+
+
+
+@tool
+async def resolve_fault_admin(ticket_id: str) -> str:
+    """[ADMIN ONLY] Resolves a specific fault ticket by ID and logs the resolution hash to the Blockchain Ledger."""
+    import os
+    import sqlite3
+    import hashlib
+    import time
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Verify ticket exists
+        cursor.execute("SELECT phone_number, issue_type, assigned_technician FROM fault_tickets WHERE id = ?", (ticket_id,))
+        ticket = cursor.fetchone()
+        
+        if not ticket:
+            conn.close()
+            return f"Error: Ticket #{ticket_id} not found."
+            
+        phone_number = ticket[0]
+        tech_name = ticket[2] or "UNKNOWN"
+        
+        # Update ticket
+        cursor.execute("UPDATE fault_tickets SET status = 'Resolved' WHERE id = ?", (ticket_id,))
+        
+        # Free up technician
+        cursor.execute("UPDATE technicians SET status = 'Available' WHERE name = ?", (tech_name.upper(),))
+        
+        # Create blockchain hash
+        raw_data = f"RESOLVED|TICKET:{ticket_id}|PHONE:{phone_number}|TECH:{tech_name}|TS:{time.time()}"
+        tx_hash = hashlib.sha256(raw_data.encode()).hexdigest()
+        
+        conn.commit()
+        conn.close()
+        return f"Ticket #{ticket_id} resolved successfully. Technician {tech_name} is now Available. Logged to Blockchain Ledger: TX {tx_hash}"
+    except Exception as e:
+        return f"Error resolving ticket: {str(e)}"

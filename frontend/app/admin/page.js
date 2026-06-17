@@ -492,13 +492,19 @@ export default function AdminDashboard() {
           </thead>
           <tbody className="divide-y divide-slate-800/50">
             {data.tickets.map((t, i) => (
-              <tr key={i} className="hover:bg-slate-800/30 transition-colors">
-                <td className="p-4 text-sm text-slate-400">#{t.ticket_id.split('-').pop()}</td>
+              <tr key={i} className={`transition-colors ${t.ticket_id?.startsWith('CUS') ? 'bg-amber-500/10 border-l-2 border-amber-500 hover:bg-amber-500/20' : 'hover:bg-slate-800/30'}`}>
+                <td className={`p-4 text-sm ${t.ticket_id?.startsWith('CUS') ? 'text-amber-400 font-semibold' : 'text-slate-400'}`}>
+                  #{t.ticket_id.split('-').pop()}
+                </td>
                 <td className="p-4 text-sm text-slate-200">{t.phone_number}</td>
                 <td className="p-4 text-sm text-slate-400">
                   <div className="flex flex-col">
-                    <span>{t.issue_type}</span>
-                    {t.description && <span className="text-xs text-slate-500 mt-1">{t.description}</span>}
+                    <span className={t.ticket_id?.startsWith('CUS') ? 'text-amber-300 font-medium' : ''}>
+                      {t.ticket_id?.startsWith('CUS') && <span className="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded mr-2 font-semibold">Pulse App</span>}
+                      {t.issue_type || t.description.split(' - ')[0] || t.description}
+                    </span>
+                    {!t.issue_type && t.description.includes(' - ') && <span className="text-xs text-slate-500 mt-1">{t.description.split(' - ').slice(1).join(' - ')}</span>}
+                    {t.issue_type && t.description && <span className="text-xs text-slate-500 mt-1">{t.description}</span>}
                   </div>
                 </td>
                 <td className="p-4 text-sm text-slate-400">

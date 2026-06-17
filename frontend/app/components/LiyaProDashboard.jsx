@@ -349,7 +349,7 @@ You have access to all tools to manage the SLT system.`;
         payload.image_base64 = attachedImage.split(',')[1];
       }
 
-      const response = await fetch(`${API_URL}/api/chat`, {
+      const response = await fetch(`${API_URL}/api/chat_stream`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -359,21 +359,44 @@ You have access to all tools to manage the SLT system.`;
       });
 
       if (!response.ok) throw new Error(`API error: ${response.status}`);
-      const data = await response.json();
       
-      if (data.session_id) setSessionId(data.session_id);
-      
+      const msgId = Date.now() + 1;
       const aiMsg = {
-        id: Date.now() + 1,
+        id: msgId,
         role: "assistant",
-        content: data.response,
-        agent_used: data.agent_used,
-        agent_emoji: data.agent_used === "liya_agent" ? (isMaya ? "✨" : "🧠") : (data.agent_emoji || "🧠"),
-        agent_label: data.agent_used === "liya_agent" ? agentName : (data.agent_label || agentName),
+        content: "",
+        agent_emoji: isMaya ? "✨" : "🧠",
+        agent_label: agentName,
       };
-
+      
       setChatMessages((prev) => [...prev, aiMsg]);
-      speakPro(data.response);
+      
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder("utf-8");
+      let fullText = "";
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        
+        const chunkStr = decoder.decode(value, { stream: true });
+        const lines = chunkStr.split("\n");
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const dataStr = line.slice(6);
+            if (dataStr.trim() === "[DONE]") break;
+            try {
+              const dataObj = JSON.parse(dataStr);
+              if (dataObj.text) {
+                fullText += dataObj.text;
+                setChatMessages((prev) => prev.map(m => m.id === msgId ? { ...m, content: fullText } : m));
+              }
+            } catch (e) {}
+          }
+        }
+      }
+      
+      speakPro(fullText);
     } catch (error) {
       console.error("Pro chat error:", error);
       const errorMsg = {
