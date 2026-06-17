@@ -166,8 +166,6 @@ export function useGeminiLiveAPI({ systemInstruction, language = "si", voiceName
               tools: [{
               functionDeclarations: [
                 {
-                  
-                {
                   name: "search_slt_knowledgebase",
                   description: "Search the internal SLT knowledgebase for instant answers. Much faster than consult_slt_expert_system. Use this for general questions.",
                   parameters: {
