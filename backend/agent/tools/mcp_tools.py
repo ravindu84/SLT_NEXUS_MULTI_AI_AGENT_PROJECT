@@ -949,6 +949,7 @@ async def resolve_fault_admin(ticket_id: str) -> str:
     import sqlite3
     import hashlib
     import time
+    from datetime import datetime
     DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
     try:
         conn = sqlite3.connect(DB_PATH)
@@ -974,6 +975,12 @@ async def resolve_fault_admin(ticket_id: str) -> str:
         # Create blockchain hash
         raw_data = f"RESOLVED|TICKET:{ticket_id}|PHONE:{phone_number}|TECH:{tech_name}|TS:{time.time()}"
         tx_hash = hashlib.sha256(raw_data.encode()).hexdigest()
+        
+        # Insert into blockchain ledger
+        cursor.execute(
+            "INSERT INTO blockchain_ledger (transaction_hash, transaction_type, data, timestamp) VALUES (?, ?, ?, ?)",
+            (tx_hash, "FAULT_RESOLUTION_RECEIPT", f"Ticket {ticket_id} resolved by {tech_name}", datetime.now().isoformat())
+        )
         
         conn.commit()
         conn.close()

@@ -918,7 +918,7 @@ async def get_admin_tickets():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM fault_tickets ORDER BY created_at DESC LIMIT 20")
+    cursor.execute("SELECT * FROM fault_tickets WHERE status != 'Resolved' ORDER BY created_at DESC LIMIT 20")
     rows = cursor.fetchall()
     conn.close()
     return {"tickets": [dict(r) for r in rows]}
