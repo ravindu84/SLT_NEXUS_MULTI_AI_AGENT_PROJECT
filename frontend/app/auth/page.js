@@ -32,8 +32,6 @@ export default function AuthPage(props) {
   const [step, setStep] = useState(1);
   const [isDesktop, setIsDesktop] = useState(true);
 
-  const audioRef = useRef(null);
-
   useEffect(() => {
     const video = videoRef.current;
     const audio = audioRef.current;
