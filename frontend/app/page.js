@@ -473,7 +473,7 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
   }
 
   if (!showAuth && !showApp) {
-    return <LandingPage onTryLiya={() => { setShowAuth(true); playBgMusic(); }} />;
+    return <LandingPage onTryLiya={() => { setShowAuth(true); stopBgMusic(); }} />;
   }
 
   if (showAuth) {
@@ -482,6 +482,7 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
         currentLang={language}
         onLanguageSelected={(selectedLang) => {
           setLanguage(selectedLang);
+          playBgMusic();
         }}
         onBackToLanguageSelection={stopBgMusic}
         onAuthSuccess={async (phoneNum) => {
