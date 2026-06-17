@@ -20,8 +20,14 @@ async def create_fault_ticket(phone_number: str, issue_type: str, description: s
     """Creates a fault ticket in the WFM system and dispatches a technician."""
     async with httpx.AsyncClient() as client:
         payload = {"phone_number": phone_number, "issue_type": issue_type, "description": description}
-        if phone_number in latest_image_cache:
-            payload["image_data"] = latest_image_cache[phone_number]
+        # Try phone_number first, fallback to checking if there's any image cached (simplified)
+        img_data = latest_image_cache.get(phone_number)
+        if not img_data and latest_image_cache:
+            # Just grab the last one if we don't have a strict match, since it's a single user session usually
+            img_data = list(latest_image_cache.values())[-1]
+            
+        if img_data:
+            payload["image_data"] = img_data
             
         if assigned_technician:
             payload["assigned_technician"] = assigned_technician

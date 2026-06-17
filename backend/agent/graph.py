@@ -234,7 +234,6 @@ def get_rag_context(query: str, agent_name: str) -> str:
         # Agent-specific source filters for more targeted retrieval
         agent_source_map = {
             "spark_agent": "packages",
-            "pulse_agent": "troubleshooting",
             "guardian_agent": "scam_patterns",
             "insight_agent": "usage_profiles",
         }

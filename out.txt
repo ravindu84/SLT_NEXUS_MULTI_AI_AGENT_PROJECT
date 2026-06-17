@@ -1,0 +1,1 @@
+{"response":"I'm sorry, but I can't identify or describe the contents of the image. If you have any other questions or need assistance, feel free to ask!","session_id":"test_vision","agent_used":"liya_agent","agent_emoji":"🧠","agent_label":"LIYA","intent":""}
