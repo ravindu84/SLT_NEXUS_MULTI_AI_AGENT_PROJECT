@@ -394,7 +394,7 @@ def search_slt_knowledgebase(query: str) -> str:
         load_dotenv(os.path.join(os.path.dirname(__file__), "..", "..", ".env"))
         from backend.rag.retriever import SLTRetriever
         retriever = SLTRetriever()
-        results = retriever.query(query, n_results=3)
+        results = retriever.query(query, n_results=5)
         if not results:
             return "No matching data found in the SLT knowledge base."
         
@@ -607,9 +607,9 @@ async def clear_predictive_faults() -> str:
         # Write to blockchain ledger
         tx_hash = hashlib.sha256(f"ORACLE_CLEAR_{datetime.now().isoformat()}".encode()).hexdigest()
         cursor.execute("""
-            INSERT INTO ledger (timestamp, transaction_hash, event_type, details)
-            VALUES (?, ?, ?, ?)
-        """, (datetime.now().isoformat(), tx_hash, "ORACLE_PREDICTIONS_CLEARED", f"Admin cleared predictive faults from Oracle. TxHash: {tx_hash}"))
+            INSERT INTO ledger (transaction_type, details, created_at)
+            VALUES (?, ?, ?)
+        """, ("ORACLE_PREDICTIONS_CLEARED", f"Admin cleared predictive faults from Oracle. TxHash: {tx_hash}", datetime.now().isoformat()))
         
         cursor.execute("DELETE FROM oracle_predictions")
         conn.commit()
@@ -769,9 +769,9 @@ async def resolve_all_faults_admin() -> str:
         tx_hash = hashlib.sha256(hash_input.encode()).hexdigest()
         
         cursor.execute('''
-            INSERT INTO ledger_logs (timestamp, transaction_hash, event_type, details)
-            VALUES (?, ?, ?, ?)
-        ''', (datetime.now().isoformat(), tx_hash, "BULK_FAULT_RESOLUTION", f"All active faults resolved and validated. TxHash: {tx_hash}"))
+            INSERT INTO ledger (transaction_type, details, created_at)
+            VALUES (?, ?, ?)
+        ''', ("BULK_FAULT_RESOLUTION", f"All active faults resolved and validated. TxHash: {tx_hash}", datetime.now().isoformat()))
         
         conn.commit()
         conn.close()
@@ -804,9 +804,9 @@ async def resolve_major_outage() -> str:
         hash_input = f"MAJOR_OUTAGE_RESOLVED_{datetime.now().isoformat()}"
         tx_hash = hashlib.sha256(hash_input.encode()).hexdigest()
         cursor.execute("""
-            INSERT INTO ledger_logs (timestamp, transaction_hash, event_type, details)
-            VALUES (?, ?, ?, ?)
-        """, (datetime.now().isoformat(), tx_hash, "OUTAGE_RESOLUTION", f"Major network outage resolved. Services restored. TxHash: {tx_hash}"))
+            INSERT INTO ledger (transaction_type, details, created_at)
+            VALUES (?, ?, ?)
+        """, ("OUTAGE_RESOLUTION", f"Major network outage resolved. Services restored. TxHash: {tx_hash}", datetime.now().isoformat()))
         conn.commit()
         conn.close()
 
@@ -930,9 +930,9 @@ async def resolve_churn_risk(phone_number: str, action_taken: str) -> str:
         # Write to blockchain ledger
         tx_hash = hashlib.sha256(f"CHURN_RETAIN_{phone_number}_{datetime.now().isoformat()}".encode()).hexdigest()
         cursor.execute("""
-            INSERT INTO ledger (timestamp, transaction_hash, event_type, details)
-            VALUES (?, ?, ?, ?)
-        """, (datetime.now().isoformat(), tx_hash, "CUSTOMER_RETAINED", f"Customer {phone_number} retained. Action: {action_taken}. TxHash: {tx_hash}"))
+            INSERT INTO ledger (transaction_type, details, created_at)
+            VALUES (?, ?, ?)
+        """, ("CUSTOMER_RETAINED", f"Customer {phone_number} retained. Action: {action_taken}. TxHash: {tx_hash}", datetime.now().isoformat()))
         
         conn.commit()
         conn.close()
@@ -978,8 +978,8 @@ async def resolve_fault_admin(ticket_id: str) -> str:
         
         # Insert into blockchain ledger
         cursor.execute(
-            "INSERT INTO blockchain_ledger (transaction_hash, transaction_type, data, timestamp) VALUES (?, ?, ?, ?)",
-            (tx_hash, "FAULT_RESOLUTION_RECEIPT", f"Ticket {ticket_id} resolved by {tech_name}", datetime.now().isoformat())
+            "INSERT INTO ledger (transaction_type, details, created_at) VALUES (?, ?, ?)",
+            ("FAULT_RESOLUTION_RECEIPT", f"Ticket {ticket_id} resolved by {tech_name}. TxHash: {tx_hash}", datetime.now().isoformat())
         )
         
         conn.commit()
