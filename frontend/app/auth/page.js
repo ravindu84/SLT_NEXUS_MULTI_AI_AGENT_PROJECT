@@ -34,29 +34,9 @@ export default function AuthPage(props) {
 
   useEffect(() => {
     const video = videoRef.current;
-    const audio = audioRef.current;
-    if (!video || !audio) return;
-    
-    const handlePlay = () => { 
-      if (showLanguageSelection) {
-        audio.play().catch(e=>console.log(e)); 
-      }
-    };
-    const handlePause = () => audio.pause();
-    const handleSeek = () => { audio.currentTime = video.currentTime; };
-
-    video.addEventListener('play', handlePlay);
-    video.addEventListener('pause', handlePause);
-    video.addEventListener('seeked', handleSeek);
-    
+    if (!video) return;
     video.play().catch(e=>console.log(e));
-
-    return () => {
-      video.removeEventListener('play', handlePlay);
-      video.removeEventListener('pause', handlePause);
-      video.removeEventListener('seeked', handleSeek);
-    }
-  }, [showLanguageSelection]);
+  }, []);
 
   const handleLanguageSelect = (selectedLang) => {
     setShowLanguageSelection(false);
@@ -317,14 +297,13 @@ export default function AuthPage(props) {
       <div className="absolute bottom-[-10%] right-[-10%] w-[600px] h-[600px] bg-purple-600/30 rounded-full blur-[150px] mix-blend-screen animate-pulse pointer-events-none z-0" />
       <div className="absolute top-[20%] right-[10%] w-[400px] h-[400px] bg-pink-600/20 rounded-full blur-[150px] mix-blend-screen animate-pulse pointer-events-none z-0" style={{ animationDelay: '1s' }} />
 
-      {/* BACKGROUND VIDEO & AUDIO */}
+      {/* BACKGROUND VIDEO */}
       <video 
         ref={videoRef}
         src="/assets/kiosk_video.mp4" 
         autoPlay loop muted playsInline
         className="absolute top-0 left-0 w-full h-full object-cover opacity-60 mix-blend-screen z-0"
       />
-      <audio ref={audioRef} src="/assets/kiosk_sound.mp3" loop />
       
       {/* Background overlay so the content stands out */}
       <div className="absolute top-0 left-0 w-full h-full bg-black/60 pointer-events-none z-10" />

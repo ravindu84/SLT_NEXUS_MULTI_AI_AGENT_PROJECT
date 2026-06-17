@@ -473,7 +473,7 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
   }
 
   if (!showAuth && !showApp) {
-    return <LandingPage onTryLiya={() => { setShowAuth(true); stopBgMusic(); }} />;
+    return <LandingPage onTryLiya={() => { setShowAuth(true); playBgMusic(); }} />;
   }
 
   if (showAuth) {
@@ -487,7 +487,6 @@ Your goal is to assist ${currentName} with their telecom needs with a warm, pers
         onAuthSuccess={async (phoneNum) => {
         setShowAuth(false);
         setShowApp(true);
-        playBgMusic();
         if (phoneNum) {
           setSessionId(phoneNum);
           // Fetch customer name from backend for personalized AI greeting

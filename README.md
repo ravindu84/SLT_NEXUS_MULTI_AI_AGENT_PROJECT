@@ -1,38 +1,107 @@
-# SLT NEXUS: Ultimate Multi-Agent AI Ecosystem
+# SLT NEXUS: Solution Overview & Architecture Report
 
-## Overview
-SLT NEXUS is a state-of-the-art Multi-Agent Artificial Intelligence platform developed by **NEXGEN Creators**. Built specifically for Sri Lanka Telecom (SLT), this system serves as a bridge between customer-facing services (B2C) and internal enterprise operations (B2B), particularly optimizing workflows within the Network Operations Center (NOC) and Digital Support Unit (DSU).
+**Unified Omnichannel Swarm Intelligence Ecosystem for B2C & B2B Telecommunication Services**
 
-## Dual Subscription Model
-The platform is designed to cater to two distinct user bases through a flexible subscription architecture:
-1. **B2C Zone (Customer Facing):** Designed for public users interacting via 3D VR Kiosks, standard SaaS web portals, and cross-platform **Mobile Applications (React Native)**.
-2. **B2B Zone (Internal Enterprise):** Designed for SLT internal staff utilizing NOC Admin Dashboards and Custom WFM Report Applications.
+*Prepared for SLT-MOBITEL Digital Innovation Competition*
 
-## The Brain: LIYA Orchestrator & AI Logic
-At the core of the SLT NEXUS ecosystem sits **LIYA**, the Master Orchestrator powered by **LangGraph Core** and **LangChain**. LIYA routes requests, manages memory, and delegates tasks to a highly specialized swarm of 8 distinct AI Agents.
+---
 
-* **Advanced RAG Pipeline:** The system utilizes robust document processing techniques including **Text Chunking** and **Vector Embeddings** to feed accurate data into the AI models.
-* **Vector Storage:** Embedded chunks are stored and retrieved efficiently using Vector Databases for hyper-accurate, context-aware responses.
+## 1. Executive Vision
 
-## The Multi-Agent Swarm (8 Specialized Agents)
+**SLT NEXUS** is an next-generation omnichannel AI ecosystem that unifies customer experience (B2C) and field service operations (B2B) under a single swarm intelligence framework.
 
-### Group 1: Customer Customer Agents (B2C - Outward Facing)
-1. **Spark (Sales):** Handles new package inquiries and customer onboarding.
-2. **Pulse (Tech/NOC):** Troubleshoots internet issues and checks fiber faults.
-3. **Insight (Data):** Processes data queries and package comparisons.
-4. **Guardian (Security):** Scam detection and account security verification.
-5. **Vault (Blockchain & Smart Contracts):** Executes automated Smart Contracts and manages secure, immutable digital agreements for SLT enterprise and customer operations.
-   
-### Group 2: Internal Operations Agents (B2B - Inward Facing)
-6. **Dispatcher (Auto-Tickets):** Automates ticket routing from NOC to regional units.
-7. **Analyzer (WFM/Reports):** Generates daily summaries and connects with Clarity/WFM DBs.
-8. **Provisioner (New Connections):** Automates the backend provisioning processes for new SLT lines.
+### Key Strategic Pillars:
+1.  **Immersive Web Kiosk Mode:** Bringing ultimate accessibility to SLT branch offices via a real-time **3D AI Avatar (LIYA)** with viseme lip-sync and **MediaPipe Gesture Recognition** for deaf/mute customers.
+2.  **B2C Self-Fix Mobile App:** Empowers customers to run automated router tests, troubleshoot line errors, and pay bills independently.
+3.  **B2B Technician Mobile App:** Connects field engineers to live database-level NMS diagnostics (TID, SNR, Optical Power, Attenuation) directly from the site.
+4.  **12-Agent Swarm Orchestrator:** Engineered with LangGraph and Google Gemini Pro to dynamically route queries, check CRM records, and perform secure actions.
 
-## Tech Stack & Infrastructure
-* **Frontend (Zone A):** Hosted on **Vercel Edge Network**. Built with Next.js, React Native (Mobile App), and React Three Fiber for the 3D Avatar (LIYA) integration.
-* **Backend (Zone B):** Hosted on **AWS Cloud Infrastructure** (EC2 / Lambda). Powered by Python for heavy LangChain/LangGraph orchestration.
-* **MCP (Model Context Protocol) Integrations:** The AI Agents strictly use MCP to securely connect, authenticate, and fetch real-time data from internal systems (Mock iMaster NCE, Clarity/WFM DB, and Billing Systems) without exposing core credentials.
-* **Database, Auth & Vector Storage:** **Supabase** is used for secure New User Registration (Auth) and acts as the primary Vector DB to store embedded data chunks for the RAG pipeline.
+---
+
+## 2. Cloud Architecture & Deployment Model
+
+SLT NEXUS is engineered for global scale, speed, and strict security isolation, splitting operations into three optimal hosting zones:
+
+```
+[ Next.js Web App / Kiosk ] (Vercel Global CDN)
+          │
+          ▼  (HTTPS / WebSockets API calls)
+[ FastAPI Agent Swarm Server ] (AWS EC2)
+    │           │           │
+    ▼           ▼           ▼
+[Supabase Auth] [pgvector RAG] [Supabase PostgreSQL DB] (Supabase Cloud Project)
+```
+
+### A. Vercel Cloud Platform (Frontend)
+*   **Role:** Hosts the **Next.js Web Kiosk** and frontend client modules.
+*   **Advantage:** Serves pages globally via edge caching, guaranteeing **sub-10ms loading speeds** for an ultra-smooth kiosk experience.
+
+### B. AWS EC2 (Backend Swarm Server)
+*   **Role:** Hosts the **FastAPI Python server** running the **LangGraph state machine**.
+*   **Advantage:** Bypasses serverless timeout limitations (e.g., Vercel's 10s execution cap) to run complex, long-running agent reasoning, RAG database calls, and ElevenLabs audio proxies. Native UV deployment via Screen sessions.
+
+### C. Supabase Cloud (Data & Security)
+*   **Role:** Handles User Authentication, pgvector index search, and relational PostgreSQL telemetry.
+*   **Advantage:** **Row Level Security (RLS)** restricts data access directly at the database level. B2C customers are strictly restricted to their own profiles, while B2B staff can select across the relational telemetry pool.
+
+---
+
+## 3. The 12-Agent Swarm: Deep Dive
+
+At the heart of the system is a 12-Agent Swarm orchestrated via LangGraph. Each agent acts as an autonomous expert:
+
+| Agent Name | Emoji | Target Domain | Core Responsibility & Tool Usage |
+| :--- | :---: | :--- | :--- |
+| **Manager** | 🤖 | Swarm Brain | Evaluates incoming prompts and dynamically routes execution to the correct sub-agent. |
+| **Pulse** | 💓 | B2C Diagnostic | Executes automated router checks (Status, physical connection diagnostics). |
+| **Oracle** | 🔮 | B2B Diagnostics | Fetches deep SQL telemetry parameters (SNR, Attenuation, Optical Power, TID) for field technicians. |
+| **Analyzer** | 📊 | Staff Ops | Compiles technician shift logs and schedules automated email reports to regional managers. |
+| **Signa** | 💗 | Accessibility | Manages Web Kiosk gesture recognition and translates signs to functional queries. |
+| **Guardian** | 🛡️ | Security | Scans conversations in real-time to detect active phishing or telecommunications fraud. |
+| **Vault** | 🔗 | Ledger Audit | Records customer resolutions to a local simulated blockchain ledger for verified SLA compliance. |
+| **Provisioner**| 🔌 | Queue Routing | Dispatches priority service tasks and allocates staff resources based on current workloads. |
+| **Pathfinder** | 📍 | Regional Ops | Analyzes signal coverage coordinates to optimize technician dispatch paths. |
+| **Spark** | ⚡ | Up-selling | Recommends relevant data package upgrades based on active customer usage logs. |
+| **Insight** | 👁️ | Billing | Resolves billing inquiries and parses complex billing reports via pgvector RAG. |
+| **Messenger** | ✉️ | Dispatch | Sends real-time SMS, email, and WhatsApp notifications to clients and field staff. |
+
+---
+
+## 4. Relational Database & Security Design
+
+To support our prototype, we engineered a relational SQLite database (`slt_dummy.db`) containing **200 dummy telephone numbers** (100 Fiber, 100 Copper), perfectly mimicking a live telecom CRM and Network Management System (NMS):
+
+```
+┌──────────────────┐          ┌───────────────────┐          ┌──────────────────┐
+│   CRM_PROFILES   │          │  NETWORK_STATUS   │          │  BILLING_RECORD  │
+├──────────────────┤          ├───────────────────┤          ├──────────────────┤
+│ Phone (PK)       │◄─────────│ Phone (FK)        │◄─────────│ Phone (FK)       │
+│ Customer Name    │          │ Optical Power     │          │ Outstanding Due  │
+│ Address          │          │ SNR, Attenuation  │          │ Payment Status   │
+│ Service Type     │          │ ONT Type, TID     │          │ Bill Cycle Date  │
+└──────────────────┘          └───────────────────┘          └──────────────────┘
+```
+
+When the **Oracle B2B Agent** is queried by a technician, it triggers the `get_technician_diagnostics` tool which performs a three-way relational join to display:
+*   *Customer Information (Name, Address, Service)*
+*   *Live Telemetry (Optical Power: -26.4 dBm, SNR: 28.2 dB, Attenuation: 12.4 dB, TID: 5543)*
+*   *Billing Status (Outstanding dues, status)*
+
+---
+
+## 5. Live User Journey Flowcharts
+
+### B2C Customer Self-Fix Loop
+```
+[User Text/Voice/Sign Input] ──> [Manager Agent] ──> [Pulse Agent] ──> [Router Health Check Tool] ──> [Self-Fix Recommendation]
+```
+
+### B2B Technician Diagnostics Loop
+```
+[Technician Request] ──> [Manager Agent] ──> [Oracle Agent] ──> [SQLite JOIN Tool] ──> [Full Diagnostics Sheet Response]
+```
+
+---
 
 ## Getting Started (Local Setup)
 
@@ -40,7 +109,7 @@ To clone and run the SLT NEXUS ecosystem locally on your machine, follow these s
 
 ### 1. Clone the Repository
 ```bash
-git clone [https://github.com/ravindu84/SLT_NEXUS_MULTI_AI_AGENT_PROJECT.git](https://github.com/ravindu84/SLT_NEXUS_MULTI_AI_AGENT_PROJECT.git)
+git clone https://github.com/ravindu84/SLT_NEXUS_MULTI_AI_AGENT_PROJECT.git
 cd SLT_NEXUS_MULTI_AI_AGENT_PROJECT
 ```
 
@@ -52,17 +121,18 @@ npm run dev
 ```
 
 ### 3. Backend Setup (Python RAG & LangGraph Agents)
+We recommend using `uv` for lightning-fast python environments.
 ```bash
-cd ../backend
-python -m venv venv
-venv\Scripts\activate
-pip install -r requirements.txt
-python main.py
+cd backend
+uv venv
+source .venv/bin/activate
+uv pip install -r requirements.txt
+uvicorn main:app --host 0.0.0.0 --port 8000
 ```
 
 ### 4. Mobile App Setup (React Native)
 ```bash
-cd ../mobile
+cd mobile_customer
 npm install
 npx expo start
 ```
