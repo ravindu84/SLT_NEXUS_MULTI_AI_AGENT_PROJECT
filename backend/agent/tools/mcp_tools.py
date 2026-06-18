@@ -995,7 +995,7 @@ async def resolve_fault_admin(ticket_id: str) -> str:
         cursor = conn.cursor()
         
         # Verify ticket exists
-        cursor.execute("SELECT phone_number, issue_type, assigned_technician FROM fault_tickets WHERE ticket_id = ? OR phone_number = ?", (ticket_id, ticket_id))
+        cursor.execute("SELECT phone_number, description, technician FROM fault_tickets WHERE ticket_id = ? OR phone_number = ?", (ticket_id, ticket_id))
         ticket = cursor.fetchone()
         
         if not ticket:
