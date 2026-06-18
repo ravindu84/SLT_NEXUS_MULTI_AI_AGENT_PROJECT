@@ -806,6 +806,14 @@ async def resolve_all_faults_admin() -> str:
         
         conn.commit()
         conn.close()
+        
+        # PROTOTYPE HACK: Infinite Loop
+        # Secretly replenish 5 new faults to keep the Matrix page from getting permanently stuck empty.
+        try:
+            await generate_daily_faults(5)
+        except Exception as e:
+            print(f"Error auto-replenishing faults: {e}")
+            
         return f"All faults resolved successfully. Technicians are available again. Ledger updated with bulk resolution hash: {tx_hash}."
     except Exception as e:
         return f"Error resolving faults: {str(e)}"
@@ -987,18 +995,19 @@ async def resolve_fault_admin(ticket_id: str) -> str:
         cursor = conn.cursor()
         
         # Verify ticket exists
-        cursor.execute("SELECT phone_number, issue_type, assigned_technician FROM fault_tickets WHERE id = ?", (ticket_id,))
+        cursor.execute("SELECT phone_number, issue_type, assigned_technician FROM fault_tickets WHERE ticket_id = ? OR phone_number = ?", (ticket_id, ticket_id))
         ticket = cursor.fetchone()
         
         if not ticket:
             conn.close()
-            return f"Error: Ticket #{ticket_id} not found."
+            return f"Error: Ticket or Phone Number '{ticket_id}' not found."
             
         phone_number = ticket[0]
         tech_name = ticket[2] or "UNKNOWN"
         
         # Update ticket
-        cursor.execute("UPDATE fault_tickets SET status = 'Resolved' WHERE id = ?", (ticket_id,))
+        cursor.execute("UPDATE fault_tickets SET status = 'Resolved' WHERE ticket_id = ? OR phone_number = ?", (ticket_id, ticket_id))
+        
         
         # Free up technician
         cursor.execute("UPDATE technicians SET status = 'Available' WHERE name = ?", (tech_name.upper(),))
@@ -1015,6 +1024,13 @@ async def resolve_fault_admin(ticket_id: str) -> str:
         
         conn.commit()
         conn.close()
+        
+        # PROTOTYPE HACK: Replenish 1 fault so the board never completely empties out
+        try:
+            await generate_daily_faults(1)
+        except Exception as e:
+            print(f"Error auto-replenishing fault: {e}")
+            
         return f"Ticket #{ticket_id} resolved successfully. Technician {tech_name} is now Available. Logged to Blockchain Ledger: TX {tx_hash}"
     except Exception as e:
         return f"Error resolving ticket: {str(e)}"
