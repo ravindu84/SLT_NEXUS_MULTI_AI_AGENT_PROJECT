@@ -497,15 +497,16 @@ export default function AdminDashboard() {
           </thead>
           <tbody className="divide-y divide-slate-800/50">
             {data.tickets.map((t, i) => (
-              <tr key={i} className={`transition-colors ${t.ticket_id?.startsWith('CUS') ? 'bg-amber-500/10 border-l-2 border-amber-500 hover:bg-amber-500/20' : 'hover:bg-slate-800/30'}`}>
-                <td className={`p-4 text-sm ${t.ticket_id?.startsWith('CUS') ? 'text-amber-400 font-semibold' : 'text-slate-400'}`}>
-                  #{t.ticket_id.split('-').pop()}
+              <tr key={i} className={`transition-colors ${t.ticket_id?.startsWith('CUS') ? 'bg-emerald-500/10 border-l-2 border-emerald-500 hover:bg-emerald-500/20' : t.ticket_id?.startsWith('SYS') ? 'bg-blue-500/10 border-l-2 border-blue-500 hover:bg-blue-500/20' : 'hover:bg-slate-800/30'}`}>
+                <td className={`p-4 text-sm ${t.ticket_id?.startsWith('CUS') ? 'text-emerald-400 font-semibold' : t.ticket_id?.startsWith('SYS') ? 'text-blue-400 font-semibold' : 'text-slate-400'}`}>
+                  #{t.ticket_id?.split('-').pop() || t.ticket_id}
                 </td>
                 <td className="p-4 text-sm text-slate-200">{t.phone_number}</td>
                 <td className="p-4 text-sm text-slate-400">
                   <div className="flex flex-col">
-                    <span className={t.ticket_id?.startsWith('CUS') ? 'text-amber-300 font-medium' : ''}>
-                      {t.ticket_id?.startsWith('CUS') && <span className="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded mr-2 font-semibold">Pulse App</span>}
+                    <span className={t.ticket_id?.startsWith('CUS') ? 'text-emerald-300 font-medium' : t.ticket_id?.startsWith('SYS') ? 'text-blue-300 font-medium' : ''}>
+                      {t.ticket_id?.startsWith('CUS') && <span className="text-xs bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded mr-2 font-semibold">Customer App</span>}
+                      {t.ticket_id?.startsWith('SYS') && <span className="text-xs bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded mr-2 font-semibold">System Fault</span>}
                       {t.issue_type || t.description.split(' - ')[0] || t.description}
                     </span>
                     {!t.issue_type && t.description.includes(' - ') && <span className="text-xs text-slate-500 mt-1">{t.description.split(' - ').slice(1).join(' - ')}</span>}
