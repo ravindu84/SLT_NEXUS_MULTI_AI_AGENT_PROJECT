@@ -746,7 +746,8 @@ async def chat_endpoint(request: ChatRequest):
         pass
 
     messages.append(SystemMessage(content=context_msg))    
-    messages.extend(history)
+    # Memory Truncation: Keep only the last 6 messages to prevent OpenAI Token Explosion (429 errors)
+    messages.extend(history[-6:])
             
     # Current message with optional Vision Support
     if request.image_base64:
@@ -762,13 +763,26 @@ async def chat_endpoint(request: ChatRequest):
         messages.append(HumanMessage(content=request.message))
 
     try:
-        # Invoke our 12-Agent swarm brain!
-        result = await get_graph().ainvoke({
-            "messages": messages,
-            "user_language": request.lang or "si",  # Default to Sinhala
-            "is_admin": request.is_admin,
-            "phone_number": session_id if not request.is_admin else None
-        })
+        import asyncio
+        max_retries = 3
+        result = None
+        for attempt in range(max_retries):
+            try:
+                # Invoke our 12-Agent swarm brain!
+                result = await get_graph().ainvoke({
+                    "messages": messages,
+                    "user_language": request.lang or "si",  # Default to Sinhala
+                    "is_admin": request.is_admin,
+                    "phone_number": session_id if not request.is_admin else None
+                })
+                break
+            except Exception as loop_e:
+                if "429" in str(loop_e) and attempt < max_retries - 1:
+                    print(f"Rate limit hit. Retrying in 2 seconds... (Attempt {attempt + 1}/{max_retries})")
+                    await asyncio.sleep(2)
+                else:
+                    raise loop_e
+                    
         ai_message = result["messages"][-1]
         # Censor AI response to prevent bad words being generated/spoken
         ai_response = censor_profanity(ai_message.content)
