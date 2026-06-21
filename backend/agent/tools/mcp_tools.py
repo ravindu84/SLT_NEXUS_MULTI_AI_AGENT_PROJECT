@@ -593,6 +593,43 @@ async def generate_predictive_faults() -> str:
         return f"Error predicting faults: {str(e)}"
 
 @tool
+async def assign_predictive_faults_admin() -> str:
+    """[ADMIN ONLY] Assigns the currently predicted faults (Oracle) to technicians. Use this when Admin says 'assign the predicted faults to technicians'."""
+    import os
+    import sqlite3
+    import random
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
+    try:
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # Check if there are any predictions
+        cursor.execute("SELECT COUNT(*) FROM oracle_predictions")
+        count = cursor.fetchone()[0]
+        if count == 0:
+            conn.close()
+            return "There are no predictive faults currently on the dashboard to assign."
+            
+        # Get all technicians
+        cursor.execute("SELECT name FROM technicians")
+        techs = [row[0] for row in cursor.fetchall()]
+        
+        # Assign random techs to be "Busy"
+        busy_techs = random.sample(techs, min(3, len(techs)))
+        
+        # Increment their active tickets
+        for t in busy_techs:
+            cursor.execute("UPDATE technicians SET status = 'Busy', active_tickets = active_tickets + 3 WHERE name = ?", (t,))
+            
+        conn.commit()
+        conn.close()
+        
+        assigned_names = ", ".join(busy_techs)
+        return f"Successfully assigned the predictive faults to technicians: {assigned_names}. Their workload has increased on the dispatch dashboard."
+    except Exception as e:
+        return f"Error assigning predictive faults: {str(e)}"
+
+@tool
 async def clear_predictive_faults() -> str:
     """Clears the Oracle Predictor dashboard. Run this when Admin says the predicted faults have been fixed or handled."""
     import os
@@ -1034,6 +1071,116 @@ async def resolve_fault_admin(ticket_id: str) -> str:
         return f"Ticket #{ticket_id} resolved successfully. Technician {tech_name} is now Available. Logged to Blockchain Ledger: TX {tx_hash}"
     except Exception as e:
         return f"Error resolving ticket: {str(e)}"
+
+@tool
+async def auto_retain_churning_customers() -> str:
+    """[ADMIN ONLY] Automatically sends personalized loyalty offers to ALL currently detected churning customers via Email, resolves them, and automatically detects the next batch of vulnerable customers."""
+    import os
+    import sqlite3
+    import hashlib
+    import smtplib
+    import json
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+    from datetime import datetime
+    from dotenv import load_dotenv
+
+    DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
+    try:
+        # Load environment variables
+        load_dotenv(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"))
+        sender_email = os.getenv("GMAIL_USER")
+        sender_password = os.getenv("GMAIL_APP_PASSWORD")
+        target_email = "aravindaslt@gmail.com"
+
+        conn = sqlite3.connect(DB_PATH)
+        cursor = conn.cursor()
+        
+        # 1. Fetch current churning customers
+        cursor.execute("SELECT phone_number, registered_name, reasons FROM churn_predictions WHERE status = 'At Risk'")
+        churners = cursor.fetchall()
+        
+        if not churners:
+            conn.close()
+            return "There are no churning customers currently 'At Risk' on the dashboard."
+            
+        # 2. Formulate email body
+        email_body = f"<h2>SLT NEXUS - Auto Retention Engine Triggered</h2><p>The following customers were identified as HIGH CHURN RISK. The AI Agent 'Spark' has automatically formulated and dispatched the following retention offers:</p><ul>"
+        for c in churners:
+            phone, name, reasons_json = c
+            try:
+                reasons = json.loads(reasons_json)
+                reason_str = ", ".join(reasons)
+            except:
+                reason_str = reasons_json
+                
+            email_body += f"<li><strong>{name} ({phone})</strong><br><em>Risk Reasons:</em> {reason_str}<br><span style='color:green;'><b>Offer Sent:</b> 50GB Free Data for 3 Months + Priority Routing</span></li><br>"
+        email_body += "</ul><p><small>Automated by SLT NEXUS Swarm Intelligence</small></p>"
+        
+        # 3. Send Email using SMTP
+        email_status = ""
+        if sender_email and sender_password:
+            try:
+                msg = MIMEMultipart()
+                msg['From'] = sender_email
+                msg['To'] = target_email
+                msg['Subject'] = "SLT NEXUS: Automated Churn Retention Offers Dispatched"
+                msg.attach(MIMEText(email_body, 'html'))
+                
+                server = smtplib.SMTP('smtp.gmail.com', 587)
+                server.starttls()
+                server.login(sender_email, sender_password)
+                server.sendmail(sender_email, [target_email], msg.as_string())
+                server.quit()
+                email_status = f"Prototype email successfully delivered to {target_email}."
+            except Exception as e:
+                email_status = f"Failed to send email to {target_email}: {str(e)}."
+        else:
+            email_status = f"Email simulated (Credentials missing). Would have sent to {target_email}."
+
+        # 4. Resolve current churners
+        cursor.execute("DELETE FROM churn_predictions WHERE status = 'At Risk'")
+        
+        # 5. Write to Blockchain
+        tx_hash = hashlib.sha256(f"AUTO_RETAIN_{datetime.now().isoformat()}".encode()).hexdigest()
+        cursor.execute("""
+            INSERT INTO ledger (transaction_type, details, created_at)
+            VALUES (?, ?, ?)
+        """, ("CHURN_AUTO_RETAIN", f"AI Swarm successfully retained {len(churners)} customers and dispatched offers. TxHash: {tx_hash}", datetime.now().isoformat()))
+        
+        # 6. Auto-Replenish with 5 new customers
+        cursor.execute('''
+            SELECT DISTINCT c.phone_number, c.registered_name
+            FROM customers c
+            JOIN billing_history bh ON c.phone_number = bh.phone_number
+            WHERE bh.amount_paid = 0.0 AND bh.month IN ('February', 'March', 'April')
+            AND c.phone_number NOT IN (SELECT phone_number FROM churn_predictions)
+            ORDER BY RANDOM()
+            LIMIT 5
+        ''')
+        rows = cursor.fetchall()
+        for r in rows:
+            phone, name = r[0], r[1]
+            cursor.execute("SELECT COUNT(*) FROM historical_faults WHERE phone_number = ?", (phone,))
+            faults = cursor.fetchone()[0]
+            cursor.execute("SELECT MAX(arrears) FROM billing_history WHERE phone_number = ?", (phone,))
+            arr = cursor.fetchone()[0]
+            
+            risk_score = 80 + min(20, faults * 2 + (arr/1000))
+            if risk_score > 99: risk_score = 98.5
+            reasons = json.dumps([f"{faults} line faults recently", f"Rs. {arr} pending arrears", "Service Quality Degradation Detected"])
+            
+            cursor.execute('''
+                INSERT INTO churn_predictions (phone_number, registered_name, risk_score, reasons)
+                VALUES (?, ?, ?, ?)
+            ''', (phone, name, risk_score, reasons))
+
+        conn.commit()
+        conn.close()
+        
+        return f"Successfully retained {len(churners)} customers! {email_status} Blockchain TX: {tx_hash}. 5 NEW vulnerable customers have been seeded to the dashboard for the next demo."
+    except Exception as e:
+        return f"Error in auto churn retention loop: {str(e)}"
 
 @tool
 async def get_churn_reasons(phone_number: str) -> str:

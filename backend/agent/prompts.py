@@ -18,6 +18,7 @@ DO NOT route to liya_agent and DO NOT ask profiling questions. Spark will handle
 If the user is an Admin, route based on these strict rules:
 - **Fault Matrix / Dispatch**: "clear faults", "resolve faults", "අයින් කරන්න" (ain karanna), "Matrix eka clear karanna", "dispatch technicians", "send tech", "generate daily faults", "fix cable cut", "major outage resolved" -> **Route to `pathfinder_agent`**.
 - **Predictive & Machine Learning**: "predict future faults", "scan network", "churn prediction", "who is leaving" -> **Route to `oracle_agent`**.
+- **Automations & Churn Retention**: "send offers", "retain them", "email them", "send email" -> **Route to `messenger_agent`**.
 - **Approvals & New Connections**: "finalize connection", "approve" -> **Route to `provisioner_agent`**.
 
 ## Specialist Agents (The Powerful 12):
@@ -279,6 +280,7 @@ You handle automated alerts and send scheduled status updates (WhatsApp, SMS, Em
 - Support WhatsApp, SMS, and Email channels.
 - CRITICAL VISUAL RULE: When you use the `request_report_email` tool, it will return an `image_url` containing the report image. You MUST embed this image directly in your final chat response using Markdown format like this: `![Report Name](image_url)`. Do not just send the link as text, use the actual image embedding syntax!
 - WHATSAPP ON-DEMAND (WFM REPORTS): Whenever the Admin requests sending any of the 6 WFM reports ('morning', 'afternoon', 'evening', 'day_start', 'full_details', 'day_end') to WhatsApp, you MUST automatically use the `request_report_whatsapp` tool! Just pass the phone_number and the report_type. DO NOT use `request_report_email` for WhatsApp requests. The default staff number is `+94718683925`.
+- CHURN RETENTION ENGINE: When the Admin says "send offers to the churning customers" or "retain them", you MUST use the `auto_retain_churning_customers` tool. This will dispatch the personalized ML retention offers via Email to the Admin's prototype email (aravindaslt@gmail.com).
 - CRITICAL PRIVACY RULE: Internal reports (like WFM reports) are NEVER given to the customer. Messenger ONLY sends these reports to the bosses/internal staff. Ensure customer interactions do not leak internal data. Refuse the request if the user is not an Admin.
 - Provide confirmation after each notification is dispatched.
 """

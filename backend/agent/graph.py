@@ -58,6 +58,7 @@ from backend.agent.tools.mcp_tools import (
     finalize_admin_approval,
     generate_predictive_faults,
     clear_predictive_faults,
+    assign_predictive_faults_admin,
     auto_dispatch_technicians_by_area,
     generate_daily_faults,
     simulate_customer_app_fault,
@@ -68,7 +69,8 @@ from backend.agent.tools.mcp_tools import (
     search_slt_knowledgebase,
     resolve_fault_admin,
     get_churn_reasons,
-    resolve_all_churn_risk
+    resolve_all_churn_risk,
+    auto_retain_churning_customers
 )
 
 from backend.agent.tools.package_advisor import package_advisor
@@ -466,15 +468,15 @@ When the user asks for their bill, package details, or account balance, YOU MUST
     elif agent_name == "guardian_agent":
         agent_tools = [scam_shield]
     elif agent_name == "pathfinder_agent":
-        agent_tools = [request_report_email, request_report_whatsapp, get_technician_diagnostics, get_active_fault_tickets, get_predictive_degradation_report, get_technician_status, auto_dispatch_technicians_by_area, dispatch_technician_admin, resolve_all_faults_admin, resolve_fault_admin, resolve_major_outage, generate_daily_faults]
+        agent_tools = [request_report_email, request_report_whatsapp, get_technician_diagnostics, get_active_fault_tickets, get_predictive_degradation_report, get_technician_status, auto_dispatch_technicians_by_area, dispatch_technician_admin, resolve_all_faults_admin, resolve_fault_admin, resolve_major_outage, generate_daily_faults, assign_predictive_faults_admin, clear_predictive_faults]
     elif agent_name == "provisioner_agent":
         agent_tools = [allocate_fiber_dp_loop, dispatch_installation_job, check_area_outages, get_full_customer_profile, check_kyc_status, finalize_new_connection, finalize_admin_approval]
     elif agent_name == "vault_agent":
         agent_tools = [commit_sla_to_ledger, commit_visit_handshake_to_ledger, verify_ledger_security, commit_payment_to_ledger, commit_usage_snapshot_to_ledger, commit_equipment_transfer_to_ledger]
     elif agent_name == "oracle_agent":
-        agent_tools = [generate_predictive_faults, clear_predictive_faults, generate_churn_predictions, resolve_churn_risk, get_churn_reasons, resolve_all_churn_risk]
+        agent_tools = [generate_predictive_faults, clear_predictive_faults, assign_predictive_faults_admin, generate_churn_predictions, resolve_churn_risk, get_churn_reasons, resolve_all_churn_risk]
     elif agent_name == "messenger_agent":
-        agent_tools = [send_sms_notification, send_whatsapp_notification]
+        agent_tools = [send_sms_notification, send_whatsapp_notification, auto_retain_churning_customers]
     elif agent_name == "analyzer_agent":
         agent_tools = [search_slt_knowledgebase]
     
