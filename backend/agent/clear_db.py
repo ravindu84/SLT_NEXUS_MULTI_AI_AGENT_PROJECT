@@ -1,6 +1,8 @@
 import sqlite3
 
-DB_PATH = 'C:/SLT_NEXUS/backend/slt_dummy.db'
+import os
+
+DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "slt_dummy.db")
 conn = sqlite3.connect(DB_PATH)
 cursor = conn.cursor()
 
