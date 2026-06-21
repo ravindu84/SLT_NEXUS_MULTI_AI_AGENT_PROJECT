@@ -326,8 +326,9 @@ async def classify_intent(state: AgentState):
             print(f"[INFO] Phone number auto-extracted from latest message: {found}")
     
     # Fast bypass: if it's a simple greeting, skip LLM classification entirely for 0ms classification latency!
-    greetings = ["hi", "hello", "hey", "halo", "helo", "හෙලෝ", "ආයුබෝවන්", "வணக்கம்", "vanakkam", "yo", "macho", "machan"]
-    if text in greetings or any(text.startswith(g) for g in ["hi ", "hello ", "hey ", "හෙලෝ "]):
+    clean_text = text.lower().replace(",", "").replace(".", "").strip()
+    greetings = ["hi", "hii", "hello", "hlo", "hey", "halo", "helo", "හෙලෝ", "ආයුබෝවන්", "வணக்கம்", "vanakkam", "yo", "macho", "machan"]
+    if clean_text in greetings or any(clean_text.startswith(g) for g in ["hi ", "hii ", "hello ", "helli ", "hlo ", "hey ", "හෙලෝ "]):
         return {
             "current_agent": "liya_agent",
             "intent": "greeting",
@@ -460,9 +461,9 @@ When the user asks for their bill, package details, or account balance, YOU MUST
         # Dynamic Tool Binding to Reduce Latency and Token Overhead
     agent_tools = []
     if agent_name == "spark_agent":
-        agent_tools = [package_advisor, record_new_connection, process_package_payment]
+        agent_tools = [package_advisor, record_new_connection, process_package_payment, search_slt_knowledgebase]
     elif agent_name == "pulse_agent":
-        agent_tools = [check_router_health, create_fault_ticket, self_fix_internet, simulate_customer_app_fault]
+        agent_tools = [check_router_health, create_fault_ticket, self_fix_internet, simulate_customer_app_fault, search_slt_knowledgebase]
     elif agent_name == "insight_agent":
         agent_tools = [get_data_usage, get_billing_info, get_daily_usage_logs, pay_slt_bill]
     elif agent_name == "guardian_agent":
@@ -479,6 +480,8 @@ When the user asks for their bill, package details, or account balance, YOU MUST
         agent_tools = [send_sms_notification, send_whatsapp_notification, auto_retain_churning_customers]
     elif agent_name == "analyzer_agent":
         agent_tools = [search_slt_knowledgebase]
+    elif agent_name == "liya_agent":
+        agent_tools = [search_slt_knowledgebase, get_full_customer_profile]
     
     if len(agent_tools) > 0:
         llm = get_llm().bind_tools(agent_tools)
