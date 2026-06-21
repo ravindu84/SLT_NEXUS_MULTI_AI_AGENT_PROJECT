@@ -1198,8 +1198,7 @@ async def get_churn_reasons(phone_number: str) -> str:
         if row:
             import json
             reasons = json.loads(row[0])
-            return f"Reasons for churn for {phone_number}:
-" + "\n".join([f"- {r}" for r in reasons])
+            return f"Reasons for churn for {phone_number}:\n" + "\n".join([f"- {r}" for r in reasons])
         else:
             return f"Customer {phone_number} not found in the Churn Predictions list."
     except Exception as e:
