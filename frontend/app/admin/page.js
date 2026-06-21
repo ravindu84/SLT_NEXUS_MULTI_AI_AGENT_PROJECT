@@ -957,7 +957,12 @@ export default function AdminDashboard() {
           ].map(item => (
             <button
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
+              onClick={() => {
+                setActiveTab(item.id);
+                if (item.id === 'ai-chat' && aiChatTab === 'innovations') {
+                  setAiChatTab('liya');
+                }
+              }}
               className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
                 activeTab === item.id 
                   ? 'bg-cyan-500/10 text-cyan-500 relative' 
