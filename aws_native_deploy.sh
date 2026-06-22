@@ -1,7 +1,9 @@
 #!/bin/bash
 set -e
 
-echo "Cleaning up Docker to free disk space..."
+echo "Cleaning up old processes and Docker..."
+killall screen || true
+fuser -k 8000/tcp || true
 sudo docker stop slt-nexus-backend || true
 sudo docker rm slt-nexus-backend || true
 sudo docker system prune -a -f --volumes
