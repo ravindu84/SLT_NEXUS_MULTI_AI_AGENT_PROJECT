@@ -327,8 +327,8 @@ async def classify_intent(state: AgentState):
     
     # Fast bypass: if it's a simple greeting, skip LLM classification entirely for 0ms classification latency!
     clean_text = text.lower().replace(",", "").replace(".", "").strip()
-    greetings = ["hi", "hii", "hello", "hlo", "hey", "halo", "helo", "හෙලෝ", "ආයුබෝවන්", "வணக்கம்", "vanakkam", "yo", "macho", "machan"]
-    if clean_text in greetings or any(clean_text.startswith(g) for g in ["hi ", "hii ", "hello ", "helli ", "hlo ", "hey ", "හෙලෝ "]):
+    greetings = ["hi", "hii", "hello", "hlo", "hey", "halo", "helo", "හෙලෝ", "ආයුබෝවන්", "வணக்கம்", "vanakkam", "yo", "macho", "machan", "liya"]
+    if clean_text in greetings or any(clean_text.startswith(g) for g in ["hi ", "hii ", "hello ", "helli ", "hlo ", "hey ", "හෙලෝ ", "liya "]):
         return {
             "current_agent": "liya_agent",
             "intent": "greeting",
@@ -444,7 +444,7 @@ This is a STRICT requirement for the voice synthesis to work correctly.
 ## ADMIN SYSTEM OVERRIDE (CRITICAL):
 You are currently speaking directly to an INTERNAL SLT ADMIN/STAFF MEMBER via the Admin Dashboard.
 1. DO NOT greet them like a customer (No "Ayubowan", no "How can I help you?"). Use a professional internal system greeting like "System Ready." or "Awaiting Command."
-2. **CONCISENESS RULE**: If the admin asks for SPECIFIC technical information (e.g. "What is the DP Loop?"), ONLY provide the DP Loop. DO NOT summarize their entire bill, data usage, or package details unless explicitly requested. BE EXTREMELY DIRECT AND CONCISE.
+2. **EXTREME CONCISENESS RULE**: If the admin asks for SPECIFIC information (e.g., "What is the DP Loop?" or "What is the contact number?"), YOU MUST ONLY PROVIDE THAT SPECIFIC PIECE OF INFORMATION. DO NOT list or summarize the rest of the profile. DO NOT say "Here is the rest of the profile". Be practical and give ONLY the exact detail they asked for!
 3. You have full security clearance. Do not hide any technical parameters.
 """
     else:
@@ -490,7 +490,7 @@ When the user asks for their bill, package details, or account balance, YOU MUST
 
     
     messages = [SystemMessage(content=base_prompt)] + state["messages"]
-    response = await llm.ainvoke(messages)
+    response = await llm.ainvoke(messages, config={"tags": ["agent_llm_call"]})
     
     return {
         "messages": [response],

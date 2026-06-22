@@ -607,7 +607,13 @@ async def chat_stream_endpoint(request: ChatRequest):
             f"8. ADMIN IDENTITY: The Admin you are talking to is named 'Ravindu'. Always greet him as Ravindu when confirming a major action.\n"
             f"9. DISPATCHING TECHS: If Ravindu asks to send a technician for a new connection or fault, use the `dispatch_technician_admin` tool. Provide the SLT Number and the Tech Name.\n"
             f"10. FINALIZING CONNECTIONS: If Ravindu says the job is done and asks to update the system, use the `finalize_admin_approval` tool. Once successful, reply EXACTLY with 'Ah Ravindu, it is done' (or in Sinhala 'ආ රවිඳු, මම වැඩේ ඉවර කළා. Blockchain එකටත් ලියලා, Customer ව Active ලිස්ට් එකට දැම්මා').\n"
-            f"11. ORACLE PREDICTIONS: If Ravindu asks to 'scan the network for future faults' or 'show vulnerable lines', use `generate_predictive_faults` tool. If he says he 'fixed those predicted faults' or asks to 'clear the page', use `clear_predictive_faults` tool.\\n"\n            f"12. DAILY FAULTS & DISPATCH: If Ravindu asks to 'pull today's faults' or 'show today's tickets', use `generate_daily_faults` to get 50 new faults. If he says 'Assign these faults to their area technicians', use the `auto_dispatch_technicians_by_area` tool to assign them and increment their active load in the Dispatch Center.\\n"\n            f"13. BULK FAULT RESOLUTION: If Ravindu says 'All faults are done', 'Faults iwarai', or asks to clear the fault matrix, use the `resolve_all_faults_admin` tool. This tool resolves all active faults, resets technicians to 0 (leaving a few active for realism), and generates a blockchain hash.\\n"\n            f"13.5. CUSTOMER APP FAULTS: If Ravindu asks to simulate a customer submitting a fault via the Customer App, use `simulate_customer_app_fault`. They will appear highlighted on the board.\\n"\n            f"14. CABLE CUT / MAJOR OUTAGE RESOLUTION: If Ravindu says 'The cut cable is fixed', 'eka hari', 'Network eka samanya karanna' while referring to a Pathfinder alarm or cable cut, use the `resolve_major_outage` tool. This stops the UI alarm loop, simulates sending SMS to customers, emails a detailed damage report with financial loss to aravindaslt@gmail.com, and logs it to blockchain. IMPORTANT: After running the tool, reply in Sinhala to Ravindu saying: 'ආ රවිඳු, මම අදාළ පාරිභෝගිකයින්ට SMS එක යැව්වා. අලුත්වැඩියා අලාභ වාර්තාව (Damage Report) ඔයාගේ Email එකට දැම්මා. Network එක සාමාන්‍ය තත්ත්වයට පත් කරලා Blockchain එකටත් Update කළා!'\\n"\n            f"15. CHURN PREDICTION: If Ravindu asks to 'find customers who might leave soon', use `generate_churn_predictions`. If he says 'I gave them an offer/solution', use `resolve_churn_risk` to clear them from the board and log to blockchain.\\n"\n            f"16. ALWAYS refer to technicians as 'තාක්ෂණ ශිල්පියා' (Thakshana shilpiya). DO NOT USE 'තාක්ෂණිකයා' or 'කාර්මිකයා'!\\n"
+            f"11. ORACLE PREDICTIONS: If Ravindu asks to 'scan the network for future faults' or 'show vulnerable lines', use `generate_predictive_faults` tool. If he says he 'fixed those predicted faults' or asks to 'clear the page', use `clear_predictive_faults` tool.\\n"
+            f"12. DAILY FAULTS & DISPATCH: If Ravindu asks to 'pull today's faults' or 'show today's tickets', use `generate_daily_faults` to get 50 new faults. If he says 'Assign these faults to their area technicians', use the `auto_dispatch_technicians_by_area` tool to assign them and increment their active load in the Dispatch Center.\\n"
+            f"13. BULK FAULT RESOLUTION: If Ravindu says 'All faults are done', 'Faults iwarai', or asks to clear the fault matrix, use the `resolve_all_faults_admin` tool. This tool resolves all active faults, resets technicians to 0 (leaving a few active for realism), and generates a blockchain hash.\\n"
+            f"13.5. CUSTOMER APP FAULTS: If Ravindu asks to simulate a customer submitting a fault via the Customer App, use `simulate_customer_app_fault`. They will appear highlighted on the board.\\n"
+            f"14. CABLE CUT / MAJOR OUTAGE RESOLUTION: If Ravindu says 'The cut cable is fixed', 'eka hari', 'Network eka samanya karanna' while referring to a Pathfinder alarm or cable cut, use the `resolve_major_outage` tool. This stops the UI alarm loop, simulates sending SMS to customers, emails a detailed damage report with financial loss to aravindaslt@gmail.com, and logs it to blockchain. IMPORTANT: After running the tool, reply in Sinhala to Ravindu saying: 'ආ රවිඳු, මම අදාළ පාරිභෝගිකයින්ට SMS එක යැව්වා. අලුත්වැඩියා අලාභ වාර්තාව (Damage Report) ඔයාගේ Email එකට දැම්මා. Network එක සාමාන්‍ය තත්ත්වයට පත් කරලා Blockchain එකටත් Update කළා!'\\n"
+            f"15. CHURN PREDICTION: If Ravindu asks to 'find customers who might leave soon', use `generate_churn_predictions`. If he says 'I gave them an offer/solution', use `resolve_churn_risk` to clear them from the board and log to blockchain.\\n"
+            f"16. ALWAYS refer to technicians as 'තාක්ෂණ ශිල්පියා' (Thakshana shilpiya). DO NOT USE 'තාක්ෂණිකයා' or 'කාර්මිකයා'!\\n"
         )
     else:
         context_msg = (
@@ -615,7 +621,8 @@ async def chat_stream_endpoint(request: ChatRequest):
             f"1. You MUST NEVER provide raw technical details like DP Box, Loop IDs, SNR, or Attenuation. Keep answers simple. "
             f"2. SECURITY RULE: The customer's authenticated phone number is exactly {session_id}. "
             f"3. You are STRICTLY FORBIDDEN from providing details, usage, bills, or tickets for ANY other phone number. If they ask about another number, politely refuse. "
-            f"4. Do not ask for their phone number again, use {session_id} automatically for all tool calls. "\n            f"5. IMPORTANT: If the customer reports a hardware fault (like router issue, red light) WITHOUT a photo, ACT LIKE A HIGH-TECH AI AGENT! Say \"Initiating remote diagnostic protocol...\" in their language, then ask them to upload a photo of the router for AI visual analysis. Make it sound extremely advanced and robotic!"
+            f"4. Do not ask for their phone number again, use {session_id} automatically for all tool calls. \n"
+            f"5. IMPORTANT: If the customer reports a hardware fault (like router issue, red light) WITHOUT a photo, ACT LIKE A HIGH-TECH AI AGENT! Say \"Initiating remote diagnostic protocol...\" in their language, then ask them to upload a photo of the router for AI visual analysis. Make it sound extremely advanced and robotic!"
         )
     
     try:
@@ -636,7 +643,7 @@ async def chat_stream_endpoint(request: ChatRequest):
     import json
     
     messages.append(SystemMessage(content=context_msg))    
-    messages.extend(history)
+    messages.extend(history[-6:])
             
     if request.image_base64:
         import backend.agent.tools.mcp_tools as mcp_tools
@@ -651,8 +658,8 @@ async def chat_stream_endpoint(request: ChatRequest):
 
     messages.append(user_msg)
     history.append(user_msg)
-    if len(history) > 6:
-        history.pop(0)
+    
+    sessions[session_id] = history[-6:]
 
     async def event_generator():
         from backend.agent.graph import get_graph
@@ -661,7 +668,7 @@ async def chat_stream_endpoint(request: ChatRequest):
         state = {
             "messages": messages,
             "current_agent": "liya_agent",
-            "phone_number": request.phone_number or session_id,
+            "phone_number": session_id if not request.is_admin else None,
             "user_language": request.lang or "si"
         }
         
@@ -670,14 +677,16 @@ async def chat_stream_endpoint(request: ChatRequest):
             async for event in graph.astream_events(state, version="v2"):
                 kind = event["event"]
                 if kind == "on_chat_model_stream":
-                    chunk = event["data"]["chunk"]
-                    if chunk.content and isinstance(chunk.content, str):
-                        final_content += chunk.content
-                        data = json.dumps({"text": chunk.content})
-                        yield f"data: {data}\n\n"
+                    tags = event.get("tags", [])
+                    if "agent_llm_call" in tags:
+                        chunk = event["data"]["chunk"]
+                        if chunk.content and isinstance(chunk.content, str):
+                            final_content += chunk.content
+                            data = json.dumps({"text": chunk.content})
+                            yield f"data: {data}\n\n"
                         
             if final_content:
-                history.append(AIMessage(content=final_content))
+                sessions[session_id].append(AIMessage(content=final_content))
                 
             yield "data: [DONE]\n\n"
             
@@ -728,7 +737,8 @@ async def chat_endpoint(request: ChatRequest):
             f"1. You MUST NEVER provide raw technical details like DP Box, Loop IDs, SNR, or Attenuation. Keep answers simple. "
             f"2. SECURITY RULE: The customer's authenticated phone number is exactly {session_id}. "
             f"3. You are STRICTLY FORBIDDEN from providing details, usage, bills, or tickets for ANY other phone number. If they ask about another number, politely refuse. "
-            f"4. Do not ask for their phone number again, use {session_id} automatically for all tool calls. "\n            f"5. IMPORTANT: If the customer reports a hardware fault (like router issue, red light) WITHOUT a photo, ACT LIKE A HIGH-TECH AI AGENT! Say \"Initiating remote diagnostic protocol...\" in their language, then ask them to upload a photo of the router for AI visual analysis. Make it sound extremely advanced and robotic!"
+            f"4. Do not ask for their phone number again, use {session_id} automatically for all tool calls. \n"
+            f"5. IMPORTANT: If the customer reports a hardware fault (like router issue, red light) WITHOUT a photo, ACT LIKE A HIGH-TECH AI AGENT! Say \"Initiating remote diagnostic protocol...\" in their language, then ask them to upload a photo of the router for AI visual analysis. Make it sound extremely advanced and robotic!"
         )
     
     try:
@@ -758,9 +768,11 @@ async def chat_endpoint(request: ChatRequest):
             {"type": "text", "text": request.message},
             {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{request.image_base64}"}}
         ]
-        messages.append(HumanMessage(content=multimodal_content))
+        user_msg = HumanMessage(content=multimodal_content)
     else:
-        messages.append(HumanMessage(content=request.message))
+        user_msg = HumanMessage(content=censor_profanity(request.message))
+
+    messages.append(user_msg)
 
     try:
         import asyncio
@@ -795,7 +807,9 @@ async def chat_endpoint(request: ChatRequest):
         agent_emoji = info["emoji"]
         agent_label = info["label"]
         
-        sessions[session_id] = result["messages"]
+        history.append(user_msg)
+        history.append(AIMessage(content=ai_response))
+        sessions[session_id] = history[-6:]
 
         return ChatResponse(
             response=ai_response,
