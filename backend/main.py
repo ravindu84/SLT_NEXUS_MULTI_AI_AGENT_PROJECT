@@ -660,6 +660,41 @@ async def chat_stream_endpoint(request: ChatRequest):
     history.append(user_msg)
     
     sessions[session_id] = history[-6:]
+    
+    # --- START FAST PATH (Server-side 0-latency bypass) ---
+    clean_msg = request.message.lower().strip()
+    from backend.agent.graph import extract_phone_number
+    existing_phone = extract_phone_number(request.message)
+    if not existing_phone:
+        existing_phone = session_id if not request.is_admin else None
+
+    # 1. Greeting Bypass
+    greetings = ["hi", "hii", "hello", "hlo", "hey", "halo", "helo", "හෙලෝ", "ආයුබෝවන්", "வணக்கம்", "vanakkam", "yo", "macho", "machan", "liya"]
+    is_greeting = False
+    clean_text = clean_msg.replace(",", "").replace(".", "").strip()
+    if clean_text in greetings or any(clean_text.startswith(g) for g in ["hi ", "hii ", "hello ", "helli ", "hlo ", "hey ", "හෙලෝ ", "liya "]):
+        is_greeting = True
+    
+    # 2. Missing Phone Bypass for Admin
+    missing_phone = False
+    if request.is_admin and not existing_phone and not is_greeting:
+        requires_phone_keywords = ["tid", "bill", "usage", "profile", "fault", "dp", "loop", "customer", "slt", "check"]
+        if any(kw in clean_msg for kw in requires_phone_keywords):
+            missing_phone = True
+
+    if is_greeting or missing_phone:
+        async def fast_generator():
+            if is_greeting:
+                reply = "Hi! I am Liya. How can I assist you today?" if request.lang == "en" else "ආයුබෝවන්! මම ලියා. මම අද ඔබට උදව් කරන්නේ කෙසේද?"
+            else:
+                reply = "Please provide the SLT phone number to check." if request.lang == "en" else "කරුණාකර පරීක්ෂා කිරීමට අවශ්‍ය SLT දුරකථන අංකය ලබාදෙන්න."
+            
+            sessions[session_id].append(AIMessage(content=reply))
+            yield f"data: {json.dumps({'text': reply})}\n\n"
+            yield "data: [DONE]\n\n"
+            
+        return StreamingResponse(fast_generator(), media_type="text/event-stream")
+    # --- END FAST PATH ---
 
     async def event_generator():
         from backend.agent.graph import get_graph
