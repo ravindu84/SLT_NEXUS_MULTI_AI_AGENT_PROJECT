@@ -3,7 +3,10 @@ set -e
 
 echo "Cleaning up old processes and Docker..."
 killall screen || true
-fuser -k 8000/tcp || true
+sudo lsof -i :8000 -t | xargs sudo kill -9 || true
+sudo lsof -i :8001 -t | xargs sudo kill -9 || true
+ps aux | grep uvicorn | awk '{print $2}' | xargs sudo kill -9 || true
+sleep 2
 sudo docker stop slt-nexus-backend || true
 sudo docker rm slt-nexus-backend || true
 sudo docker system prune -a -f --volumes
@@ -25,6 +28,6 @@ uv pip install uvicorn
 
 echo "Starting backend natively in screen session..."
 cd ~/SLT_NEXUS_MULTI_AI_AGENT_PROJECT
-screen -S backend -d -m bash -c 'source backend/.venv/bin/activate && uvicorn backend.main:app --host 0.0.0.0 --port 8000'
+screen -S backend -d -m bash -c 'source backend/.venv/bin/activate && uvicorn backend.main:app --host 0.0.0.0 --port 8000 > uvicorn.log 2>&1'
 
 echo "Deployment successful!"
