@@ -685,7 +685,10 @@ async def chat_stream_endpoint(request: ChatRequest):
     if is_greeting or missing_phone:
         async def fast_generator():
             if is_greeting:
-                reply = "Hi! I am Liya. How can I assist you today?" if request.lang == "en" else "ආයුබෝවන්! මම ලියා. මම අද ඔබට උදව් කරන්නේ කෙසේද?"
+                if request.is_admin:
+                    reply = "Hi Ravindu! How can I assist you today?" if request.lang == "en" else "ආයුබෝවන් Ravindu! මම අද ඔබට උදව් කරන්නේ කෙසේද?"
+                else:
+                    reply = "Hi! I am Liya. How can I assist you today?" if request.lang == "en" else "ආයුබෝවන්! මම ලියා. මම අද ඔබට උදව් කරන්නේ කෙසේද?"
             else:
                 reply = "Please provide the SLT phone number to check." if request.lang == "en" else "කරුණාකර පරීක්ෂා කිරීමට අවශ්‍ය SLT දුරකථන අංකය ලබාදෙන්න."
             
@@ -708,6 +711,9 @@ async def chat_stream_endpoint(request: ChatRequest):
         }
         
         try:
+            # Bypass Vercel 10s TTFB Timeout by yielding an immediate chunk
+            yield f"data: {json.dumps({'text': ''})}\n\n"
+            
             final_content = ""
             async for event in graph.astream_events(state, version="v2"):
                 kind = event["event"]
