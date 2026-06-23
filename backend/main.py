@@ -669,11 +669,8 @@ async def chat_stream_endpoint(request: ChatRequest):
         existing_phone = session_id if not request.is_admin else None
 
     # 1. Greeting Bypass
-    greetings = ["hi", "hii", "hello", "hlo", "hey", "halo", "helo", "හෙලෝ", "ආයුබෝවන්", "வணக்கம்", "vanakkam", "yo", "macho", "machan", "liya"]
-    is_greeting = False
-    clean_text = clean_msg.replace(",", "").replace(".", "").strip()
-    if clean_text in greetings or any(clean_text.startswith(g) for g in ["hi ", "hii ", "hello ", "helli ", "hlo ", "hey ", "හෙලෝ ", "liya "]):
-        is_greeting = True
+    greeting_keywords = ["hi", "hii", "hello", "hlo", "hey", "halo", "helo", "හෙලෝ", "ආයුබෝවන්", "வணக்கம்", "vanakkam", "yo", "macho", "machan", "liya"]
+    is_greeting = any(kw in clean_msg.split() for kw in greeting_keywords) or any(clean_msg.startswith(g) for g in greeting_keywords)
     
     # 2. Missing Phone Bypass for Admin
     missing_phone = False

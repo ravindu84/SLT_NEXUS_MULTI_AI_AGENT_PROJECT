@@ -349,8 +349,7 @@ You have access to all tools to manage the SLT system.`;
         payload.image_base64 = attachedImage.split(',')[1];
       }
 
-      const DIRECT_API = "https://16.171.166.199.nip.io";
-      const response = await fetch(`${DIRECT_API}/api/chat_stream`, {
+      const response = await fetch(`/api/chat_stream`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
