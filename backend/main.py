@@ -668,27 +668,16 @@ async def chat_stream_endpoint(request: ChatRequest):
     if not existing_phone:
         existing_phone = session_id if not request.is_admin else None
 
-    # 1. Greeting Bypass
-    greeting_keywords = ["hi", "hii", "hello", "hlo", "hey", "halo", "helo", "හෙලෝ", "ආයුබෝවන්", "வணக்கம்", "vanakkam", "yo", "macho", "machan", "liya"]
-    is_greeting = any(kw in clean_msg.split() for kw in greeting_keywords) or any(clean_msg.startswith(g) for g in greeting_keywords)
-    
-    # 2. Missing Phone Bypass for Admin
+    # 1. Missing Phone Bypass for Admin
     missing_phone = False
-    if request.is_admin and not existing_phone and not is_greeting:
+    if request.is_admin and not existing_phone:
         requires_phone_keywords = ["tid", "bill", "usage", "profile", "fault", "dp", "loop", "customer", "slt", "check"]
         if any(kw in clean_msg for kw in requires_phone_keywords):
             missing_phone = True
 
-    if is_greeting or missing_phone:
+    if missing_phone:
         async def fast_generator():
-            if is_greeting:
-                if request.is_admin:
-                    reply = "Hi Ravindu! How can I assist you today?" if request.lang == "en" else "ආයුබෝවන් Ravindu! මම අද ඔබට උදව් කරන්නේ කෙසේද?"
-                else:
-                    reply = "Hi! I am Liya. How can I assist you today?" if request.lang == "en" else "ආයුබෝවන්! මම ලියා. මම අද ඔබට උදව් කරන්නේ කෙසේද?"
-            else:
-                reply = "Please provide the SLT phone number to check." if request.lang == "en" else "කරුණාකර පරීක්ෂා කිරීමට අවශ්‍ය SLT දුරකථන අංකය ලබාදෙන්න."
-            
+            reply = "Please provide the SLT phone number to check." if request.lang == "en" else "කරුණාකර පරීක්ෂා කිරීමට අවශ්‍ය SLT දුරකථන අංකය ලබාදෙන්න."
             sessions[session_id].append(AIMessage(content=reply))
             yield f"data: {json.dumps({'text': reply})}\n\n"
             yield "data: [DONE]\n\n"
@@ -708,8 +697,13 @@ async def chat_stream_endpoint(request: ChatRequest):
         }
         
         try:
-            # Bypass Vercel 10s TTFB Timeout by yielding an immediate chunk
-            yield f"data: {json.dumps({'text': ''})}\n\n"
+            # Bypass Vercel 10s TTFB Timeout by yielding an immediate chunk, and pass session data
+            initial_data = {
+                "text": "",
+                "session_id": session_id,
+                "agent_used": agent_name
+            }
+            yield f"data: {json.dumps(initial_data)}\n\n"
             
             final_content = ""
             async for event in graph.astream_events(state, version="v2"):

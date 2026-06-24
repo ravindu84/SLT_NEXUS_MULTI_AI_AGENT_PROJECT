@@ -275,7 +275,19 @@ Your goal is to assist users with their telecom needs and guide them with a prof
         payload.image_base64 = attachedImage.split(',')[1];
       }
 
-      const response = await fetch(`${API_URL}/api/chat`, {
+      // Add a temporary loading message for Neo
+      const msgId = Date.now() + 1;
+      const aiMsg = {
+        id: msgId,
+        role: "assistant",
+        content: "",
+        agent_emoji: "🤖",
+        agent_label: "NEO",
+      };
+      
+      setChatMessages((prev) => [...prev, aiMsg]);
+
+      const response = await fetch(`${API_URL}/api/chat_stream`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -285,21 +297,50 @@ Your goal is to assist users with their telecom needs and guide them with a prof
       });
 
       if (!response.ok) throw new Error(`API error: ${response.status}`);
-      const data = await response.json();
       
-      if (data.session_id) setSessionId(data.session_id);
-      
-      const aiMsg = {
-        id: Date.now() + 1,
-        role: "assistant",
-        content: data.response,
-        agent_used: data.agent_used,
-        agent_emoji: data.agent_used === "liya_agent" ? "🤖" : (data.agent_emoji || "🤖"),
-        agent_label: data.agent_used === "liya_agent" ? "NEO" : (data.agent_label || "NEO"),
-      };
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
 
-      setChatMessages((prev) => [...prev, aiMsg]);
-      speakNeo(data.response);
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        
+        const chunkStr = decoder.decode(value, { stream: true });
+        const lines = chunkStr.split("\n");
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const dataStr = line.slice(6).trim();
+            if (dataStr === "[DONE]") break;
+            if (!dataStr) continue;
+            try {
+              const parsed = JSON.parse(dataStr);
+              if (parsed.session_id && !sessionId) {
+                setSessionId(parsed.session_id);
+              }
+              if (parsed.text) {
+                fullText += parsed.text;
+                // Update the message in state
+                setChatMessages((prev) => 
+                  prev.map(msg => msg.id === msgId ? { ...msg, content: fullText } : msg)
+                );
+              }
+              if (parsed.error) {
+                fullText += `\n[Error: ${parsed.error}]`;
+                setChatMessages((prev) => 
+                  prev.map(msg => msg.id === msgId ? { ...msg, content: fullText } : msg)
+                );
+              }
+            } catch(e) {
+              // ignore parse errors
+            }
+          }
+        }
+      }
+
+      // Automatically Speak out the full text once it finishes
+      speakNeo(fullText);
+
     } catch (error) {
       console.error("Neo chat error:", error);
       const errorMsg = {

@@ -286,7 +286,20 @@ export default function ChatPanel({
     }
 
     try {
-      const response = await fetch(`${API_URL}/api/chat`, {
+      // Add a temporary loading message for AI
+      const msgId = Date.now() + 1;
+      const aiMsg = {
+        id: msgId,
+        role: "assistant",
+        content: "",
+        agent_emoji: "🤖",
+        agent_label: "Assistant",
+        timestamp: new Date(),
+      };
+      
+      setMessages((prev) => [...prev, aiMsg]);
+
+      const response = await fetch(`${API_URL}/api/chat_stream`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -296,23 +309,50 @@ export default function ChatPanel({
       });
 
       if (!response.ok) throw new Error("API request failed");
-      const data = await response.json();
-      setSessionId(data.session_id);
+      
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullText = "";
 
-      const aiMsg = {
-        id: Date.now() + 1,
-        role: "assistant",
-        content: data.response,
-        agent_used: data.agent_used,
-        agent_emoji: data.agent_emoji,
-        agent_label: data.agent_label,
-        intent: data.intent,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, aiMsg]);
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        
+        const chunkStr = decoder.decode(value, { stream: true });
+        const lines = chunkStr.split("\n");
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const dataStr = line.slice(6).trim();
+            if (dataStr === "[DONE]") break;
+            if (!dataStr) continue;
+            try {
+              const parsed = JSON.parse(dataStr);
+              if (parsed.session_id && !sessionId) {
+                setSessionId(parsed.session_id);
+              }
+              if (parsed.text) {
+                fullText += parsed.text;
+                // Update the message in state
+                setMessages((prev) => 
+                  prev.map(msg => msg.id === msgId ? { ...msg, content: fullText } : msg)
+                );
+                setTimeout(scrollToBottom, 50);
+              }
+              if (parsed.error) {
+                fullText += `\n[Error: ${parsed.error}]`;
+                setMessages((prev) => 
+                  prev.map(msg => msg.id === msgId ? { ...msg, content: fullText } : msg)
+                );
+              }
+            } catch(e) {
+              // ignore parse errors
+            }
+          }
+        }
+      }
 
       // Speak the response
-      speak(data.response);
+      speak(fullText);
     } catch (error) {
       const errorMsg = {
         id: Date.now() + 1,
