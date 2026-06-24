@@ -572,14 +572,14 @@ AGENT_INFO = {
 @app.get("/api/admin/profile/{phone}")
 async def proxy_get_full_customer_profile(phone: str):
     import backend.agent.tools.mcp_tools as mcp_tools
-    result = mcp_tools.get_full_customer_profile(phone)
+    result = mcp_tools.get_full_customer_profile.invoke({"phone_number": phone})
     return {"response": result}
 
 @app.post("/api/knowledgebase/search")
 async def proxy_search_knowledgebase(query: dict):
     q = query.get("query", "")
     import backend.agent.tools.mcp_tools as mcp_tools
-    result = mcp_tools.search_slt_knowledgebase(q)
+    result = mcp_tools.search_slt_knowledgebase.invoke({"query": q})
     return {"response": result}
 
 @app.post("/api/chat_stream")
