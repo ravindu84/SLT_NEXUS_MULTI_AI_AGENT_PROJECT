@@ -270,7 +270,7 @@ Your goal is to assist users with their telecom needs and guide them with a prof
     setChatLoading(true);
 
     try {
-      const payload = { message: text || "Please check this image.", session_id: sessionId, lang: language, is_admin: isAdmin };
+      const payload = { message: text || "Please check this image.", session_id: sessionId, lang: language, is_admin: isAdmin, agent_name: "neo" };
       if (attachedImage) {
         payload.image_base64 = attachedImage.split(',')[1];
       }

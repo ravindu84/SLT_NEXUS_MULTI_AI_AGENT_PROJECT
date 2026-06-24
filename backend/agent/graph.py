@@ -399,6 +399,10 @@ async def agent_node(state: AgentState):
     }
     
     base_prompt = prompts.get(agent_name, LIYA_AGENT_PROMPT)
+    if agent_name in ["maya", "maya_agent"]:
+        base_prompt = base_prompt.replace("LIYA", "MAYA").replace("Liya", "Maya")
+    elif agent_name in ["neo", "neo_agent"]:
+        base_prompt = base_prompt.replace("LIYA", "NEO").replace("Liya", "Neo")
     
     # --- Inject Phone Number into prompt if available ---
     phone_number = state.get("phone_number")
@@ -441,11 +445,10 @@ This is a STRICT requirement for the voice synthesis to work correctly.
     # --- Inject Admin/Staff Overrides ---
     if state.get("is_admin"):
         base_prompt += """
-## ADMIN SYSTEM OVERRIDE (CRITICAL):
+## ADMIN SYSTEM OVERRIDE:
 You are currently speaking directly to an INTERNAL SLT ADMIN/STAFF MEMBER via the Admin Dashboard.
-1. DO NOT greet them like a customer (No "Ayubowan", no "How can I help you?"). Use a professional internal system greeting like "System Ready." or "Awaiting Command."
-2. **EXTREME CONCISENESS RULE**: If the admin asks for SPECIFIC information (e.g., "What is the DP Loop?" or "What is the contact number?"), YOU MUST ONLY PROVIDE THAT SPECIFIC PIECE OF INFORMATION. DO NOT list or summarize the rest of the profile. DO NOT say "Here is the rest of the profile". Be practical and give ONLY the exact detail they asked for!
-3. You have full security clearance. Do not hide any technical parameters.
+You have full security clearance. Do not hide any technical parameters. Answer naturally and fully using the tools provided.
+ADMIN MODE: Do NOT summarize. If the admin asks for details, use the tools (like search_slt_knowledgebase or get_full_customer_profile) and print the full raw diagnostic and profile data.
 """
     else:
         base_prompt += """
@@ -456,6 +459,7 @@ You are STRICTLY FORBIDDEN from sending or displaying internal WFM reports or of
 ## STRICT TOOL DIRECTIVE:
 When the user asks for their data usage, YOU MUST CALL the `get_data_usage` tool.
 When the user asks for their bill, package details, or account balance, YOU MUST CALL the `get_billing_info` tool to fetch their real data! Do NOT just tell them to use the MySLT app. Do NOT rely on RAG text to answer this. ACTUALLY CALL THE TOOL!
+RAG KNOWLEDGE RULE: You MUST use the 'search_slt_knowledgebase' tool when asked about SLT products, broadband, packages, prices, or general questions. Do NOT hallucinate answers!
 """
     
         # Dynamic Tool Binding to Reduce Latency and Token Overhead
@@ -480,8 +484,8 @@ When the user asks for their bill, package details, or account balance, YOU MUST
         agent_tools = [send_sms_notification, send_whatsapp_notification, auto_retain_churning_customers]
     elif agent_name == "analyzer_agent":
         agent_tools = [search_slt_knowledgebase]
-    elif agent_name == "liya_agent":
-        agent_tools = [search_slt_knowledgebase, get_full_customer_profile]
+    elif agent_name in ["liya_agent", "neo_agent", "neo", "liya", "maya", "maya_agent"]:
+        agent_tools = [search_slt_knowledgebase, get_full_customer_profile, get_data_usage, get_billing_info, get_daily_usage_logs, check_router_health, create_fault_ticket, package_advisor]
     
     if len(agent_tools) > 0:
         llm = get_llm().bind_tools(agent_tools)

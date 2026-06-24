@@ -383,6 +383,8 @@ class ChatRequest(BaseModel):
     lang: Optional[str] = "si"
     image_base64: Optional[str] = None
     is_admin: Optional[bool] = False
+    agent_name: Optional[str] = "liya_agent"
+    agent_name: Optional[str] = "liya_agent"
 
 class GestureRequest(BaseModel):
     image_base64: str
@@ -600,9 +602,8 @@ async def chat_stream_endpoint(request: ChatRequest):
             f"2. You MUST provide full raw technical details (DP Box, Loop IDs, SNR, Attenuation, MAC addresses) when asked. "
             f"3. The staff member can ask about ANY customer number. If they provide a number in the chat, use that. NEVER make up or hallucinate phone numbers! Real SLT landline numbers start with 0112 (e.g., 0112895800), NEVER 0122 or similar invalid codes. "
             f"4. The current session_id ({session_id}) is an INTERNAL TRACKING ID, NOT a phone number! If they ask for specific customer details (bill, profile), ask for the 10-digit number. BUT if they ask for internal system reports (WFM reports, dispatch data, general stats), DO NOT ask for a phone number! Just generate the report. "
-            f"5. GREETING RULE: Do NOT use customer greetings like 'Ayubowan'. Use a professional internal greeting. "
-            f"6. CONCISENESS RULE: ONLY provide the EXACT information requested."
-            f"6.5 PRONUNCIATION RULE: When speaking Sinhala, ALWAYS read the digit '0' as 'binduwa' (බිංදුව) and NEVER as 'shunyai' (ශුන්‍යය). For example, 0112 should be read as 'binduwa ekayi ekayi dekak'. "
+            f"5. ADMIN MODE: Do NOT summarize. If the admin asks for details, use the tools and print the full raw diagnostic and profile data. "
+            f"6. PRONUNCIATION RULE: When speaking Sinhala, ALWAYS read the digit '0' as 'binduwa' (බිංදුව) and NEVER as 'shunyai' (ශුන්‍යය). For example, 0112 should be read as 'binduwa ekayi ekayi dekak'. "
             f"7. CRITICAL TOOL ASSIGNMENT: Use the 'get_full_customer_profile' tool to instantly fetch ALL technical, network, billing, and usage data for a customer. Use this whenever the admin asks to check a customer!\n"
             f"8. ADMIN IDENTITY: The Admin you are talking to is named 'Ravindu'. Always greet him as Ravindu when confirming a major action.\n"
             f"9. DISPATCHING TECHS: If Ravindu asks to send a technician for a new connection or fault, use the `dispatch_technician_admin` tool. Provide the SLT Number and the Tech Name.\n"
@@ -622,7 +623,8 @@ async def chat_stream_endpoint(request: ChatRequest):
             f"2. SECURITY RULE: The customer's authenticated phone number is exactly {session_id}. "
             f"3. You are STRICTLY FORBIDDEN from providing details, usage, bills, or tickets for ANY other phone number. If they ask about another number, politely refuse. "
             f"4. Do not ask for their phone number again, use {session_id} automatically for all tool calls. \n"
-            f"5. IMPORTANT: If the customer reports a hardware fault (like router issue, red light) WITHOUT a photo, ACT LIKE A HIGH-TECH AI AGENT! Say \"Initiating remote diagnostic protocol...\" in their language, then ask them to upload a photo of the router for AI visual analysis. Make it sound extremely advanced and robotic!"
+            f"5. IMPORTANT: If the customer reports a hardware fault (like router issue, red light) WITHOUT a photo, ACT LIKE A HIGH-TECH AI AGENT! Say \"Initiating remote diagnostic protocol...\" in their language, then ask them to upload a photo of the router for AI visual analysis. Make it sound extremely advanced and robotic!\n"
+            f"6. RAG KNOWLEDGE RULE: You MUST use the 'search_slt_knowledgebase' tool when asked about SLT products, broadband, packages, prices, or general questions. Do NOT hallucinate answers!"
         )
     
     try:
@@ -662,7 +664,25 @@ async def chat_stream_endpoint(request: ChatRequest):
     sessions[session_id] = history[-6:]
     
     # --- START FAST PATH (Server-side 0-latency bypass) ---
-    clean_msg = request.message.lower().strip()
+    import re
+    clean_msg = re.sub(r'[^\w\s]', '', request.message.lower().strip())
+    
+    # 0. Instant Greeting Bypass
+    greetings = ["hi", "hello", "hi neo", "hi liya", "hello neo", "hello liya", "hey", "test", "හලෝ", "හායි", "කොහොමද"]
+    if clean_msg in greetings:
+        async def greeting_generator():
+            yield f"data: {json.dumps({'text': '', 'session_id': session_id, 'agent_used': request.agent_name})}\n\n"
+            if request.lang == "si":
+                greeting_text = "ආයුබෝවන්! මම SLT-MOBITEL NEXUS. මම ඔබට උදව් කරන්නේ කෙසේද?"
+            elif request.lang == "ta":
+                greeting_text = "வணக்கம்! நான் SLT-MOBITEL NEXUS. நான் உங்களுக்கு எப்படி உதவ முடியும்?"
+            else:
+                greeting_text = "Hello! I am SLT-MOBITEL NEXUS. How can I help you today?"
+            yield f"data: {json.dumps({'text': greeting_text})}\n\n"
+            yield "data: [DONE]\n\n"
+        sessions[session_id].append(AIMessage(content="Hello! How can I help you?"))
+        return StreamingResponse(greeting_generator(), media_type="text/event-stream")
+
     from backend.agent.graph import extract_phone_number
     existing_phone = extract_phone_number(request.message)
     if not existing_phone:
@@ -678,10 +698,11 @@ async def chat_stream_endpoint(request: ChatRequest):
     if missing_phone:
         async def fast_generator():
             reply = "Please provide the SLT phone number to check." if request.lang == "en" else "කරුණාකර පරීක්ෂා කිරීමට අවශ්‍ය SLT දුරකථන අංකය ලබාදෙන්න."
-            sessions[session_id].append(AIMessage(content=reply))
+            yield f"data: {json.dumps({'text': '', 'session_id': session_id, 'agent_used': agent_name})}\n\n"
             yield f"data: {json.dumps({'text': reply})}\n\n"
             yield "data: [DONE]\n\n"
             
+        sessions[session_id].append(AIMessage(content="Please provide the SLT phone number to check."))
         return StreamingResponse(fast_generator(), media_type="text/event-stream")
     # --- END FAST PATH ---
 
@@ -750,9 +771,8 @@ async def chat_endpoint(request: ChatRequest):
             f"2. You MUST provide full raw technical details (DP Box, Loop IDs, SNR, Attenuation, MAC addresses) when asked. "
             f"3. The staff member can ask about ANY customer number. If they provide a number in the chat, use that. "
             f"4. The current session_id ({session_id}) is an INTERNAL TRACKING ID, NOT a phone number! If they ask for specific customer details (bill, profile), ask for the 10-digit number. BUT if they ask for internal system reports (WFM reports, dispatch data, general stats), DO NOT ask for a phone number! Just generate the report. "
-            f"5. GREETING RULE: Do NOT use customer greetings like 'Ayubowan'. Use a professional internal greeting. "
-            f"6. CONCISENESS RULE: ONLY provide the EXACT information requested."
-            f"7. CRITICAL TOOL ASSIGNMENT: Use the 'get_full_customer_profile' tool to instantly fetch ALL technical, network, billing, and usage data for a customer. Use this whenever the admin asks to check a customer!\n"
+            f"5. ADMIN MODE: Do NOT summarize. If the admin asks for details, use the tools and print the full raw diagnostic and profile data. "
+            f"6. CRITICAL TOOL ASSIGNMENT: Use the 'get_full_customer_profile' tool to instantly fetch ALL technical, network, billing, and usage data for a customer. Use this whenever the admin asks to check a customer!\n"
             f"8. ADMIN IDENTITY: The Admin you are talking to is named 'Ravindu'. Always greet him as Ravindu when confirming a major action.\n"
             f"9. DISPATCHING TECHS: If Ravindu asks to send a technician for a new connection or fault, use the `dispatch_technician_admin` tool. Provide the SLT Number and the Tech Name. Once successful, reply EXACTLY with 'Yes Ravindu, I have dispatched technician [Tech Name] for [Number]'.\n"
             f"10. FINALIZING CONNECTIONS: If Ravindu says the job is done and asks to update the system, use the `finalize_admin_approval` tool. Once successful, reply EXACTLY with 'Ah Ravindu, it is done' (or in Sinhala 'ආ රවිඳු, මම වැඩේ ඉවර කළා. Blockchain එකටත් ලියලා, Customer ව Active ලිස්ට් එකට දැම්මා').\n"
@@ -770,7 +790,8 @@ async def chat_endpoint(request: ChatRequest):
             f"2. SECURITY RULE: The customer's authenticated phone number is exactly {session_id}. "
             f"3. You are STRICTLY FORBIDDEN from providing details, usage, bills, or tickets for ANY other phone number. If they ask about another number, politely refuse. "
             f"4. Do not ask for their phone number again, use {session_id} automatically for all tool calls. \n"
-            f"5. IMPORTANT: If the customer reports a hardware fault (like router issue, red light) WITHOUT a photo, ACT LIKE A HIGH-TECH AI AGENT! Say \"Initiating remote diagnostic protocol...\" in their language, then ask them to upload a photo of the router for AI visual analysis. Make it sound extremely advanced and robotic!"
+            f"5. IMPORTANT: If the customer reports a hardware fault (like router issue, red light) WITHOUT a photo, ACT LIKE A HIGH-TECH AI AGENT! Say \"Initiating remote diagnostic protocol...\" in their language, then ask them to upload a photo of the router for AI visual analysis. Make it sound extremely advanced and robotic!\n"
+            f"6. RAG KNOWLEDGE RULE: You MUST use the 'search_slt_knowledgebase' tool when asked about SLT products, broadband, packages, prices, or general questions. Do NOT hallucinate answers!"
         )
     
     try:
@@ -815,6 +836,7 @@ async def chat_endpoint(request: ChatRequest):
                 # Invoke our 12-Agent swarm brain!
                 result = await get_graph().ainvoke({
                     "messages": messages,
+                    "current_agent": request.agent_name,
                     "user_language": request.lang or "si",  # Default to Sinhala
                     "is_admin": request.is_admin,
                     "phone_number": session_id if not request.is_admin else None

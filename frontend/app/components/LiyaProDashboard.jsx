@@ -344,7 +344,7 @@ You have access to all tools to manage the SLT system.`;
       }
       // --- END FAST PATH ---
 
-      const payload = { message: text || "Please check this image.", session_id: sessionId, lang: language, is_admin: isAdmin };
+      const payload = { message: text || "Please check this image.", session_id: sessionId, lang: language, is_admin: isAdmin, agent_name: agent };
       if (attachedImage) {
         payload.image_base64 = attachedImage.split(',')[1];
       }
